@@ -1,0 +1,4 @@
+{
+    "use_current_origin": true, // defines whether to use the window.location.origin value or the one defined below.
+    "base_url": "api server here, no trailing slashes"
+}
