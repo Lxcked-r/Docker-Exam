@@ -37,19 +37,6 @@ import usersRouter from "./routes/users.js";
 import sessionRouter from "./routes/session.js";
 app.use("/api/v1/users", usersRouter);
 app.use("/api/v1/session", sessionRouter);
-
-import tasksRouter from "./routes/tasks.js";
-app.use("/api/v1/tasks", tasksRouter);
-
-import templatesRouter from "./routes/templates.js";
-app.use("/api/v1/templates", templatesRouter);
-
-import templatesRelationsRouter from "./routes/templatesRelations.js";
-app.use("/api/v1/templatesRelations", templatesRelationsRouter);
-
-import avatarsRouter from "./routes/avatars.js";
-app.use("/api/v1/avatars", avatarsRouter);
-
   
 // Default route
 app.get("/", (req, res) => {
