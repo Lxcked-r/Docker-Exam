@@ -9,10 +9,6 @@ const User = db.define('User', { // describes a user. operators may create and e
 		unique: true,
 		allowNull: false,
 	},
-	name: {
-		type: DataTypes.STRING,
-		allowNull: false,
-	},
 	username: {
 		type: DataTypes.STRING,
 		unique: true,
@@ -26,15 +22,7 @@ const User = db.define('User', { // describes a user. operators may create and e
 		type: DataTypes.BOOLEAN,
 		defaultValue: false,
 		allowNull: false,
-	},
-	avatar: {
-		type: DataTypes.STRING,
-		allowNull: true,
-	},
-	schedule: {
-		type: DataTypes.STRING,
-		allowNull: true,
-	},
+	}
 });
 
 export default User;
