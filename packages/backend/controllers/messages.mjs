@@ -2,7 +2,7 @@
     This file exposes functions to work with rows of the Message table in the database.
 */
 
-import Message from "../models/message.mjs";
+import Message from "../models/messages.mjs";
 import { db } from "../utils/database.mjs";
 import logger from "../utils/logger.mjs";
 
@@ -69,3 +69,8 @@ const getMessages = async (userId, destinationUserId) => {
         return null;
     }
 }
+
+export {
+    createMessage,
+    getMessages,
+};

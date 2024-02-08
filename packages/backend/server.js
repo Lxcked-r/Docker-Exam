@@ -37,6 +37,9 @@ import usersRouter from "./routes/users.js";
 import sessionRouter from "./routes/session.js";
 app.use("/api/v1/users", usersRouter);
 app.use("/api/v1/session", sessionRouter);
+
+import messagesRouter from "./routes/messages.js";
+app.use("/api/v1/messages", messagesRouter);
   
 // Default route
 app.get("/", (req, res) => {
