@@ -101,7 +101,7 @@ const updateLastMessage = (message) => {
 
 
 onMounted( async() => {
-    socket.emit("channel", {channelID: props.channelID, userID: localUserStore.user.id});
+    socket.emit("channel", {channelID: props.channelID, userID: localUserStore.user.id, userName: localUserStore.user.name});
     loading.value = false;
 });
 
@@ -120,7 +120,7 @@ onMounted( async() => {
    <div class="flex sm:items-center justify-between py-3 border-b-2 border-gray-200">
       <div class="relative flex items-center space-x-4">
         <AvatarCircle 
-        :name="ee"/>
+        :name="ee" />
          <div class="flex flex-col leading-tight">
             <div class="text-2xl mt-1 flex items-center">
                <span class="text-gray-700 mr-3">{{ channelName }}</span>
@@ -148,13 +148,14 @@ onMounted( async() => {
    </div>
    <div id="messages" class="flex flex-col space-y-4 p-3 overflow-y-auto scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch">
     <div v-for="message in channelMessages">
-        
         <Message
         :text=message.text
         :isOwnMessage=isSameThanActualUser(message)
-        :isLast=!isSameThanNext(message) />
+        :isLast=!isSameThanNext(message)
+        :userName="message.User.username"
+        :created-at="tt"/>
     </div>
-</div>  
+</div>
 <div class="border-t-2 border-gray-200 px-4 pt-4 mb-2 sm:mb-0">
     <div class="relative flex">
         <span class="absolute inset-y-0 flex items-center">
