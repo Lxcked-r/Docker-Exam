@@ -19,6 +19,7 @@ const props = defineProps({
 	},
 });
 
+
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
 const baseUrl = config.use_current_origin ? window.location.origin : config.base_url;
@@ -37,8 +38,6 @@ const usedId = computed(() => {
 const usedName = computed(() => {
 	if (props.name) {
 		return props.name;
-	} else {
-		return localUserStore.user.name;
 	}
 });
 
