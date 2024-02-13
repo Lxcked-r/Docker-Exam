@@ -6,6 +6,8 @@ import Message from "../models/messages.mjs";
 import { db } from "../utils/database.mjs";
 import logger from "../utils/logger.mjs";
 
+import User from "../models/user.mjs";
+
 const callerName = "Message";
 
 /**
@@ -59,6 +61,11 @@ const getMessages = async (channelID) => {
 
     try {
         const messages = await Message.findAll({
+            include: [{
+                model: User,
+                attributes: ["username"],
+            
+            }],
             where: {
                 channelID,
             },

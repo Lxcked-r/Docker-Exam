@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import { db } from "../utils/database.mjs";
+import User from "./user.mjs";
 
 const Message = db.define("Message", {
     id: {
@@ -28,5 +29,7 @@ const Message = db.define("Message", {
     }
 
 });
+
+Message.belongsTo(User, { foreignKey: "userID" });
 
 export default Message;
