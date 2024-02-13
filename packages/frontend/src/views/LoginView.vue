@@ -45,7 +45,7 @@ const login = async () => {
 
 	if (response.status === 200) {
 		API.setToken(response.data.token);
-		router.push("/dashboard");
+		router.push("/chat");
 		isLoading.value = false;
 		return;
 	}

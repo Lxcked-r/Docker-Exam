@@ -9,6 +9,8 @@ import CustomDialog from "@/components/CustomDialog.vue";
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
 
+const loading = ref(true);
+
 const router = useRouter();
 
 const dialogRef = ref(null);
@@ -18,14 +20,16 @@ onMounted(async () => {
 	try {
 		await localUserStore.init();
 		if (localUserStore.kind !== "api") {
-			sessionStateStore.isOffline = true;
+			router.push("/login");
+			return;
 		}
 		sessionStateStore.setSignedInState(true);
-		router.push("/dashboard");
 	} catch (e) {
 		console.error(e);
 		router.push("/login");
 	}
+
+	loading.value = false;
 });
 
 const reload = () => {
@@ -35,7 +39,7 @@ const reload = () => {
 </script>
 
 <template>
-<main class="flex align-center justify-center h-screen">
+<main v-if="loading" class="flex align-center justify-center h-screen">
 	<span class="loading loading-spinner loading-lg"></span>
 	<CustomDialog
 		:is-acknowledgement="true"
@@ -59,4 +63,8 @@ const reload = () => {
 		</template>
 	</CustomDialog>
 </main>
+
+<div v-else>
+
+</div>
 </template>
