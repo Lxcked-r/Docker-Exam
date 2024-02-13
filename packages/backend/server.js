@@ -4,6 +4,10 @@ import cookieParser from "cookie-parser";
 import logger from "./utils/logger.mjs";
 import { connect, syncModels } from "./utils/database.mjs";
 
+import { Server } from 'socket.io';
+
+import { createServer } from "http";
+
 const caller = "Server";
 
 const app = new Express();
@@ -40,6 +44,10 @@ app.use("/api/v1/session", sessionRouter);
 
 import messagesRouter from "./routes/messages.js";
 app.use("/api/v1/messages", messagesRouter);
+
+import channelsRouter from "./routes/channels.js";
+import { Socket } from "dgram";
+app.use("/api/v1/channels", channelsRouter);
   
 // Default route
 app.get("/", (req, res) => {
@@ -73,3 +81,28 @@ if (!synced) {
 app.listen(3000, () => {
     logger.info("Server started", { caller: caller });
 });
+
+const httpServer = createServer(app);
+
+const io = new Server(httpServer, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+      }
+});
+
+io.on('connection', socket => {
+    console.log('a user connected');
+    socket.on('channel', (data) => {
+        socket.join(data.channelID);
+        console.log(data.userID,'joined channel', data.channelID)
+    });
+    socket.on('message', (data) => {
+        io.to(data.channelID).emit("message", data);
+    });
+    
+});
+
+
+
+httpServer.listen(3001);
