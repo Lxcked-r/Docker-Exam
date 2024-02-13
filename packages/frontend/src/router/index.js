@@ -18,44 +18,11 @@ const router = createRouter({
 			component: () => import("../views/LoginView.vue"),
 		},
 		{
-			path: "/dashboard",
-			name: "dashboard",
-			component: () => import("../views/DashboardView.vue"),
-			children: [
-				{
-					path: "tasks",
-					name: "tasks",
-					component: () => import("../views/TasksView.vue"),
-				},
-				{
-					path: "settings",
-					name: "settings",
-					component: () => import("../views/settings/SettingsView.vue"),
-				},
-				{
-					path: "admin",
-					name: "admin",
-					component: () => import("../views/admin/AdminView.vue"),
-					children: [
-						{
-							path: "users",
-							name: "adminUsers",
-							component: () => import("../views/admin/UsersView.vue"),
-						},
-						{
-							path: "templates",
-							name: "adminTemplates",
-							component: () => import("../views/admin/TemplatesView.vue"),
-						},
-						{
-							path: "tasks",
-							name: "adminTasks",
-							component: () => import("../views/admin/TasksView.vue"),
-						},
-					],
-				},
-			],
-		},
+			path: "/chat",
+			name: "chat",
+
+			component: () => import("../views/ChatView.vue"),
+		}
 	],
 });
 

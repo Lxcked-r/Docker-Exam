@@ -4,11 +4,9 @@ import API from "@/utils/apiWrapper";
 
 export const useLocalUserStore = defineStore("localUser", () => {
 	const user = ref({
-		id: "null",		// should be a uuidv4
-		name: "User",
+		id: "null",		
 		username: "user",
 		operator: false,
-		avatar: null,
 	});
 
 	const kind = ref(null);	// local, api, or null
@@ -42,21 +40,20 @@ export const useLocalUserStore = defineStore("localUser", () => {
 			}
 
 			if (
-				response.data.user.id === undefined ||
-				response.data.user.name === undefined || typeof response.data.user.name !== "string" ||
-				response.data.user.username === undefined || typeof response.data.user.username !== "string" ||
+				response.data.user.id === undefined || response.data.user.username === undefined || typeof response.data.user.username !== "string" ||
 				response.data.user.operator === undefined || typeof response.data.user.operator !== "boolean"
 			) {
 				apiInitFailed = true;
 				throw new Error("Invalid response format");
 			}
-
+			
 			// copy this to local storage
 			localStorage.setItem("localUser", JSON.stringify(response.data.user));
 
 			// copy to live store
 			user.value = response.data.user;
 		} catch (error) {
+			
 			console.error("[stores/localUser] Could not fetch user from server. Falling back to localStorage.");
 			kind.value = "local";
 			apiInitFailed = true;
@@ -68,16 +65,14 @@ export const useLocalUserStore = defineStore("localUser", () => {
 
 			if (
 				localUser.id === undefined ||
-				localUser.name === undefined || typeof localUser.name !== "string" ||
 				localUser.username === undefined || typeof localUser.username !== "string" ||
 				localUser.operator === undefined || typeof localUser.operator !== "boolean"
 			) {
 				localStorageInitFailed = true;
 				throw new Error("Invalid response format");
 			}
-
 			// copy to live store
-			user.value = localUser;
+			user.value = await localUser;
 		} catch (error) {
 			console.error("[stores/localUser] Could not fetch user from localStorage.");
 
@@ -94,5 +89,9 @@ export const useLocalUserStore = defineStore("localUser", () => {
 		initialized.value = true;
 	};
 
-	return { user, initialized, kind, init };
+	const getUser = async () => {
+		return user.value;
+	};
+
+	return { user, initialized, kind, init , getUser};
 });
