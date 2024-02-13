@@ -12,12 +12,14 @@ const callerName = "Message";
  * Create a new message.
  * @param {Object} options - The message's information.
  * @param {string} options.text - The message's text.
- * @param {string} options.userId - The user's id.
+ * @param {string} options.channelID - The channel's id.
+ * @param {string} options.userID - The user's id.
  * @returns {Promise<Object>} The created message.
  */
 const createMessage = async (options) => {
     // Validate the options
-    if (!options.text || !options.userId) {
+    console.log(options.text);
+    if (!options.text || !options.userID || !options.channelID) {
         logger.error("Missing required field", { caller: callerName });
         return null;
     }
@@ -27,7 +29,8 @@ const createMessage = async (options) => {
     try {
         const message = await Message.create({
             text: options.text,
-            userId: options.userId,
+            userID: options.userID,
+            channelID: options.channelID,
         }, { transaction });
 
         logger.info(`Created message ${message.id}`, { caller: callerName });
@@ -43,14 +46,13 @@ const createMessage = async (options) => {
 }
 
 /**
- * Get all messages between 2 users.
- * @param {string} userId - The user's id.
- * @param {string} destinationUserId - The destination user's id.
+ * Get pagination of messages from channel.
+ * @param {string} channelID - The destination user's id.
  * @returns {Promise<Array<Object>>} All messages.
  */
-const getMessages = async (userId, destinationUserId) => {
+const getMessages = async (channelID) => {
     // Validate the options
-    if (!userId || !destinationUserId) {
+    if (!channelID) {
         logger.error("Missing required field", { caller: callerName });
         return null;
     }
@@ -58,8 +60,7 @@ const getMessages = async (userId, destinationUserId) => {
     try {
         const messages = await Message.findAll({
             where: {
-                userId,
-                destinationUserId,
+                channelID,
             },
         });
 

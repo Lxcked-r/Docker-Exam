@@ -13,11 +13,11 @@ const Message = db.define("Message", {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    userId: {
+    userID: {
         type: DataTypes.UUID,
         allowNull: false,
     },
-    destinationUserId: {
+    channelID: {
         type: DataTypes.UUID,
         allowNull: false,
     },
@@ -25,12 +25,8 @@ const Message = db.define("Message", {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
-    },
-    isInGroup : {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
     }
+
 });
 
 export default Message;
