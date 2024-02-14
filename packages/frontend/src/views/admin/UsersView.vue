@@ -13,9 +13,6 @@ import AvatarUploader from "@/components/AvatarUploader.vue";
 const localUserStore = useLocalUserStore();
 const router = useRouter();
 
-if (localUserStore.user.operator === false) {
-	router.replace("/dashboard");
-}
 
 // data
 const users = ref([]); 						// the list of users from the server
@@ -73,7 +70,7 @@ const closeEditorAndSave = async () => {
 	const res = await API.fireServer(`/api/v1/users/${diffedSelectedUser.value.id}`, {
 		method: "PATCH",
 		body: JSON.stringify({
-			name: diffedSelectedUser.value.name,
+			name: diffedSelectedUser.value.username,
 			username: diffedSelectedUser.value.username,
 			operator: diffedSelectedUser.value.operator,
 		}),
@@ -163,7 +160,6 @@ onMounted(async () => {
 </script>
 
 <template>
-	<Teleport to="#dash">
 		<!-- Editor -->
 		<CustomDialog
 			ref="editorRef"
@@ -174,7 +170,7 @@ onMounted(async () => {
 			:confirm-locked="isEditorSaving"
 		>
 			<template #title>
-				Editing "{{ diffedSelectedUser?.name }}"
+				Editing {{ diffedSelectedUser?.username }}
 			</template>
 			<template #content>
 				<AvatarUploader
@@ -283,13 +279,6 @@ onMounted(async () => {
 						</div>
 
 					</div>
-
-					<button
-						class="btn btn-sm btn-primary mt-4"
-						@click="editorRef.hide(); scheduleEditorRef.show();"
-					>
-						Edit attendance schedule
-					</button>
 				</div>
 			</template>
 		</CustomDialog>
@@ -304,7 +293,7 @@ onMounted(async () => {
 			:confirm-locked="isResettingPassword"
 		>
 			<template #title>
-				Resetting password for "{{ diffedSelectedUser?.name }}"
+				Resetting password for {{ diffedSelectedUser?.username }}
 			</template>
 			<template #content>
 				<div class="flex flex-col gap-4">
@@ -483,7 +472,6 @@ onMounted(async () => {
 				</div>
 			</template>
 		</CustomDialog>
-	</Teleport>
 
 	<div class="flex flex-col gap-4">
 		<h2>

@@ -12,24 +12,18 @@ const router = useRouter();
 const localUserStore = useLocalUserStore();
 
 const onMainRoute = computed(() => {
-	return router.currentRoute.value.path === "/dashboard/admin";
+	return router.currentRoute.value.path === "/op/admin";
 });
 
 const headerText = computed(() => {
 	switch (router.currentRoute.value.path) {
-	case "/dashboard/admin/users":
+	case "/op/admin/users":
 		return "Users";
-	case "/dashboard/admin/templates":
-		return "Templates";
-	case "/dashboard/admin/tasks":
-		return "Tasks";
-	default:
-		return "Administration";
 	}
 });
 
 if (localUserStore.user.operator === false) {
-	router.replace("/dashboard");
+	router.replace("/");
 }
 
 </script>
@@ -48,20 +42,11 @@ if (localUserStore.user.operator === false) {
 
 		<div class="flex gap-4 justify-center md:flex-row flex-col" v-if="onMainRoute">
 			<HomeSquare
-				to="/dashboard/admin/users"
+				to="/op/admin/users"
 				icon="bi-people"
 				text="Users"
 			/>
-			<HomeSquare
-				to="/dashboard/admin/templates"
-				icon="bi-card-list"
-				text="Templates"
-			/>
-			<HomeSquare
-				to="/dashboard/admin/tasks"
-				icon="bi-list-task"
-				text="Tasks"
-			/>
+
 		</div>
 
 		<div v-show="!onMainRoute">
