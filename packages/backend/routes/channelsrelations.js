@@ -1,43 +1,37 @@
 /**
- * /api/v1/channels
-*/
+ * /api/v1/channelsrelations
+ */
 
 import express from 'express';
-import { createChannel, getChannelById } from '../controllers/channels.mjs';
+import { createChannelRelation, getChannelsRelations } from '../controllers/channelsrelations.mjs';
 
 import { authenticate } from "../middleware/auth.mjs";
 
 const router = express.Router();
 router.use(express.json());
 
-router.post('/',async (req, res) => {
-
+router.post('/', authenticate(), async (req, res) => {
     const options = req.body;
-    if(!options.name) {
+    if (!options.channelID || !options.userID) {
         res.status(400).json({ success: false, message: "Missing required fields" });
         return;
     }
 
-    if (!options.users) {
-        options.users = [];
-    }
-
-    const channel = await createChannel(options);
-    if (!channel) {
+    const channelRelation = await createChannelRelation(options);
+    if (!channelRelation) {
         res.status(400).json({ success: false, message: "Missing required fields" });
         return;
     }
-    res.send(channel);
+    res.send(channelRelation);
 });
 
 router.get('/', authenticate(), async (req, res) => {
-    const options = req.query;
-    const channels = await getChannelById(options.id);
-    if (!channels) {
+    const channelsRelations = await getChannelsRelations(req.query.userID);
+    if (!channelsRelations) {
         res.status(400).json({ success: false, message: "Missing required fields" });
         return;
     }
-    res.send(channels);
+    res.send(channelsRelations);
 });
 
 export default router;

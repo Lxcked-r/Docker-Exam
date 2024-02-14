@@ -28,7 +28,6 @@ const createChannel = async (options) => {
     try {
         const channel = await Channel.create({
             name: options.name,
-            users: options.users || []
         }, { transaction });
 
         logger.info(`Created channel ${channel.id}`, { caller: callerName });
@@ -84,7 +83,37 @@ const editChannel = async (options) => {
     }
 }
 
+/**
+ * Get a channel by User ID.
+ * @param {string} id - The user's id.
+ * @return {Array<Object>} The channels.
+ */
+const getChannelById = async (id) => {
+    // Validate the options
+    if (!id) {
+        logger.error("Missing required field", { caller: callerName });
+        return null;
+    }
+
+    try {
+        const channel = await Channel.all({
+            where: {
+                id
+            }
+        });
+
+        logger.info(`Got channel ${channel.id}`, { caller: callerName });
+
+        return channel;
+    } catch (error) {
+        logger.error(error, { caller: callerName });
+        return null;
+    }
+}
+
+
 export {    
     createChannel,
-    editChannel
+    editChannel,
+    getChannelById
 };
