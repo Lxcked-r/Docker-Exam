@@ -1,7 +1,8 @@
 import { DataTypes } from 'sequelize';
 import { db } from "../utils/database.mjs";
 
-const User = db.define('User', { // describes a user. operators may create and edit templates. users can mark tasks they own as complete
+const User = db.define('User', { 
+	// describes a user. operators may create and edit templates. users can mark tasks they own as complete
 	id: {
 		type: DataTypes.UUID,
 		defaultValue: DataTypes.UUIDV4,
