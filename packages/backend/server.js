@@ -8,6 +8,8 @@ import { Server } from 'socket.io';
 
 import { createServer } from "http";
 
+import CryptoJS from "crypto-js";
+
 const caller = "Server";
 
 const app = new Express();
@@ -46,8 +48,11 @@ import messagesRouter from "./routes/messages.js";
 app.use("/api/v1/messages", messagesRouter);
 
 import channelsRouter from "./routes/channels.js";
-import { Socket } from "dgram";
 app.use("/api/v1/channels", channelsRouter);
+
+import channelsRelationsRouter from "./routes/channelsrelations.js";
+app.use("/api/v1/channelsrelations", channelsRelationsRouter);
+
   
 // Default route
 app.get("/", (req, res) => {
@@ -78,9 +83,6 @@ if (!synced) {
     process.exit(1);
 }
 
-app.listen(3000, () => {
-    logger.info("Server started", { caller: caller });
-});
 
 const httpServer = createServer(app);
 
@@ -91,18 +93,34 @@ const io = new Server(httpServer, {
       }
 });
 
-io.on('connection', socket => {
-    console.log('a user connected');
-    socket.on('channel', (data) => {
+
+const decryptData = (data) => {
+    const secret = "abcde";
+    return JSON.parse(CryptoJS.enc.Utf8.stringify(CryptoJS.AES.decrypt(data,  secret, 
+    {
+        keySize: 128 / 8,
+        iv: secret,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+      })));
+}
+
+io.on('connection', async socket => {
+    socket.on('channel', async (data) => {
+        data = await decryptData(data);
         socket.join(data.channelID);
         console.log(data.userID,'joined channel', data.channelID)
     });
-    socket.on('message', (data) => {
+    socket.on('message', async (data) => {
+        
+        data = await decryptData(data);
         io.to(data.channelID).emit("message", data);
+        io.to(data.channelID).emit("notif", {Notif: "New Message"});
+    });
+    socket.on("typing", async (data) => {
+        data = await decryptData(data);
+        io.to(data.channelID).emit("typing", data);
     });
     
 });
-
-
-
 httpServer.listen(3001);

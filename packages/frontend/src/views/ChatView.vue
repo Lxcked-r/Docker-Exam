@@ -23,8 +23,13 @@ const messages = ref([]);
 const dialogRef = ref(null);
 
 const channelID = ref(null);
+const channelName = ref(null);
 
-channelID.value = 9;
+
+const urlParams = new URLSearchParams(window.location.search);
+
+
+channelID.value = urlParams.get("channelID");
 
 onMounted(async () => {	
 	// Check if the user is logged in, and redirect them to the chat if they are.
@@ -37,7 +42,7 @@ onMounted(async () => {
 			router.push("/login");
 			return;
 		}
-		router.push("/chat");
+		router.push("/chat?channelID="+ urlParams.get("channelID"));
 	} catch (e) {
 		console.error(e);
 		status = false;
@@ -45,6 +50,7 @@ onMounted(async () => {
 	}
 	if (status) {
 		user.value = localUserStore.user;
+		await getThisChannel();
 		await getMessages();
 		loading.value = false;
 	} else {
@@ -52,6 +58,15 @@ onMounted(async () => {
 	}
 
 });
+
+const getThisChannel = async () => {
+	const res = await API.fireServer("/api/v1/channels?ID="+urlParams.get("channelID"), {
+		method: "GET"
+	});
+
+	const channel = await res.json();
+	channelName.value = channel.name;
+}
 
 const reload = () => {
 	window.location.reload();
@@ -78,12 +93,12 @@ const getUserFromLocalStore = async () => {
 				Getting the latest data...
 			</p>
 	</div>
-	<div v-else="" class="home">
-		<CustomDialog ref="dialogRef" />
+	<div v-else class="home">
 		<Chat 
-		channelName="test"
+		:channelName="channelName"
 		:channelMessages=messages
 		:channelID=channelID
+		:userName="user.username"
 		:userID=user.id />
 	</div>
 </template>
