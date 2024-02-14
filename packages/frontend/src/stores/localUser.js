@@ -90,6 +90,36 @@ export const useLocalUserStore = defineStore("localUser", () => {
 	};
 
 	const getUser = async () => {
+		try {
+			const response = await API.fireServer("/api/v1/users/me", {
+				method: "GET",
+			});
+
+			response.data = await response.json();
+
+			// make sure the values in the response are sane
+			if (!response.ok) {
+				apiInitFailed = true;
+				throw new Error("Bad response code");
+			}
+
+			if (
+				response.data.user.id === undefined || response.data.user.username === undefined || typeof response.data.user.username !== "string" ||
+				response.data.user.operator === undefined || typeof response.data.user.operator !== "boolean"
+			) {
+				apiInitFailed = true;
+				throw new Error("Invalid response format");
+			}
+			
+			// copy this to local storage
+			localStorage.setItem("localUser", JSON.stringify(response.data.user));
+
+			// copy to live store
+			user.value = response.data.user;
+		} catch (error) {
+			
+				console.error(error);
+		}
 		return user.value;
 	};
 
