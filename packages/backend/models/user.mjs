@@ -23,7 +23,11 @@ const User = db.define('User', {
 		type: DataTypes.BOOLEAN,
 		defaultValue: false,
 		allowNull: false,
-	}
+	},
+	avatar: {
+		type: DataTypes.STRING,
+		allowNull: true,
+	},
 });
 
 export default User;
