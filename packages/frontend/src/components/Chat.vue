@@ -6,6 +6,8 @@ import { useRouter } from "vue-router";
 import { useLocalUserStore } from "@/stores/localUser";
 import { useSessionStateStore } from "@/stores/sessionState";
 
+import NotificationManager from "./NotificationManager.vue";
+
 import CryptoJS from "crypto-js";
 
 import CustomDialog from "@/components/CustomDialog.vue";
@@ -17,11 +19,16 @@ import API from "@/utils/apiWrapper";
 
 import config from "@/../config.json";
 
+import router from "@/router";
+
+import crypter from "@/utils/crypter";
+
 const baseUrl = config.use_current_origin ? window.location.origin : config.base_url;
 
 
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
+
 const socket = io(baseUrl);
 
 const user = ref({});
@@ -44,6 +51,10 @@ const actualTyper = ref(null);
 
 const someoneIsTyping = ref(null);
 
+const audioNotif = ref(null);
+
+const notifs = ref(0);
+
 const handleConnect = () => {
 	if (userName.value.length > 0) {
 		connect.value = true;
@@ -51,15 +62,10 @@ const handleConnect = () => {
 }
 
 const encryptData = (data) => {
-    const x = CryptoJS.AES.encrypt(JSON.stringify(data), secret,
- {
-    keySize: 128 / 8,
-    iv: secret,
-    mode: CryptoJS.mode.CBC,
-    padding: CryptoJS.pad.Pkcs7
-  }).toString();
-    return x;
-}
+    const encrypted = crypter.encrypt(data, secret);
+    return encrypted;
+};
+
 
 const props = defineProps({
     userID: String,
@@ -96,7 +102,15 @@ const isSameThanNext = (message) => {
     }
 };
 
+const clearNotifs = () => {
+    notifs.value = 0;
+    socket.emit("clearNotifs", {userID: props.userID});
+};
+
 const setSocketMessage = (userID, text, channelID, userName) => {
+    if (text === "") {
+        return;
+    }
     const messageData = {userID: userID, text: text, channelID: channelID, User: {username: userName}};
 
     const encrypted = encryptData(messageData);
@@ -107,11 +121,25 @@ const setSocketMessage = (userID, text, channelID, userName) => {
 socket.on("message", (event) => {
 	const message = event;
 	props.channelMessages.push(message);
-    console.log(test.value.scrollTop);
+
+    setTimeout(() => {
+        scrollToBottom();
+    }, 2);
+
+    
+    if (message.userID === props.userID) {
+    
+        return;
+    } else {
+       // audioNotif.value.play();
+       notifs.value++;
+    }
+    
 });
 
 socket.on("notif", (event) => {
     console.log(event);
+    //audioNotif.value.play();
 });
 
 socket.on("typing", async (event) => {
@@ -141,18 +169,14 @@ socket.on("typing", async (event) => {
     }
 }); 
 
-const sendNewMessage = async () => {
-    console.log("Sending message");
-    const res = await API.fireServer("/api/v1/messages",
-    {
-        method: "POST",
-        body: JSON.stringify({
-            text: messageInput.value.value,
-            userID: props.userID,
-            channelID: props.channelID,
-        }),
-    });
+const backToChatsList = () => {
+    router.push("/dashboard/chats");
+};
 
+const sendNewMessage = async () => {
+    if(messageInput.value.value === "") {
+        return;
+    }
     setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName);
 
     messageInput.value.value = ""; // clear the input
@@ -161,6 +185,13 @@ const sendNewMessage = async () => {
 
 const updateLastMessage = (message) => {
     lastMessage.value = message;
+};
+
+const scrollToBottom = async () => {
+    if(!test.value) {
+        return;
+    }
+    test.value.scrollTop = test.value.scrollHeight;
 };
 
 
@@ -175,26 +206,33 @@ onMounted( async() => {
     data = await encryptData(data);
     socket.emit("channel", data);
     loading.value = false;
+    audioNotif.value = new Audio("/notif.wav");
+
+    setTimeout(() => {
+        scrollToBottom();
+    }, 2);
 });
 
 </script>
 
 <template>
-    
+  
     <div v-if="loading">
         <span class="loading loading-spinner"></span>
             <p>
                 Getting the latest data...
             </p>
     </div>
-
     <!-- component -->
     <div v-else class="flex-1 p:2 sm:p-6 justify-between flex flex-col h-screen h-full">
 
-    <div class="flex sm:items-center justify-between py-3 border-b-2 border-gray-200">
+    <div class="flex sm:items-center justify-between py-3 border-b-2 border-gray-200">        
+        <button @click="backToChatsList" class="btn btn-outline">
+            Back to Chats list
+        </button>  
         <div class="relative flex items-center space-x-4">
             <AvatarCircle 
-            name="ee" />
+            :name="channelName" />
             <div class="flex flex-col leading-tight">
                 <div class="text-2xl mt-1 flex items-center">
                 <span class="text-gray-700 mr-3">{{ channelName }}</span>
@@ -208,20 +246,17 @@ onMounted( async() => {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </button>
-            <button type="button" class="inline-flex items-center justify-center rounded-lg border h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none">
+            <button @click="clearNotifs" type="button" class="relative inline-flex items-center p-3 text-sm font-medium text-center text-white rounded-lg hover:bg-white-800">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                 </svg>
-            </button>
-            <button type="button" class="inline-flex items-center justify-center rounded-lg border h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                </svg>
+                <span class="sr-only">Notifications</span>
+                <div v-if="notifs>0" class="absolute inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-2 -end-2 dark:border-gray-900">{{notifs}}</div>
             </button>
         </div>
     </div>
     <div ref="test" id="messages" class="flex flex-col space-y-4 p-3 overflow-y-auto h-full scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch">
-        <div v-for="message in channelMessages" v-scroll-to >
+        <div v-for="message in channelMessages" >
             <Message
             :text=message.text
             :isOwnMessage=isSameThanActualUser(message)

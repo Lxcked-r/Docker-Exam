@@ -50,8 +50,18 @@ app.use("/api/v1/messages", messagesRouter);
 import channelsRouter from "./routes/channels.js";
 app.use("/api/v1/channels", channelsRouter);
 
+import avatarsRouter from "./routes/avatars.js";
+app.use("/api/v1/avatars", avatarsRouter);
+
 import channelsRelationsRouter from "./routes/channelsrelations.js";
+import { createMessage } from "./controllers/messages.mjs";
 app.use("/api/v1/channelsrelations", channelsRelationsRouter);
+
+import notificationsRouter from "./routes/notifications.js";
+import { createNotification } from "./controllers/notifications.mjs";
+import { updateAvatar } from "./controllers/user.mjs";
+app.use("/api/v1/notifications", notificationsRouter);
+
 
   
 // Default route
@@ -77,15 +87,17 @@ if (!dbConnected) {
     process.exit(1);
 }
 
+// Sync the models with the database
 const synced = await syncModels();
 if (!synced) {
     logger.error("Could not sync models with the database", { caller: caller });
     process.exit(1);
 }
 
-
+// create server from app
 const httpServer = createServer(app);
 
+// Socket.io server instance from http server and handle cors
 const io = new Server(httpServer, {
     cors: {
         origin: "*",
@@ -93,9 +105,10 @@ const io = new Server(httpServer, {
       }
 });
 
-
+// Decryption
 const decryptData = (data) => {
     const secret = "abcde";
+    try {
     return JSON.parse(CryptoJS.enc.Utf8.stringify(CryptoJS.AES.decrypt(data,  secret, 
     {
         keySize: 128 / 8,
@@ -103,24 +116,84 @@ const decryptData = (data) => {
         mode: CryptoJS.mode.CBC,
         padding: CryptoJS.pad.Pkcs7
       })));
+    }
+    catch (err) {
+        return null;
+    }
 }
 
+const decryptFile = async (dataURL) => {
+    
+    var byteArr = b64toArray(dataURL);
+    
+    function b64toArray(b64Data){
+    var byteCharacters = atob(b64Data);
+    
+    var byteNumbers = new Array(byteCharacters.length);
+    for (var i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    
+    var byteArray = new Uint8Array(byteNumbers);
+
+    console.log(byteArray);
+    return byteArray;}
+}
+
+// Socket.io
 io.on('connection', async socket => {
+
+    // sync user to channel (socket.io room)
     socket.on('channel', async (data) => {
         data = await decryptData(data);
         socket.join(data.channelID);
-        console.log(data.userID,'joined channel', data.channelID)
     });
+
+    // send message in db and to all users in a channel (socket.io room)
     socket.on('message', async (data) => {
-        
+
         data = await decryptData(data);
+        if(data === null) {
+            logger.error("Failed to decrypt message", { caller: caller });
+            return;
+        }
+
+        const message = createMessage(data);
         io.to(data.channelID).emit("message", data);
-        io.to(data.channelID).emit("notif", {Notif: "New Message"});
+        //io.to(data.channelID).emit("notification", data);
     });
+
+    // send typing notification to all users in a channel (socket.io room)
     socket.on("typing", async (data) => {
-        data = await decryptData(data);
+        data = await decryptData(data);        
+        if(data === null) {
+            logger.error("Failed to decrypt message", { caller: caller });
+            return;
+        }
         io.to(data.channelID).emit("typing", data);
+    });
+
+    // update avatar in db and for all users thats see him (socket.io room)
+    socket.on("avatar", async (data) => {
+
+        data = await decryptData(data);
+        if(data === null) {
+            logger.error("Failed to decrypt message", { caller: caller });
+            return;
+        }
+
+        console.log(await decryptFile(data.image));
+        console.log("qewq");
+        try {
+            await updateAvatar(data.userID, data.path);
+        } catch (err) {
+            logger.error(err, { caller: caller });
+            return;
+        }
+        io.to(data.channelID).emit("avatar", data);
     });
     
 });
+
+// Start the server
 httpServer.listen(3001);

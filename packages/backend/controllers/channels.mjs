@@ -7,7 +7,8 @@ import Channel from "../models/channels.mjs";
 import { db } from "../utils/database.mjs";
 import logger from "../utils/logger.mjs";
 
-const callerName = "Channel";
+const callerName = "ChannelController";
+
 
 /**
  * Create a new channel.
@@ -90,19 +91,14 @@ const editChannel = async (options) => {
  */
 const getChannelById = async (id) => {
     // Validate the options
+    console.log(id);
     if (!id) {
         logger.error("Missing required field", { caller: callerName });
         return null;
     }
 
     try {
-        const channel = await Channel.all({
-            where: {
-                id
-            }
-        });
-
-        logger.info(`Got channel ${channel.id}`, { caller: callerName });
+        const channel = await Channel.findByPk(id);
 
         return channel;
     } catch (error) {

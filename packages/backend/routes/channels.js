@@ -10,7 +10,7 @@ import { authenticate } from "../middleware/auth.mjs";
 const router = express.Router();
 router.use(express.json());
 
-router.post('/',async (req, res) => {
+router.post('/', authenticate(), async (req, res) => {
 
     const options = req.body;
     if(!options.name) {
@@ -30,14 +30,14 @@ router.post('/',async (req, res) => {
     res.send(channel);
 });
 
-router.get('/', authenticate(), async (req, res) => {
+router.get('/', async (req, res) => {
     const options = req.query;
-    const channels = await getChannelById(options.id);
-    if (!channels) {
+    const channel = await getChannelById(options.id);
+    if (!channel) {
         res.status(400).json({ success: false, message: "Missing required fields" });
         return;
     }
-    res.send(channels);
+    res.send(channel);
 });
 
 export default router;

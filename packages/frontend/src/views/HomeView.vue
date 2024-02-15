@@ -15,6 +15,7 @@ const router = useRouter();
 
 const dialogRef = ref(null);
 
+router.push("/dashboard");
 onMounted(async () => {
 	// Check if the user is logged in, and redirect them to the dashboard if they are.
 	try {
@@ -28,6 +29,7 @@ onMounted(async () => {
 		console.error(e);
 		router.push("/login");
 	}
+
 
 	loading.value = false;
 });
