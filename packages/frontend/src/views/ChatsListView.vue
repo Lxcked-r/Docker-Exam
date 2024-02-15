@@ -28,6 +28,10 @@ const getChannels = async () => {
   }
 };
 
+const backToDashBoard = () => {
+  router.push('/dashboard');
+};
+
 onMounted(async () => {
   await localUserStore.init();
   if (localUserStore.kind !== 'api') {
@@ -40,7 +44,7 @@ onMounted(async () => {
 });
 
 const openChat = (channel) => {
-  router.push('/chat?channelID='+channel.id);
+  router.push('/chat?channelID='+channel.channelID);
 };
 
 
@@ -49,8 +53,15 @@ const openChat = (channel) => {
 <style scoped>
 /* Add your custom styles here */
 </style>
-<template>
-<div class="flex flex-col gap-4">
+<template>		
+	<button @click="backToDashBoard" class="btn btn-outline">
+		Back to Dashboard
+	</button>
+	<button @click="createNewChan" class="btn btn-outline btn-primary">
+		Create New Chat
+	</button>
+	<div class="flex flex-col gap-4">
+
 		<h2>
 			Click on a chat to join it.
 		</h2>
