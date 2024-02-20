@@ -16,6 +16,8 @@ const loading = ref(true);
 
 const user = ref({});
 
+const users = ref([]);
+
 const router = useRouter();
 
 const messages = ref([]);
@@ -25,9 +27,8 @@ const dialogRef = ref(null);
 const channelID = ref(null);
 const channelName = ref(null);
 
-
+const actualChannel = ref(null);
 const urlParams = new URLSearchParams(window.location.search);
-
 
 channelID.value = urlParams.get("channelID");
 
@@ -42,7 +43,7 @@ onMounted(async () => {
 			router.push("/login");
 			return;
 		}
-		router.push("/chat?channelID="+ urlParams.get("channelID"));
+		router.push("/dashboard/chat?channelID="+ urlParams.get("channelID"));
 	} catch (e) {
 		console.error(e);
 		status = false;
@@ -52,6 +53,7 @@ onMounted(async () => {
 		user.value = localUserStore.user;
 		await getThisChannel();
 		await getMessages();
+		await getUsers();
 		loading.value = false;
 	} else {
 		router.push("/login");
@@ -60,12 +62,13 @@ onMounted(async () => {
 });
 
 const getThisChannel = async () => {
-	const res = await API.fireServer("/api/v1/channels?ID="+urlParams.get("channelID"), {
+	const res = await API.fireServer("/api/v1/channels?id="+urlParams.get("channelID"), {
 		method: "GET"
 	});
 
 	const channel = await res.json();
 	channelName.value = channel.name;
+	actualChannel.value = channel;
 }
 
 const reload = () => {
@@ -84,21 +87,38 @@ const getUserFromLocalStore = async () => {
 	user.value = localUserStore.user;
 }
 
+const getUsers = async () => {
+	const res = await API.fireServer("/api/v1/channelsRelations?channelID=" + channelID.value, {
+		method: "GET"
+	});
+
+	users.value = await res.json();
+	return users;
+}
+
+const isOp = () => {}
+
+const isOwner = () => {
+	return actualChannel.value.ownerID === user.value.id;
+}
+
 </script>
 
 <template>
-	<div v-if="loading">
-		<span class="loading loading-spinner"></span>
-			<p>
-				Getting the latest data...
-			</p>
-	</div>
-	<div v-else class="home">
-		<Chat 
-		:channelName="channelName"
-		:channelMessages=messages
-		:channelID=channelID
-		:userName="user.username"
-		:userID=user.id />
-	</div>
+		<div v-if="loading">
+			<span class="loading loading-spinner"></span>
+				<p>
+					Getting the latest data...
+				</p>
+		</div>
+		<div v-else class="home">
+			<Chat 
+			:channelName="channelName"
+			:channelMessages="messages"
+			:channelID="channelID"
+			:userName="user.username"
+			:userID="user.id"
+			:channelUsers="users"
+			:isOwner="isOwner()" />
+		</div>
 </template>

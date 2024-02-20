@@ -18,6 +18,11 @@ const ChannelsRelations = db.define("ChannelsRelations", {
     channelID: {
         type: DataTypes.UUID,
         allowNull: false,
+    },
+    channOP : {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
     }
 });
 

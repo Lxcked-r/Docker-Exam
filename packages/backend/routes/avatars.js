@@ -54,7 +54,7 @@ router.post("/:id", authenticate(), async (req, res) => {
     });
 });
 
-router.get('/:id', authenticate({ allowCookies: true }), async (req, res) => {
+router.get('/:id',async (req, res) => {
     const userUUID = req.params.id;
     try {
         const file = await stat(`./avatars/${userUUID}.png`);

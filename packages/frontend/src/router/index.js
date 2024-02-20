@@ -8,7 +8,7 @@ const router = createRouter({
 		{
 			path: "/",
 			name: "home",
-			component: () => import("../views/DashboardView.vue"),
+			component: () => import("../views/HomeView.vue"),
 		},
 		{
 			path: "/login",
@@ -17,12 +17,6 @@ const router = createRouter({
 			// this generates a separate chunk (About.[hash].js) for this route
 			// which is lazy-loaded when the route is visited.
 			component: () => import("../views/LoginView.vue"),
-		},
-		{
-			path: "/chat",
-			name: "chat",
-
-			component: () => import("../views/ChatView.vue"),
 		},
 		{
 			path: "/admin/users",
@@ -35,19 +29,27 @@ const router = createRouter({
 			name: "dashboard",
 
 			component: () => import("../views/DashboardView.vue"),
-		},
-		{
-			path: "/dashboard/chats",
-			name: "Chats List",
+			children: [
+				{
+					path : "chats",
+					name : "chats",
 
-			component: () => import("../views/ChatsListView.vue"),
-		},
-		{
-			path: "/dashboard/settings",
-			name: "Settings",
+					component: () => import("../views/ChatsListView.vue"),
+				},
+				{
+					path: "settings",
+					name: "settings",
 
-			component: () => import("../views/settings/SettingsView.vue"),
-		}
+					component: () => import("../views/settings/SettingsView.vue"),
+				},
+				{
+					path: "chat",
+					name: "chat",
+		
+					component: () => import("../views/ChatView.vue"),
+				},
+			]
+		},
 	],
 });
 

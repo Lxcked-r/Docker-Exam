@@ -10,7 +10,7 @@ import { authenticate } from "../middleware/auth.mjs";
 const router = express.Router();
 router.use(express.json());
 
-router.post('/', authenticate(), async (req, res) => {
+router.post('/',  async (req, res) => {
 
     const options = req.body;
     if(!options.name) {

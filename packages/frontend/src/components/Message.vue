@@ -1,4 +1,6 @@
 <script setup>
+import AvatarCircle from './AvatarCircle.vue';
+
     const props = defineProps({
         text: String,
         userID: String,
@@ -6,22 +8,38 @@
         isLast: Boolean,
         userName: String,
         createdAt: String,
+        isFirst: Boolean,
     });
 </script>
 
 <template>
-    <div class="message">
-        <div class="message_content">
-            <div v-if="!isOwnMessage" class="chat-header">
-                {{ userName }}
-                <time class="text-xs opacity-50">{{ createdAt }}</time>
-            </div>
-            <div v-if="!isOwnMessage" class="flex items-end" >
-                <span class="px-4 py-2 rounded-lg inline-block bg-gray-300 text-gray-600">{{ text }}</span>
-            </div>
-            <div v-else class="flex items-end justify-end">
-                <span class="px-4 py-2 rounded-lg inline-block bg-blue-500 text-white">{{ text }}</span>
+        <div class="message">
+            <div class="message_content">
+
+                <div v-if="!isOwnMessage&&isFirst" class="chat-header">
+                    
+                    {{ userName }}
+                    <time class="text-xs opacity-50">{{ createdAt }}</time>
+                </div>
+                <div v-if="isOwnMessage&&isFirst" class="chat chat-end">
+                    <div class="chat-header">
+                        You
+                    </div>
+                </div>
+
+                <div v-if="!isOwnMessage" class="chat chat-start">
+                    <div class="chat-image avatar">
+                        <div class="w-10 rounded-full">
+                            <AvatarCircle v-if="isLast" :id="userID" :force-fallback="true" :name="userName" />
+                        </div>
+                    </div>
+                    <span class="chat-bubble">{{ text }}</span>
+                </div>
+
+                <div v-else class="chat chat-end">
+                    <span class="chat-bubble chat-bubble-primary">{{ text }}</span>
+                </div>
+
             </div>
         </div>
-    </div>
 </template>

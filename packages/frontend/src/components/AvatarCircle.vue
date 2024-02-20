@@ -17,6 +17,10 @@ const props = defineProps({
 		type: String,
 		default: null,
 	},
+	avatar: {
+		type: String,
+		default: null,
+	},
 });
 
 
@@ -45,6 +49,8 @@ const showPlaceholderInstead = computed(() => {
 	return !localUserStore.user.avatar || sessionStateStore.isOffline || props.forceFallback;
 });
 
+props.avatar = props.id;
+
 // watch the value of localUserStore.user.avatar. if it changes, append a timestamp to the end of the url to force a refresh
 // we only want to refresh the image when it has changed from its previous value to avoid cache issues
 watch(() => localUserStore.user.avatar, () => {
@@ -61,7 +67,7 @@ watch(() => localUserStore.user.avatar, () => {
 		:class="showPlaceholderInstead ? 'bg-neutral text-neutral-content rounded-full w-12' : 'rounded-full w-12'"
 	>
 		<img
-			v-if="localUserStore.user.avatar && !sessionStateStore.isOffline && !forceFallback" class="select-none"
+			v-if="props"
 			:src="hasChangedOnce ? `${baseUrl}/api/v1/avatars/${usedId}?t=${timestamp}` : `${baseUrl}/api/v1/avatars/${usedId}`"
 		/>
 		<span v-else class="select-none">

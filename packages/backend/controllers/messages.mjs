@@ -20,7 +20,6 @@ const callerName = "Message";
  */
 const createMessage = async (options) => {
     // Validate the options
-    console.log(options.text);
     if (!options.text || !options.userID || !options.channelID) {
         logger.error("Missing required field", { caller: callerName });
         return null;
@@ -78,7 +77,39 @@ const getMessages = async (channelID) => {
     }
 }
 
+/**
+ * Get Message by ID.
+ * @param {string} messageID - The message's id.
+ * @returns {Promise<Object>} The message.
+ */
+const getMessageByID = async (messageID) => {
+    // Validate the options
+    if (!messageID) {
+        logger.error("Missing required field", { caller: callerName });
+        return null;
+    }
+
+    try {
+        const message = await Message.findOne({
+            include: [
+                {
+                    model: User,
+                    attributes: ["username"],
+                },
+            ],
+            where: {
+                id: messageID,
+            },});
+
+        return message;
+    } catch (error) {
+        logger.error(error, { caller: callerName });
+        return null;
+    }
+}
+
 export {
     createMessage,
     getMessages,
+    getMessageByID,
 };

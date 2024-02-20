@@ -7,6 +7,14 @@ import { useRouter } from 'vue-router';
 import { useLocalUserStore } from '@/stores/localUser';
 
 import ChatsDisp from '@/components/ChatsDisp.vue';
+import CustomDialog from '@/components/CustomDialog.vue';
+import socket from '@/utils/socket';
+
+import crypter from '@/utils/crypter';
+
+const creating = ref(false);
+
+const createDialogRef = ref(null);
 
 const localUserStore = useLocalUserStore();
 
@@ -44,7 +52,22 @@ onMounted(async () => {
 });
 
 const openChat = (channel) => {
-  router.push('/chat?channelID='+channel.channelID);
+
+	if (channel.key !== "") {
+		router.push('/dashboard/chat?channelID='+channel.channelID);
+	} else {
+
+	}
+};
+
+const createNewChan = () => {
+	creating.value = true;
+	createDialogRef.value.show();
+};
+
+const closeEditorAndSave = () => {
+	creating.value = false;
+	createDialogRef.value.hide();
 };
 
 
@@ -53,7 +76,25 @@ const openChat = (channel) => {
 <style scoped>
 /* Add your custom styles here */
 </style>
-<template>		
+<template v-if="!loading">
+		
+		<CustomDialog
+			ref="createDialogRef"
+			confirm-name="Save"
+			cancel-name="Cancel"
+			@cancel="createDialogRef.hide()"
+			@confirm="closeEditorAndSave();"
+			:confirm-locked="isEditorSaving"
+		>
+		<template #content>
+			<h2>
+				Create a new chat
+			</h2>
+			<input type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" />
+		</template>
+			
+		</CustomDialog>
+
 	<button @click="backToDashBoard" class="btn btn-outline">
 		Back to Dashboard
 	</button>
@@ -80,10 +121,18 @@ const openChat = (channel) => {
 			v-for="channel in channels"
 			v-else
 			:key="channel.id"
-			:id="channel.id"
+			:id="channel.Channel.id"
 			:name="channel.Channel.name"
+			:avatar="channel.Channel.avatar"
 
 			@click="selectedChannel = channel; openChat(channel);"
+		/>
+
+		<CustomDialog
+			ref="dialogRef"
+			:is-acknowledgement="true"
+			confirm-name="Reload"
+			@confirm="reload();"
 		/>
 </div>
   </template>

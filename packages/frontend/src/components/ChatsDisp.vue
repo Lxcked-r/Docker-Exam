@@ -5,9 +5,11 @@ const props = defineProps({
 	id: { type: String, required: true },
 	name: { type: String, required: true },
     notifs: { type: Number, required: false, default: 0 },
+	avatar: { type: String, required: false, default: null },
 });
 
 defineEmits(["checked"]);
+
 </script>
 
 <template>

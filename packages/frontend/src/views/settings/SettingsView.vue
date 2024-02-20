@@ -1,18 +1,8 @@
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import API from "@/utils/apiWrapper";
 import { useLocalUserStore } from "@/stores/localUser";
 import AvatarCircle from "@/components/AvatarCircle.vue";
-
-import config from "@/../config.json";
-
-import crypter from "@/utils/crypter";
-
-import { io } from "socket.io-client";
-
-const baseUrl = config.use_current_origin ? window.location.origin : config.base_url;
-
-const socket = io(baseUrl);
 
 const localUserStore = useLocalUserStore();
 
@@ -78,21 +68,22 @@ const signOutAll = async () => {
 
 const uploadImage = async () => {
 	const file = filePicker.value.files[0];
-	let user = await localUserStore.getUser();
+	const formData = new FormData();
+	formData.append("image", file);
 
+	try {
+		const res = await API.fireServer(`/api/v1/avatars/${localUserStore.user.id}`, {
+			method: "POST",
+			body: formData,
+			headers: {
+				"Content-Type": false,
+			},
+		});
 
-	const testImage = await crypter.toBase64(file);
-
-	console.log(testImage);
-
-
-	let data = { image: testImage, userID: user.id };
-
-	data = crypter.encrypt(data);
-
-	socket.emit("avatar", data);
-
-	localUserStore.user.avatar = localUserStore.user.avatar + "?t=" + Date.now();
+		localUserStore.user.avatar = localUserStore.user.avatar + "?t=" + Date.now();
+	} catch (e) {
+		console.error(e);
+	}
 };
 
 const removingAvatar = ref(false);
@@ -111,6 +102,10 @@ const removeAvatar = async () => {
 		console.error(e);
 	}
 };
+
+onMounted(async () => {
+	await localUserStore.init();
+});
 
 </script>
 

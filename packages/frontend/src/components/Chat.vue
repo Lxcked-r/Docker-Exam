@@ -1,10 +1,11 @@
 <script setup>
 //chat view component
-import { ref, onMounted } from "vue";
+import { ref, onMounted, inject } from "vue";
 import { useRouter } from "vue-router";
 
 import { useLocalUserStore } from "@/stores/localUser";
 import { useSessionStateStore } from "@/stores/sessionState";
+import { useChannelStore } from "@/stores/channel";
 
 import NotificationManager from "./NotificationManager.vue";
 
@@ -14,7 +15,6 @@ import CustomDialog from "@/components/CustomDialog.vue";
 import Message from "@/components/Message.vue";
 import AvatarCircle from "./AvatarCircle.vue";
 
-import { io } from "socket.io-client";
 import API from "@/utils/apiWrapper";
 
 import config from "@/../config.json";
@@ -23,13 +23,17 @@ import router from "@/router";
 
 import crypter from "@/utils/crypter";
 
+const tt = ref(false);
+
 const baseUrl = config.use_current_origin ? window.location.origin : config.base_url;
 
+const showDeleteMessageVar = ref(null);
 
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
+const channelStore = useChannelStore();
 
-const socket = io(baseUrl);
+const socket = inject("socket");
 
 const user = ref({});
 
@@ -55,6 +59,10 @@ const audioNotif = ref(null);
 
 const notifs = ref(0);
 
+const editChannelDialogRef = ref(null);
+
+const showUser = ref(false);
+
 const handleConnect = () => {
 	if (userName.value.length > 0) {
 		connect.value = true;
@@ -64,6 +72,10 @@ const handleConnect = () => {
 const encryptData = (data) => {
     const encrypted = crypter.encrypt(data, secret);
     return encrypted;
+};
+
+const showDeleteMessage = (message) => {
+    showDeleteMessageVar.value = message;
 };
 
 
@@ -79,6 +91,7 @@ const props = defineProps({
     channelTyping: Boolean,
     channelTypingUser: String,
     channelAvatar: String,
+    isOwner: Boolean,
 });
 
 user.value.id = props.userID;
@@ -92,13 +105,18 @@ const isSameThanActualUser = (message) => {
     return message.userID === props.userID;
 };
 
-const isSameThanNext = (message) => {
-    if (lastMessage.value.id === message.id) {
+const isFirst = (message, key) => {
+    if (message.userID !== props.channelMessages[key-1]?.userID) {
         return true;
-    }
-    else {
+    } else {
         return false;
-    
+    }
+}
+
+
+const isSameThanNext = (message, key) => {
+    if (message.userID === props.channelMessages[key+1]?.userID) {
+        return true;
     }
 };
 
@@ -138,7 +156,6 @@ socket.on("message", (event) => {
 });
 
 socket.on("notif", (event) => {
-    console.log(event);
     //audioNotif.value.play();
 });
 
@@ -149,7 +166,7 @@ socket.on("typing", async (event) => {
     if(actualTyper.value === event.userName) {
         someoneIsTyping.value.innerText = event.userName + " is typing";
         return;
-    }
+    }try {
     if (someoneIsTyping.value.innerText === "") {
         someoneIsTyping.value.innerText = event.userName + " is typing";
         actualTyper.value = event.userName;
@@ -159,13 +176,13 @@ socket.on("typing", async (event) => {
         }, 3000);
     }
     else {
-        console.log("Someone is typing");
         someoneIsTyping.value.innerText = event.userName + " is typing";
         actualTyper.value = event.userName;
         setTimeout(() => {
             someoneIsTyping.value.innerText = "";
             actualTyper.value = "";
         }, 3000);
+    }} catch (e) {
     }
 }); 
 
@@ -174,7 +191,7 @@ const backToChatsList = () => {
 };
 
 const sendNewMessage = async () => {
-    if(messageInput.value.value === "") {
+    if(messageInput.value.value === "" || messageInput.value.value.length<3) {
         return;
     }
     setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName);
@@ -194,15 +211,28 @@ const scrollToBottom = async () => {
     test.value.scrollTop = test.value.scrollHeight;
 };
 
-
-const typing = async () => {
+const typing = async (event) => {
     const data = {channelID: props.channelID, userID: props.userID, userName: props.userName};
     const encrypted = encryptData(data);
     socket.emit("typing", encrypted);
+    if (event.code === "Enter") {
+        setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName);
+        messageInput.value.value = ""; // clear the input
+    }
 };
 
+const openChannelEdit = (channelID) => {
+    editChannelDialogRef.value.show();
+};
+
+const showUsersList = () => {
+    showUser.value = true;
+};
+
+
 onMounted( async() => {
-    let data = {channelID: props.channelID, userID: localUserStore.user.id, userName: localUserStore.user.userName}
+    channelStore.setChannelID(props.channelID);
+    let data = {channelID: props.channelID, userID: localUserStore.user.id, userName: localUserStore.user.userName};
     data = await encryptData(data);
     socket.emit("channel", data);
     loading.value = false;
@@ -216,6 +246,30 @@ onMounted( async() => {
 </script>
 
 <template>
+    
+    <CustomDialog
+    ref="editChannelDialogRef"
+    :is-acknowledgement="true"
+    confirm-name="Save"
+    @confirm="editChannelDialogRef.hide()">
+
+    <template #title>
+        Edit channel
+    </template>
+
+    <template #content>
+        <input type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" :value="channelName"/>
+        <div class="flex flex-col">
+        <button @click="showUsersList"><i class="bi bi-people-fill"></i></button></div>
+        <div v-if="showUser" class="flex flex-col">
+            <div v-for="user in channelUsers" class="flex flex-row">
+                <AvatarCircle :name="user.User.username" :id="user.userID" />
+                <span>{{user.User.username}}</span>
+            </div>
+        </div>
+    </template>
+
+    </CustomDialog>
   
     <div v-if="loading">
         <span class="loading loading-spinner"></span>
@@ -232,7 +286,8 @@ onMounted( async() => {
         </button>  
         <div class="relative flex items-center space-x-4">
             <AvatarCircle 
-            :name="channelName" />
+            :name="channelName"
+            :id="channelID" />
             <div class="flex flex-col leading-tight">
                 <div class="text-2xl mt-1 flex items-center">
                 <span class="text-gray-700 mr-3">{{ channelName }}</span>
@@ -241,27 +296,38 @@ onMounted( async() => {
             </div>
         </div>
         <div class="flex items-center space-x-2">
-            <button type="button" class="inline-flex items-center justify-center rounded-lg border h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
+            <button type="button" @click="openChannelEdit(channelID)">
+                <i class="bi bi-gear"></i>
             </button>
-            <button @click="clearNotifs" type="button" class="relative inline-flex items-center p-3 text-sm font-medium text-center text-white rounded-lg hover:bg-white-800">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                </svg>
-                <span class="sr-only">Notifications</span>
-                <div v-if="notifs>0" class="absolute inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-2 -end-2 dark:border-gray-900">{{notifs}}</div>
-            </button>
+
         </div>
     </div>
     <div ref="test" id="messages" class="flex flex-col space-y-4 p-3 overflow-y-auto h-full scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch">
-        <div v-for="message in channelMessages" >
+        <button v-if="showDeleteMessageVar" @click="clearNotifs" type="button" class="relative inline-flex items-center p-3 text-sm font-medium text-center text-white rounded-lg hover:bg-white-800">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+            </svg>
+            <span class="sr-only">Notifications</span>
+            <div v-if="notifs>0" class="absolute inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-2 -end-2 dark:border-gray-900">{{notifs}}</div>
+        </button>
+        <div v-for="(message, index) in channelMessages" >
+            <div v-if="tt" >
+                <button @click="deleteMessage" type="button" class="relative inline-flex items-center p-3 text-sm font-medium text-center text-white rounded-lg hover:bg-white-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                    <span class="sr-only">Notifications</span>
+                    <div v-if="notifs>0" class="absolute inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-2 -end-2 dark:border-gray-900">{{notifs}}</div>
+                </button>
+            </div>
             <Message
+            @mouseover="showDeleteMessage(message)"
             :text=message.text
             :isOwnMessage=isSameThanActualUser(message)
-            :isLast=!isSameThanNext(message)
+            :isLast="!isSameThanNext(message, index)"
             :userName="message.User.username"
+            :userID="message.userID"
+            :isFirst="isFirst(message, index)"
             created-at="ee" />
         </div>
     </div>
@@ -277,7 +343,7 @@ onMounted( async() => {
                     </svg>
                 </button>
             </span>
-            <input @input="typing" ref="messageInput" type="text" placeholder="Write your message!" class="w-full focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-12 bg-gray-200 rounded-md py-3">
+            <input @input="typing($event)" @keypress="typing($event)" ref="messageInput" type="text" placeholder="Write your message!" class="w-full focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-12 bg-gray-200 rounded-md py-3">
                 <div class="absolute right-0 items-center inset-y-0 hidden sm:flex">
                     <button type="button" class="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6 text-gray-600">
@@ -297,8 +363,8 @@ onMounted( async() => {
                     </button>
                     <button @click="sendNewMessage" type="button" class="inline-flex items-center justify-center rounded-lg px-4 py-3 transition duration-500 ease-in-out text-white bg-blue-500 hover:bg-blue-400 focus:outline-none">
                         <span class="font-bold">Send</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-6 w-6 ml-2 transform rotate-90">
-                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" fill="currentColor" class="bi bi-send pl-2" viewBox="0 0 16 16">
+                            <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z"/>
                         </svg>
                     </button>
                 </div>

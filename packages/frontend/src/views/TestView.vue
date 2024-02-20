@@ -1,48 +1,32 @@
 <script setup>
 import API from "@/utils/apiWrapper";
-import { computed, onMounted, ref, provide } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 const router = useRouter();
 
 import { useLocalUserStore } from "@/stores/localUser";
 import { useSessionStateStore } from "@/stores/sessionState";
-import { useChannelStore } from "@/stores/channel";
-
-import socket from "@/utils/socket";
-
-import crypter from "@/utils/crypter";
 
 import AvatarCircle from "@/components/AvatarCircle.vue";
 import HomeSquare from "@/components/HomeSquare.vue";
 import CustomDialog from "@/components/CustomDialog.vue";
-import NotificationMenu from "@/components/NotificationMenu.vue";
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
-const channelStore = useChannelStore();
 
 const signOutFailDialog = ref(null);
-const notifications = ref([]);
 
 const isLoaded = ref(false);
-
-const channels = ref([]);
-
-const notifs = ref(0);
-
-const lastNotif = ref(null);
 
 const onDefaultRoute = computed(() => {
 	return router.currentRoute.value.path === "/dashboard";
 });
 
-
-
 const headerText = computed(() => {
 	switch (router.currentRoute.value.path) {
 	case "/dashboard":
 		return "Home";
-	case "/dashboard/chats":
-		return "Chats";
+	case "/dashboard/tasks":
+		return "Tasks";
 	case "/dashboard/templates":
 		return "Templates";
 	case "/dashboard/users":
@@ -73,19 +57,6 @@ const signOut = async () => {
 	}
 };
 
-const getNotifs = async () => {
-	const res = await API.fireServer("/api/v1/notifications?userID="+ localUserStore.user.id, {
-		method: "GET",
-	});
-	return res;
-};
-
-const clearNotifs = () => {
-    notifs.value = 0;
-	notifications.value = [];
-};
-
-
 const clearLocalData = () => {
 	sessionStateStore.setSignedInState(false);
 	localStorage.clear();
@@ -95,121 +66,12 @@ const reloadPage = () => {
 	window.location.reload();
 };
 
-const addNotif = (notif) => {
-	notifications.value.push(notif);
-	notifs.value ++;
-};
-
-// sockets 
-
-socket.on("notification", (notif) => {
-	if(notif.message.userID === localUserStore.user.id || notif.message.text === lastNotif.value) {
-		return;
-	} else {
-		//addNotif(notif);
-		if (notif.message.text == "UwU") {
-			const uwuAudio = new Audio("/uwu.wav");
-			setTimeout(() => {
-				uwuAudio.play();
-			}, 1000);
-		}
-		newNotif("New message", "https://172.21.22.153:2025/api/v1/avatars/" + notif.message.userID, notif.message.text);
-		lastNotif.value = notif.message.text;
-	}
-});
-
-
-
-const getChannels = async () => {
-	const response = await API.fireServer("/api/v1/channelsrelations?userID="+localUserStore.user.id, {
-		method: "GET",
-	});
-
-	if (response.status === 200) {
-		channels.value = await response.json();
-	}
-};
-
-const emitJoinChannels = () => {
-	for (const channel of channels.value) {
-		let data = {
-			channelID: channel.channelID,
-			userID: localUserStore.user.id,
-		};
-		data = crypter.encrypt(data);
-		socket.emit("channel", data);
-	}
-};
-
-const openChat = (channelID) => {
-	clearNotifs();
-	router.push('/dashboard/chat?channelID='+channelID);
-};
-
-const newNotif = async (title, img, value) => {
-
-	tryNotif();
-
-	setTimeout(() => {
-
-		const tempNotif = new Notification(title, {
-		body: value,
-		icon: img,
-	}); 
-	}, 1000);
-
-}
-
-const tryNotif = () => {
-	if (!("Notification" in window)) {
-    // Check if the browser supports notifications
-    alert("This browser does not support desktop notification");
-  } else if (Notification.permission === "granted") {
-    // Check whether notification permissions have already been granted;
-    // if so, create a notification
-    // …
-  } else if (Notification.permission !== "denied") {
-    // We need to ask the user for permission
-    Notification.requestPermission().then((permission) => {
-      // If the user accepts, let's create a notification
-      if (permission === "granted") {
-        // …
-      }
-    });
-  }
-}
-
 onMounted(async () => {
-
-	// Check if the user is logged in, and redirect them to the dashboard if they are.
-	try {
-		await localUserStore.init();
-		if (localUserStore.kind !== "api") {
-			router.push("/login");
-			return;
-		}
-		sessionStateStore.setSignedInState(true);
-	} catch (e) {
-		console.error(e);
-		router.push("/login");
+	if (!sessionStateStore.signedIn) {
+		router.replace("/");
+	} else {
+		isLoaded.value = true;
 	}
-
-	try {
-		await channelStore.init();
-	} catch (e) {
-		console.error(e);
-	}
-
-	await getNotifs().then(async (res) => {
-		notifications.value = await res.json();
-	});
-
-	await getChannels();
-	await emitJoinChannels();
-
-	isLoaded.value = true;
-
-
 });
 
 </script>
@@ -262,11 +124,11 @@ onMounted(async () => {
 							</li>
 						</RouterLink>
 						<RouterLink
-							to="/dashboard/chats"
+							to="/dashboard/tasks"
 						>
 							<li>
 								<a>
-									Chats list
+									Tasks
 								</a>
 							</li>
 						</RouterLink>
@@ -300,30 +162,17 @@ onMounted(async () => {
 				</div>
 			</div>
 
-			<div class="dropdown dropdown-end pr-2">
-				<div tabindex="0" class="w-10 h-12 pt-3">
-					<i class="bi bi-bell text-2xl"></i>
-				</div><div v-if="notifs>0" class="absolute inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-2 -end-2 dark:border-gray-900">{{notifs}}</div>
-				<ul  v-if="notifications.length>0" tabindex="0" class="dropdown-content mt-2 z-[1] menu p-2 shadow bg-base-200 rounded-box w-max">
-					<div class="p-2 flex items-center gap-2">
-						<li v-for="notif in notifications">
-							<NotificationMenu @click="openChat(notif.message.channelID)" :message="notif.message.text" :user="notif.user.username" :channel="notif.channel" :userID="notif.message.userID"/>
-						</li>
-					</div>
-				</ul>
-			</div>
-
 			<!-- autogenerated profile picture. a div and some letters inside -->
 			<div class="dropdown dropdown-end pr-2">
 				<div tabindex="0" class="bg-neutral text-neutral-content rounded-full w-12 h-12">
-					<AvatarCircle :name="localUserStore.user.username"/>
+					<AvatarCircle />
 				</div>
 				<ul tabindex="0" class="dropdown-content mt-2 z-[1] menu p-2 shadow bg-base-200 rounded-box w-52">
 					<div class="p-2 flex items-center gap-2">
-						<AvatarCircle :name="localUserStore.user.username"/>
+						<AvatarCircle />
 						<div class="flex flex-col">
 							<span class="font-bold">
-								{{ localUserStore.user.username }}
+								{{ localUserStore.user.name }}
 							</span>
 							<span class="text-xs text-neutral-500">
 								{{ localUserStore.user.username }}
@@ -354,13 +203,12 @@ onMounted(async () => {
 			class="flex-1 flex items-center justify-center text-2xl flex-col gap-4"
 			v-if="onDefaultRoute"
 		>
-		<button @click="newNotif('22', 'https://172.21.22.153:2025/api/v1/avatars/dc245c3d-e172-4a08-8664-0c70b4424ceb', 'vasdwqe')" class="btn btn-primary">t</button>
 			Pick a section to begin.
 				<div class="flex gap-4">
 					<HomeSquare
-						to="/dashboard/chats"
+						to="/dashboard/tasks"
 						icon="bi-list-task"
-						text="Chats list"
+						text="Tasks"
 					>
 					</HomeSquare>
 					<div class="flex flex-col gap-4">

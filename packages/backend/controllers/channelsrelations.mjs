@@ -106,7 +106,7 @@ const getChannelsRelations = async (userID) => {
             include: [
             {
                 model: Channel,
-                attributes: ["name"],
+                attributes: ["name", "avatar", "id"],
             }],
             where: {
                 userID: userID
@@ -120,8 +120,40 @@ const getChannelsRelations = async (userID) => {
     }
 }
 
+/**
+ * Get all channels relations of a channel.
+ * @param {string} channelID - The channel's id.
+ * @returns {Array<Object>} The channels relations.
+ */
+const getChannelsRelationsByChannel = async (channelID) => {
+    // Validate the options
+    if (!channelID) {
+        logger.error("Missing required field", { caller: callerName });
+        return null;
+    }
+
+    try {
+        const channelsRelations = await ChannelsRelations.findAll({
+            include: [
+            {
+                model: User,
+                attributes: ["username", "avatar", "id"],
+            }],
+            where: {
+                channelID: channelID
+            }
+        });
+
+        return channelsRelations;
+    } catch (error) {
+        logger.error(error, { caller: callerName });
+        return null;
+    }
+}
+
 export {
     createChannelRelation,
     deleteChannelRelation,
-    getChannelsRelations
+    getChannelsRelations,
+    getChannelsRelationsByChannel,
 }

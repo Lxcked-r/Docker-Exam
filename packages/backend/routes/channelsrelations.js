@@ -3,7 +3,7 @@
  */
 
 import express from 'express';
-import { createChannelRelation, getChannelsRelations } from '../controllers/channelsrelations.mjs';
+import { createChannelRelation, getChannelsRelations, getChannelsRelationsByChannel } from '../controllers/channelsrelations.mjs';
 
 import { authenticate } from "../middleware/auth.mjs";
 
@@ -25,8 +25,23 @@ router.post('/', async (req, res) => {
     res.send(channelRelation);
 });
 
-router.get('/', authenticate(), async (req, res) => {
-    const channelsRelations = await getChannelsRelations(req.query.userID);
+router.get('/',  async (req, res) => {
+    let channelsRelations;
+
+    if(req.query.userID === undefined && req.query.channelID === undefined) {
+        res.status(400).json({ success: false, message: "Missing required fields" });
+        return;
+    }
+
+    if(req.query.userID != undefined) {
+        channelsRelations = await getChannelsRelations(req.query.userID);
+        console.log("get By user ID");
+
+    } else if (req.query.channelID != undefined) {
+        channelsRelations = await getChannelsRelationsByChannel(req.query.channelID);
+        console.log("get By channel ID");
+    }
+
     if (!channelsRelations) {
         res.status(400).json({ success: false, message: "Missing required fields" });
         return;

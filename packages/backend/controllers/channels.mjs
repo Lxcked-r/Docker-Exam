@@ -29,6 +29,8 @@ const createChannel = async (options) => {
     try {
         const channel = await Channel.create({
             name: options.name,
+            key: options.key || "",
+            owner: options.owner,
         }, { transaction });
 
         logger.info(`Created channel ${channel.id}`, { caller: callerName });
@@ -91,7 +93,6 @@ const editChannel = async (options) => {
  */
 const getChannelById = async (id) => {
     // Validate the options
-    console.log(id);
     if (!id) {
         logger.error("Missing required field", { caller: callerName });
         return null;
