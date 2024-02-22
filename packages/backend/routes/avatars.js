@@ -56,6 +56,10 @@ router.post("/:id", authenticate(), async (req, res) => {
 
 router.get('/:id',async (req, res) => {
     const userUUID = req.params.id;
+    if(userUUID === "null") {
+        res.sendFile(__dirname.slice(1, -7) + 'default.png');
+        return;
+    }
     try {
         const file = await stat(`./avatars/${userUUID}.png`);
         res.sendFile(__dirname.slice(1, -7) + `avatars/${userUUID}.png`);

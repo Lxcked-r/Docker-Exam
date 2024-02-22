@@ -12,6 +12,8 @@ import socket from "@/utils/socket";
 
 import crypter from "@/utils/crypter";
 
+import config from "@/../config";
+
 import AvatarCircle from "@/components/AvatarCircle.vue";
 import HomeSquare from "@/components/HomeSquare.vue";
 import CustomDialog from "@/components/CustomDialog.vue";
@@ -19,6 +21,8 @@ import NotificationMenu from "@/components/NotificationMenu.vue";
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
 const channelStore = useChannelStore();
+
+const baseUrl = config.use_current_origin ? window.location.origin : config.base_url;
 
 const signOutFailDialog = ref(null);
 const notifications = ref([]);
@@ -73,17 +77,6 @@ const signOut = async () => {
 	}
 };
 
-const getNotifs = async () => {
-	const res = await API.fireServer("/api/v1/notifications?userID="+ localUserStore.user.id, {
-		method: "GET",
-	});
-	return res;
-};
-
-const clearNotifs = () => {
-    notifs.value = 0;
-	notifications.value = [];
-};
 
 
 const clearLocalData = () => {
@@ -94,30 +87,6 @@ const clearLocalData = () => {
 const reloadPage = () => {
 	window.location.reload();
 };
-
-const addNotif = (notif) => {
-	notifications.value.push(notif);
-	notifs.value ++;
-};
-
-// sockets 
-
-socket.on("notification", (notif) => {
-	if(notif.message.userID === localUserStore.user.id || notif.message.text === lastNotif.value) {
-		return;
-	} else {
-		//addNotif(notif);
-		if (notif.message.text == "UwU") {
-			const uwuAudio = new Audio("/uwu.wav");
-			setTimeout(() => {
-				uwuAudio.play();
-			}, 1000);
-		}
-		newNotif("New message", "https://172.21.22.153:2025/api/v1/avatars/" + notif.message.userID, notif.message.text);
-		lastNotif.value = notif.message.text;
-	}
-});
-
 
 
 const getChannels = async () => {
@@ -130,6 +99,49 @@ const getChannels = async () => {
 	}
 };
 
+
+
+const tryAvatar = async (id) => {
+	let response;
+	response = await fetch(`${baseUrl}/api/v1/avatars/${id}`);
+
+	if(response) {
+		if (response.status === 200) {
+		return true;
+		}
+	}
+	return false;
+};
+
+// ############################################################################################################
+// sockets 
+socket.on("notification", async (notif) => {
+	if(notif.message.userID === localUserStore.user.id) {
+		return;
+	} else {
+		addNotif(notif);
+		if (notif.message.text == "UwU") {
+			const uwuAudio = new Audio("/uwu.wav");
+			setTimeout(() => {
+			}, 1000);
+		}
+		if(lastNotif.value != notif)
+		{
+			let url;
+			if(await tryAvatar(notif.message.userID)) {
+				url = `${baseUrl}/api/v1/avatars/${notif.message.userID}`;
+			} else {
+				url = `${baseUrl}/api/v1/avatars/null`;
+			}
+
+			newNotif(await notif.user.username, url, notif.message.text);
+			lastNotif.value = notif;
+		}
+	}
+});
+
+
+
 const emitJoinChannels = () => {
 	for (const channel of channels.value) {
 		let data = {
@@ -141,43 +153,66 @@ const emitJoinChannels = () => {
 	}
 };
 
-const openChat = (channelID) => {
-	clearNotifs();
-	router.push('/dashboard/chat?channelID='+channelID);
+
+// ############################################################################################################
+// NOTIFS 
+
+const addNotif = (notif) => {
+	notifications.value.push(notif);
+	notifs.value ++;
 };
+
 
 const newNotif = async (title, img, value) => {
 
-	tryNotif();
+	if(!tryNotif()) {
+		return;
+	}
 
-	setTimeout(() => {
 
-		const tempNotif = new Notification(title, {
-		body: value,
-		icon: img,
+	new Notification(title, {
+	body: value,
+	icon: img,
 	}); 
-	}, 1000);
 
 }
 
 const tryNotif = () => {
 	if (!("Notification" in window)) {
-    // Check if the browser supports notifications
-    alert("This browser does not support desktop notification");
+		return false;
   } else if (Notification.permission === "granted") {
-    // Check whether notification permissions have already been granted;
-    // if so, create a notification
-    // …
+	return true;
   } else if (Notification.permission !== "denied") {
     // We need to ask the user for permission
-    Notification.requestPermission().then((permission) => {
-      // If the user accepts, let's create a notification
-      if (permission === "granted") {
-        // …
-      }
-    });
+    Notification.requestPermission()
+	return false;
+
+    };
   }
-}
+
+  const getNotifs = async () => {
+	const res = await API.fireServer("/api/v1/notifications?userID="+ localUserStore.user.id, {
+		method: "GET",
+	});
+	return res;
+};
+
+const clearNotifs = () => {
+    notifs.value = 0;
+	notifications.value = [];
+};
+
+
+// ############################################################################################################
+
+
+const openChat = (channelID, notif, key) => {
+	if(notif) {
+		notifications.value.splice(key, 1);
+		notifs.value --;
+	}
+	router.push('/dashboard/chat?channelID='+channelID);
+};
 
 onMounted(async () => {
 
@@ -306,8 +341,8 @@ onMounted(async () => {
 				</div><div v-if="notifs>0" class="absolute inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-2 -end-2 dark:border-gray-900">{{notifs}}</div>
 				<ul  v-if="notifications.length>0" tabindex="0" class="dropdown-content mt-2 z-[1] menu p-2 shadow bg-base-200 rounded-box w-max">
 					<div class="p-2 flex items-center gap-2">
-						<li v-for="notif in notifications">
-							<NotificationMenu @click="openChat(notif.message.channelID)" :message="notif.message.text" :user="notif.user.username" :channel="notif.channel" :userID="notif.message.userID"/>
+						<li v-for="notif, key in notifications">
+							<NotificationMenu @click="openChat(notif.message.channelID, notif, key)" :message="notif.message.text" :user="notif.user.username" :channel="notif.channel" :userID="notif.message.userID"/>
 						</li>
 					</div>
 				</ul>
@@ -316,11 +351,11 @@ onMounted(async () => {
 			<!-- autogenerated profile picture. a div and some letters inside -->
 			<div class="dropdown dropdown-end pr-2">
 				<div tabindex="0" class="bg-neutral text-neutral-content rounded-full w-12 h-12">
-					<AvatarCircle :name="localUserStore.user.username"/>
+					<AvatarCircle :name="localUserStore.user.username" :id="localUserStore.user.id"/>
 				</div>
 				<ul tabindex="0" class="dropdown-content mt-2 z-[1] menu p-2 shadow bg-base-200 rounded-box w-52">
 					<div class="p-2 flex items-center gap-2">
-						<AvatarCircle :name="localUserStore.user.username"/>
+						<AvatarCircle :name="localUserStore.user.username" :id="localUserStore.user.id"/>
 						<div class="flex flex-col">
 							<span class="font-bold">
 								{{ localUserStore.user.username }}

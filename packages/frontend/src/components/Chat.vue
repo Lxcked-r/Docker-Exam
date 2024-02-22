@@ -23,6 +23,12 @@ import router from "@/router";
 
 import crypter from "@/utils/crypter";
 
+const checkAvatars = ref([]);
+
+const actualUser = ref(null);
+
+const showUserProfileDialogRef = ref(null);
+
 const tt = ref(false);
 
 const baseUrl = config.use_current_origin ? window.location.origin : config.base_url;
@@ -63,6 +69,16 @@ const editChannelDialogRef = ref(null);
 
 const showUser = ref(false);
 
+
+const showUserProfile = (user) => {
+    actualUser.value = user;
+    try {
+    showUserProfileDialogRef.value.show();
+    } catch (e) {
+        console.log(e);
+    }
+};
+
 const handleConnect = () => {
 	if (userName.value.length > 0) {
 		connect.value = true;
@@ -78,7 +94,6 @@ const showDeleteMessage = (message) => {
     showDeleteMessageVar.value = message;
 };
 
-
 const props = defineProps({
     userID: String,
     userName: String,
@@ -92,6 +107,8 @@ const props = defineProps({
     channelTypingUser: String,
     channelAvatar: String,
     isOwner: Boolean,
+    isOP: Boolean,
+    ownerID: String,
 });
 
 user.value.id = props.userID;
@@ -112,7 +129,6 @@ const isFirst = (message, key) => {
         return false;
     }
 }
-
 
 const isSameThanNext = (message, key) => {
     if (message.userID === props.channelMessages[key+1]?.userID) {
@@ -137,6 +153,9 @@ const setSocketMessage = (userID, text, channelID, userName) => {
 }
 
 socket.on("message", (event) => {
+    if(event.channelID !== props.channelID) {
+        return;
+    }
 	const message = event;
 	props.channelMessages.push(message);
 
@@ -146,21 +165,19 @@ socket.on("message", (event) => {
 
     
     if (message.userID === props.userID) {
-    
         return;
     } else {
-       // audioNotif.value.play();
+       //audioNotif.value.play();
        notifs.value++;
     }
     
 });
 
 socket.on("notif", (event) => {
-    //audioNotif.value.play();
 });
 
 socket.on("typing", async (event) => {
-    if (event.userID === props.userID) {
+    if (event.userID === props.userID || event.channelID !== props.channelID) {
         return;
     }
     if(actualTyper.value === event.userName) {
@@ -199,7 +216,6 @@ const sendNewMessage = async () => {
     messageInput.value.value = ""; // clear the input
 };
 
-
 const updateLastMessage = (message) => {
     lastMessage.value = message;
 };
@@ -215,7 +231,7 @@ const typing = async (event) => {
     const data = {channelID: props.channelID, userID: props.userID, userName: props.userName};
     const encrypted = encryptData(data);
     socket.emit("typing", encrypted);
-    if (event.code === "Enter") {
+    if (event.code === "Enter" || event.code === "NumpadEnter") {
         setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName);
         messageInput.value.value = ""; // clear the input
     }
@@ -226,23 +242,59 @@ const openChannelEdit = (channelID) => {
 };
 
 const showUsersList = () => {
-    showUser.value = true;
+    showUser.value = !showUser.value;
 };
 
+const tryAvatar = async (id) => {
+	let response;
+
+	if(checkAvatars.value.includes(id)) {
+		return false;
+	}
+
+	response = await fetch(`${baseUrl}/api/v1/avatars/${id}`, {
+		method: 'HEAD',
+	});
+
+	lastAvatar.value = id;
+	checkAvatars.value.push(id);
+	if(response) {
+		if (response.status === 200) {
+		return true;
+		}
+	}
+	return false;
+};
+
+
+
+const getIsOp = () => {
+    if(props.isOP || props.isOwner) {
+        return true;
+    }
+};
+
+const removeFromChannel = async (userID) => {
+    const data = {userID: userID, channelID: props.channelID};
+    await API.fireServer("/api/v1/channelsrelations", {
+        method: "DELETE",
+        body: JSON.stringify(data),
+    });
+
+};
 
 onMounted( async() => {
     channelStore.setChannelID(props.channelID);
     let data = {channelID: props.channelID, userID: localUserStore.user.id, userName: localUserStore.user.userName};
     data = await encryptData(data);
     socket.emit("channel", data);
-    loading.value = false;
-    audioNotif.value = new Audio("/notif.wav");
+    audioNotif.value = new Audio("/uwu.wav");
 
     setTimeout(() => {
         scrollToBottom();
     }, 2);
+    loading.value = false;
 });
-
 </script>
 
 <template>
@@ -253,22 +305,37 @@ onMounted( async() => {
     confirm-name="Save"
     @confirm="editChannelDialogRef.hide()">
 
-    <template #title>
-        Edit channel
-    </template>
+        <template #title>
+            Edit channel
+        </template>
 
-    <template #content>
-        <input type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" :value="channelName"/>
-        <div class="flex flex-col">
-        <button @click="showUsersList"><i class="bi bi-people-fill"></i></button></div>
-        <div v-if="showUser" class="flex flex-col">
-            <div v-for="user in channelUsers" class="flex flex-row">
-                <AvatarCircle :name="user.User.username" :id="user.userID" />
-                <span>{{user.User.username}}</span>
+        <template #content>
+            <input type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" :value="channelName"/>
+            <div class="flex flex-col">
+            <button @click="showUsersList"><i class="bi bi-people-fill"></i></button></div>
+            <div v-if="showUser" class="flex flex-col">
+                <div v-for="userchan in channelUsers" class="flex flex-row">
+                    <AvatarCircle :name="userchan.User.username" :id="userchan.userID" :avatar="userchan.User.avatar"/>
+                    <span>{{userchan.User.username}}<div v-if="userchan.userID!=ownerID&&userchan.id!=user.id">
+                        <button @click="removeFromChannel(userchan.userID)">X</button>
+                    </div></span>
+                </div>
             </div>
-        </div>
-    </template>
+        </template>
 
+    </CustomDialog>
+
+    
+    <CustomDialog 
+    ref="showUserProfileDialogRef"
+    :is-acknowledgement="true"
+    confirm-name="Close"
+    @confirm="showUserProfileDialogRef.hide()">
+    <template #title>
+    </template>
+    <template #content>
+        {{ actualUser?.User?.username }}
+    </template>
     </CustomDialog>
   
     <div v-if="loading">
@@ -278,72 +345,73 @@ onMounted( async() => {
             </p>
     </div>
     <!-- component -->
-    <div v-else class="flex-1 p:2 sm:p-6 justify-between flex flex-col h-screen h-full">
+    <div v-else class="flex-1 p:2 sm:p-6 justify-between flex flex-col h-[56rem] overflow-x-scroll no-scrollbar">
 
-    <div class="flex sm:items-center justify-between py-3 border-b-2 border-gray-200">        
-        <button @click="backToChatsList" class="btn btn-outline">
-            Back to Chats list
-        </button>  
-        <div class="relative flex items-center space-x-4">
-            <AvatarCircle 
-            :name="channelName"
-            :id="channelID" />
-            <div class="flex flex-col leading-tight">
-                <div class="text-2xl mt-1 flex items-center">
-                <span class="text-gray-700 mr-3">{{ channelName }}</span>
+        <div class="flex sm:items-center justify-between py-3 border-b-2 border-gray-200">        
+            <button @click="backToChatsList" class="btn btn-outline">
+                Back to Chats list
+            </button>  
+            <div class="relative flex items-center space-x-4">
+                <AvatarCircle 
+                :name="channelName"
+                :id="channelID" />
+                <div class="flex flex-col leading-tight">
+                    <div class="text-2xl mt-1 flex items-center">
+                        <span class="text-gray-700 mr-3">{{ channelName }}</span>
+                    </div>
+                    <span class="text-lg text-gray-600"></span>
                 </div>
-                <span class="text-lg text-gray-600"></span>
             </div>
-        </div>
-        <div class="flex items-center space-x-2">
-            <button type="button" @click="openChannelEdit(channelID)">
-                <i class="bi bi-gear"></i>
-            </button>
-
-        </div>
-    </div>
-    <div ref="test" id="messages" class="flex flex-col space-y-4 p-3 overflow-y-auto h-full scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch">
-        <button v-if="showDeleteMessageVar" @click="clearNotifs" type="button" class="relative inline-flex items-center p-3 text-sm font-medium text-center text-white rounded-lg hover:bg-white-800">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-            </svg>
-            <span class="sr-only">Notifications</span>
-            <div v-if="notifs>0" class="absolute inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-2 -end-2 dark:border-gray-900">{{notifs}}</div>
-        </button>
-        <div v-for="(message, index) in channelMessages" >
-            <div v-if="tt" >
-                <button @click="deleteMessage" type="button" class="relative inline-flex items-center p-3 text-sm font-medium text-center text-white rounded-lg hover:bg-white-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                    </svg>
-                    <span class="sr-only">Notifications</span>
-                    <div v-if="notifs>0" class="absolute inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-2 -end-2 dark:border-gray-900">{{notifs}}</div>
+            <div class="flex items-center space-x-2">
+                <button v-if="getIsOp()" type="button" @click="openChannelEdit(channelID)">
+                    <i class="bi bi-gear"></i>
                 </button>
             </div>
-            <Message
-            @mouseover="showDeleteMessage(message)"
-            :text=message.text
-            :isOwnMessage=isSameThanActualUser(message)
-            :isLast="!isSameThanNext(message, index)"
-            :userName="message.User.username"
-            :userID="message.userID"
-            :isFirst="isFirst(message, index)"
-            created-at="ee" />
+            <div class="dropdown dropdown-end pr-2">
+        <div tabindex="0" class="">
+            <button @click="showUsersList"><i class="bi bi-people-fill"></i></button>
         </div>
-    </div>
-    <div ref="someoneIsTyping" class="chat-header">
-    </div>
-    <div class="border-t-2 border-gray-200 px-4 pt-4 mb-2 sm:mb-0">
-        <div class="relative flex">                        
 
-            <span class="absolute inset-y-0 flex items-center">
-                <button type="button" class="inline-flex items-center justify-center rounded-full h-12 w-12 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6 text-gray-600">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
-                    </svg>
-                </button>
-            </span>
-            <input @input="typing($event)" @keypress="typing($event)" ref="messageInput" type="text" placeholder="Write your message!" class="w-full focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-12 bg-gray-200 rounded-md py-3">
+        <ul tabindex="0" class="dropdown-content mt-2 z-[1] menu p-2 shadow bg-base-200 rounded-box w-52">
+            <li v-for="userchan in channelUsers" >
+                <div class="flex flex-row" @click="showUserProfile(userchan)">
+                    <AvatarCircle :name="userchan.User.username" :id="userchan.userID" :avatar="userchan.User.avatar"/>
+                    <span>{{userchan.User.username}}
+                        <div v-if="userchan.userID!=ownerID&&userchan.id!=user.id">
+                        </div>
+                    </span> 
+                </div>
+            </li>
+
+        </ul>
+    </div>
+        </div>
+        <div ref="test" id="messages" class="flex flex-col space-y-4 p-3 overflow-y-auto h-full scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch">
+            <div v-for="(message, index) in channelMessages" >
+                <Message
+                @mouseover="showDeleteMessage(message)"
+                :text=message.text
+                :isOwnMessage=isSameThanActualUser(message)
+                :isLast="!isSameThanNext(message, index)"
+                :userName="message.User.username"
+                :userID="message.userID"
+                :isFirst="isFirst(message, index)"
+                :createdAt="new Date(message.createdAt).toLocaleString()"
+                :avatar="message.User.avatar"/>
+            </div>
+        </div>
+        <div ref="someoneIsTyping" class="chat-header">
+        </div>
+        <div class="relative flex-col">          
+            <div class="relative"> 
+                <span class="absolute inset-y-0 flex items-center">
+                    <button type="button" class="inline-flex items-center justify-center rounded-full h-12 w-12 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6 text-gray-600">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                        </svg>
+                    </button>
+                </span>
+                <input @input="typing($event)" @keypress="typing($event)" ref="messageInput" type="text" placeholder="Write your message!" class="w-full focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-12 bg-gray-200 rounded-md py-3">
                 <div class="absolute right-0 items-center inset-y-0 hidden sm:flex">
                     <button type="button" class="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out text-gray-500 hover:bg-gray-300 focus:outline-none">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-6 w-6 text-gray-600">
@@ -370,5 +438,6 @@ onMounted( async() => {
                 </div>
             </div>
         </div>
-    </div>
+    </div>    
+
 </template>

@@ -3,7 +3,7 @@
  */
 
 import express from 'express';
-import { createChannelRelation, getChannelsRelations, getChannelsRelationsByChannel } from '../controllers/channelsrelations.mjs';
+import { createChannelRelation, getChannelsRelations, getChannelsRelationsByChannel, deleteChannelRelation } from '../controllers/channelsrelations.mjs';
 
 import { authenticate } from "../middleware/auth.mjs";
 
@@ -35,11 +35,9 @@ router.get('/',  async (req, res) => {
 
     if(req.query.userID != undefined) {
         channelsRelations = await getChannelsRelations(req.query.userID);
-        console.log("get By user ID");
 
     } else if (req.query.channelID != undefined) {
         channelsRelations = await getChannelsRelationsByChannel(req.query.channelID);
-        console.log("get By channel ID");
     }
 
     if (!channelsRelations) {
@@ -48,5 +46,21 @@ router.get('/',  async (req, res) => {
     }
     res.send(channelsRelations);
 });
+
+router.delete('/', async (req, res) => {
+    const options = req.body;
+    if (!options.channelID || !options.userID) {
+        res.status(400).json({ success: false, message: "Missing required fields" });
+        return;
+    }
+
+    const channelRelation = await deleteChannelRelation(options);
+    if (!channelRelation) {
+        res.status(400).json({ success: false, message: "Missing required fields" });
+        return;
+    }
+    res.send(channelRelation);
+}
+);
 
 export default router;

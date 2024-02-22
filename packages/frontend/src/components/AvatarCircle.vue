@@ -1,8 +1,10 @@
 <script setup>
 import { useLocalUserStore } from "@/stores/localUser";
 import { useSessionStateStore } from "@/stores/sessionState";
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted } from "vue";
 import config from "@/../config";
+
+const lastAvatar = ref(null);
 
 const props = defineProps({
 	id: {
@@ -23,6 +25,8 @@ const props = defineProps({
 	},
 });
 
+const url = ref(null);
+const loading = ref(true);
 
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
@@ -49,7 +53,6 @@ const showPlaceholderInstead = computed(() => {
 	return !localUserStore.user.avatar || sessionStateStore.isOffline || props.forceFallback;
 });
 
-props.avatar = props.id;
 
 // watch the value of localUserStore.user.avatar. if it changes, append a timestamp to the end of the url to force a refresh
 // we only want to refresh the image when it has changed from its previous value to avoid cache issues
@@ -59,16 +62,28 @@ watch(() => localUserStore.user.avatar, () => {
 });
 
 
+onMounted(async () => {
+	if(props.avatar) {
+		url.value = `${baseUrl}/api/v1/avatars/${props.id}`;
+		loading.value = false;
+	} else {
+		url.value = `${baseUrl}/api/v1/avatars/null`;
+		loading.value = false;
+	}
+});
+
+
 </script>
 
 <template>
-<div class="avatar placeholder">
+
+<div v-if="!loading" class="avatar placeholder">
 	<div
 		:class="showPlaceholderInstead ? 'bg-neutral text-neutral-content rounded-full w-12' : 'rounded-full w-12'"
 	>
 		<img
 			v-if="props"
-			:src="hasChangedOnce ? `${baseUrl}/api/v1/avatars/${usedId}?t=${timestamp}` : `${baseUrl}/api/v1/avatars/${usedId}`"
+			:src="hasChangedOnce ? `${url}?t=${timestamp}` : `${url}`"
 		/>
 		<span v-else class="select-none">
 			{{ usedName ? usedName.split(' ').map((item) => item.charAt(0)).join('').toUpperCase() : '?' }}

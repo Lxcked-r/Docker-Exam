@@ -62,7 +62,7 @@ const getMessages = async (channelID) => {
         const messages = await Message.findAll({
             include: [{
                 model: User,
-                attributes: ["username"],
+                attributes: ["username", "avatar"],
             
             }],
             where: {

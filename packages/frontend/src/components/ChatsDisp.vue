@@ -1,5 +1,9 @@
 <script setup>
 import AvatarCircle from "@/components/AvatarCircle.vue";
+import { ref, defineProps, defineEmits, onMounted } from "vue";
+
+const loading = ref(true);
+
 
 const props = defineProps({
 	id: { type: String, required: true },
@@ -10,10 +14,14 @@ const props = defineProps({
 
 defineEmits(["checked"]);
 
+onMounted(() => {
+	loading.value = false;
+});
+
 </script>
 
 <template>
-    <div class="card" tabindex="0">
+    <div v-if="!loading" class="card" tabindex="0">
 		<AvatarCircle :id="props.id" :force-fallback="props.avatar === null" :name="props.name" />
 		<div class="content select-none">
 			<div class="title">

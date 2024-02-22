@@ -69,6 +69,7 @@ const getThisChannel = async () => {
 	const channel = await res.json();
 	channelName.value = channel.name;
 	actualChannel.value = channel;
+
 }
 
 const reload = () => {
@@ -96,10 +97,16 @@ const getUsers = async () => {
 	return users;
 }
 
-const isOp = () => {}
+const isOp = () => {
+	return user.value.id === users.channOP;
+}
 
 const isOwner = () => {
-	return actualChannel.value.ownerID === user.value.id;
+	return actualChannel.value.owner === user.value.id;
+}
+
+const getOwnerId = () => {
+	return actualChannel.value.owner;
 }
 
 </script>
@@ -119,6 +126,8 @@ const isOwner = () => {
 			:userName="user.username"
 			:userID="user.id"
 			:channelUsers="users"
-			:isOwner="isOwner()" />
+			:isOwner="isOwner()"
+			:isOP="isOp()"
+			:ownerID="getOwnerId()" />
 		</div>
 </template>

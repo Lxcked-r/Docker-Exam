@@ -76,9 +76,9 @@ const closeEditorAndSave = () => {
 <style scoped>
 /* Add your custom styles here */
 </style>
-<template v-if="!loading">
+<template>
 		
-		<CustomDialog
+	<CustomDialog v-if="!loading"
 			ref="createDialogRef"
 			confirm-name="Save"
 			cancel-name="Cancel"
@@ -93,7 +93,7 @@ const closeEditorAndSave = () => {
 			<input type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" />
 		</template>
 			
-		</CustomDialog>
+	</CustomDialog>
 
 	<button @click="backToDashBoard" class="btn btn-outline">
 		Back to Dashboard

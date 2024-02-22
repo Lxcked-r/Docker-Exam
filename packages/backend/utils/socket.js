@@ -71,21 +71,23 @@ const serverApp = async (app) => {
 
         // send message in db and to all users in a channel (socket.io room)
         socket.on('message', async (data) => {
-
             data = await decryptData(data);
             if(data === null) {
                 logger.error("Failed to decrypt message", { caller: caller });
                 return;
             }
 
+            let createdAt = new Date();
+            data.createdAt = createdAt;
+
+            console.log(data.createdAt);
+
             let message = await createMessage(data);
             const tempMessage = await getMessageByID(message.id);
             const tempChannel = await getChannelById(data.channelID);
             message.user = tempMessage.User;
-            console.log(message);
             io.to(data.channelID).emit("notification", {message: message, user: tempMessage.User, channel: tempChannel});
             io.to(data.channelID).emit("message", data);
-            //io.to(data.channelID).emit("notification", data);
         });
 
         // send typing notification to all users in a channel (socket.io room)

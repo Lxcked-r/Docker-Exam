@@ -1,15 +1,23 @@
 <script setup>
 import AvatarCircle from './AvatarCircle.vue';
 
-    const props = defineProps({
-        text: String,
-        userID: String,
-        isOwnMessage: Boolean,
-        isLast: Boolean,
-        userName: String,
-        createdAt: String,
-        isFirst: Boolean,
-    });
+
+
+const props = defineProps({
+    text: String,
+    userID: String,
+    isOwnMessage: Boolean,
+    isLast: Boolean,
+    userName: String,
+    createdAt: String,
+    isFirst: Boolean,
+    url: String,
+    avatar: String,
+});
+
+
+
+
 </script>
 
 <template>
@@ -30,7 +38,7 @@ import AvatarCircle from './AvatarCircle.vue';
                 <div v-if="!isOwnMessage" class="chat chat-start">
                     <div class="chat-image avatar">
                         <div class="w-10 rounded-full">
-                            <AvatarCircle v-if="isLast" :id="userID" :force-fallback="true" :name="userName" />
+                            <AvatarCircle v-if="isLast" :id="userID" :force-fallback="true" :name="userName" :url="url" />
                         </div>
                     </div>
                     <span class="chat-bubble">{{ text }}</span>
