@@ -15,9 +15,6 @@ const props = defineProps({
     avatar: String,
 });
 
-
-
-
 </script>
 
 <template>
@@ -38,7 +35,7 @@ const props = defineProps({
                 <div v-if="!isOwnMessage" class="chat chat-start">
                     <div class="chat-image avatar">
                         <div class="w-10 rounded-full">
-                            <AvatarCircle v-if="isLast" :id="userID" :force-fallback="true" :name="userName" :url="url" />
+                            <AvatarCircle v-if="isLast" :id="userID" :force-fallback="true" :name="userName" :url="url" :avatar="avatar" />
                         </div>
                     </div>
                     <span class="chat-bubble">{{ text }}</span>
