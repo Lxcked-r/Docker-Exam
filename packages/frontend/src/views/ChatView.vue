@@ -8,6 +8,7 @@ import Chat from "@/components/Chat.vue";
 import { useLocalUserStore } from "@/stores/localUser";
 import { useSessionStateStore } from "@/stores/sessionState";
 import CustomDialog from "@/components/CustomDialog.vue";
+import crypter from "@/utils/crypter";
 
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
@@ -53,6 +54,7 @@ onMounted(async () => {
 		user.value = localUserStore.user;
 		await getThisChannel();
 		await getMessages();
+		console.log(messages.value);
 		await getUsers();
 		loading.value = false;
 	} else {
@@ -81,7 +83,9 @@ const getMessages = async () => {
 		method: "GET"}
 	);
 
-	messages.value = await res.json();
+	const encryptedMessages = await res.json();
+
+	messages.value = await crypter.decrypt(encryptedMessages);
 }
 
 const getUserFromLocalStore = async () => {

@@ -7,44 +7,10 @@ import { getChannelsRelations } from "../controllers/channelsrelations.mjs";
 
 import CryptoJS from "crypto-js";
 import { getChannelById } from "../controllers/channels.mjs";
+import { decryptData } from "./crypter.js";
 
 const serverApp = async (app) => {
 
-    // Decryption
-    const decryptData = (data) => {
-        const secret = "abcde";
-        try {
-        return JSON.parse(CryptoJS.enc.Utf8.stringify(CryptoJS.AES.decrypt(data,  secret, 
-        {
-            keySize: 128 / 8,
-            iv: secret,
-            mode: CryptoJS.mode.CBC,
-            padding: CryptoJS.pad.Pkcs7
-        })));
-        }
-        catch (err) {
-            console.log(err);
-        }
-    }
-
-    const decryptFile = async (dataURL) => {
-        
-        var byteArr = b64toArray(dataURL);
-        
-        function b64toArray(b64Data){
-        var byteCharacters = atob(b64Data);
-        
-        var byteNumbers = new Array(byteCharacters.length);
-        for (var i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        
-        var byteArray = new Uint8Array(byteNumbers);
-
-        console.log(byteArray);
-        return byteArray;}
-    }
-    
     // create server from app
     const httpServer = createServer(app);
 

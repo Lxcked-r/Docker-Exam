@@ -6,6 +6,8 @@ import Message from "../models/messages.mjs";
 import { db } from "../utils/database.mjs";
 import logger from "../utils/logger.mjs";
 
+import { encrypt } from "../utils/crypter.js";
+
 import User from "../models/user.mjs";
 
 const callerName = "Message";
@@ -70,7 +72,7 @@ const getMessages = async (channelID) => {
             },
         });
 
-        return messages;
+        return JSON.stringify(await encrypt(messages));
     } catch (error) {
         logger.error(error, { caller: callerName });
         return null;
