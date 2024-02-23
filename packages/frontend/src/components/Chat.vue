@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 
 import { useLocalUserStore } from "@/stores/localUser";
 import { useSessionStateStore } from "@/stores/sessionState";
-import { useChannelStore } from "@/stores/channel";
+import { useLocalChannelStore } from "@/stores/channel";
 
 import NotificationManager from "./NotificationManager.vue";
 
@@ -37,7 +37,7 @@ const showDeleteMessageVar = ref(null);
 
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
-const channelStore = useChannelStore();
+const channelStore = useLocalChannelStore();
 
 const socket = inject("socket");
 
@@ -284,7 +284,9 @@ const removeFromChannel = async (userID) => {
 };
 
 onMounted( async() => {
-    channelStore.setChannelID(props.channelID);
+
+    channelStore.init(localUserStore.user.userID);
+    
     let data = {channelID: props.channelID, userID: localUserStore.user.id, userName: localUserStore.user.userName};
     data = await encryptData(data);
     socket.emit("channel", data);
@@ -354,7 +356,8 @@ onMounted( async() => {
             <div class="relative flex items-center space-x-4">
                 <AvatarCircle 
                 :name="channelName"
-                :id="channelID" />
+                :id="channelID"
+                :avatar="channelAvatar" />
                 <div class="flex flex-col leading-tight">
                     <div class="text-2xl mt-1 flex items-center">
                         <span class="text-gray-700 mr-3">{{ channelName }}</span>
@@ -397,7 +400,7 @@ onMounted( async() => {
                 :userID="message.userID"
                 :isFirst="isFirst(message, index)"
                 :createdAt="new Date(message.createdAt).toLocaleString()"
-                :avatar="message.User.avatar"/>
+                :avatar="message.User.avatar? message.User.avatar : null"/>
             </div>
         </div>
         <div ref="someoneIsTyping" class="chat-header">
