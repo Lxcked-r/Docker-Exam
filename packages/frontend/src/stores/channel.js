@@ -2,13 +2,13 @@ import { ref } from "vue";
 import { defineStore } from "pinia";
 import API from "@/utils/apiWrapper";
 
-export const useChannelStore = defineStore("localChannel", () => {
+export const useLocalChannelStore = defineStore("localChannel", () => {
 
     const channels = ref([]);
     const initialized = ref(false);
     const actualChannel = ref(null);
 
-    const init = async () => {
+    const init = async (userID) => {
         // we get the user from the api first before falling back to localStorage
         // if that fails too somehow, we need to throw an error
 
@@ -17,7 +17,7 @@ export const useChannelStore = defineStore("localChannel", () => {
 
         // try the api first
         try {
-            const response = await API.fireServer("/api/v1/channels", {
+            const response = await API.fireServer("/api/v1/channelsRelations?userID=" + userID, {
                 method: "GET",
             });
 
@@ -35,6 +35,8 @@ export const useChannelStore = defineStore("localChannel", () => {
             }
             // copy to live store
             channels.value = response.data.channels;
+
+            localStorage.setItem("localChannels", JSON.stringify(response.data.channels));
 
             actualChannel.value = response.data.channels[0];
         } catch (error) {
