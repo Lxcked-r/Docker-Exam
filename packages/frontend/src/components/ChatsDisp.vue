@@ -22,7 +22,7 @@ onMounted(() => {
 
 <template>
     <div v-if="!loading" class="card" tabindex="0">
-		<AvatarCircle :id="props.id" :force-fallback="props.avatar === null" :name="props.name" />
+		<AvatarCircle :id="props.id" :force-fallback="props.avatar === null" :name="props.name" :avatar="props.avatar"/>
 		<div class="content select-none">
 			<div class="title">
                 {{ props.name }}

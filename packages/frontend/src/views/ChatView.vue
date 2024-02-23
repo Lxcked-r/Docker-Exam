@@ -128,6 +128,7 @@ const getOwnerId = () => {
 			:channelUsers="users"
 			:isOwner="isOwner()"
 			:isOP="isOp()"
-			:ownerID="getOwnerId()" />
+			:ownerID="getOwnerId()"
+			:channelAvatar="actualChannel.avatar" />
 		</div>
 </template>

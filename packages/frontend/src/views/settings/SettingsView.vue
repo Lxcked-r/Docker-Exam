@@ -121,7 +121,7 @@ onMounted(async () => {
 
 		<div class="flex flex-col gap-4 mt-4">
 			<div class="flex gap-4 items-center">
-				<AvatarCircle :id="localUserStore.user.id"/>
+				<AvatarCircle :id="localUserStore.user.id" :avatar="localUserStore.user.avatar"/>
 				<button
 					:class="removingAvatar || localUserStore.user.avatar === null ? 'btn btn-error max-w-32 btn-disabled' : 'btn btn-error max-w-32'"
 					@click="removeAvatar()"
