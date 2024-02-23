@@ -72,6 +72,7 @@ const showUser = ref(false);
 
 const showUserProfile = (user) => {
     actualUser.value = user;
+
     try {
     showUserProfileDialogRef.value.show();
     } catch (e) {
@@ -141,11 +142,11 @@ const clearNotifs = () => {
     socket.emit("clearNotifs", {userID: props.userID});
 };
 
-const setSocketMessage = (userID, text, channelID, userName) => {
+const setSocketMessage = (userID, text, channelID, userName, avatar) => {
     if (text === "") {
         return;
     }
-    const messageData = {userID: userID, text: text, channelID: channelID, User: {username: userName}};
+    const messageData = {userID: userID, text: text, channelID: channelID, User: {username: userName, avatar: avatar}};
 
     const encrypted = encryptData(messageData);
     socket.emit("message", encrypted);
@@ -157,6 +158,7 @@ socket.on("message", (event) => {
         return;
     }
 	const message = event;
+
 	props.channelMessages.push(message);
 
     setTimeout(() => {
@@ -208,10 +210,10 @@ const backToChatsList = () => {
 };
 
 const sendNewMessage = async () => {
-    if(messageInput.value.value === "" || messageInput.value.value.length<3) {
+    if(messageInput.value.value === "") {
         return;
     }
-    setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName);
+    setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName, localUserStore.user.avatar);
 
     messageInput.value.value = ""; // clear the input
 };
@@ -232,7 +234,7 @@ const typing = async (event) => {
     const encrypted = encryptData(data);
     socket.emit("typing", encrypted);
     if (event.code === "Enter" || event.code === "NumpadEnter") {
-        setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName);
+        setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName, localUserStore.user.avatar);
         messageInput.value.value = ""; // clear the input
     }
 };

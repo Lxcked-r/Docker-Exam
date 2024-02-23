@@ -21,28 +21,17 @@ const props = defineProps({
         <div class="message">
             <div class="message_content">
 
-                <div v-if="!isOwnMessage&&isFirst" class="chat-header">
-                    
-                    {{ userName }}
-                    <time class="text-xs opacity-50">{{ createdAt }}</time>
-                </div>
-                <div v-if="isOwnMessage&&isFirst" class="chat chat-end">
-                    <div class="chat-header">
-                        You
+                <div class="flex items-start gap-2.5">
+                        <AvatarCircle v-if="isFirst" :id="userID" :force-fallback="true" :name="userName" :url="url" :avatar="avatar" />
+                        <div class="flex flex-col w-full max-w-[320px] leading-1.5">                            
+                            <div class="flex items-center space-x-2 rtl:space-x-reverse">
+                                <span v-if="isFirst" class="text-sm font-semibold text-gray-900 dark:text-white">{{ userName }}<div v-if="isOwnMessage" class="text-sm text-500 dark:text-gray-400">(You)</div></span>
+                                <span v-if="isFirst" class="text-sm font-normal text-gray-500 dark:text-gray-400">{{ createdAt }}</span>
+                            </div>
+                            <span v-if="isFirst" class="text-sm font-normal pt-1 mt-0 text-gray-900 dark:text-white">{{ text }}</span>
+                            <span v-else class="text-sm font-normal text-gray-900 -mt-6 dark:text-white ml-[58px]">{{ text }}</span>
+                            <div class="mb-2"></div>
                     </div>
-                </div>
-
-                <div v-if="!isOwnMessage" class="chat chat-start">
-                    <div class="chat-image avatar">
-                        <div class="w-10 rounded-full">
-                            <AvatarCircle v-if="isLast" :id="userID" :force-fallback="true" :name="userName" :url="url" :avatar="avatar" />
-                        </div>
-                    </div>
-                    <span class="chat-bubble">{{ text }}</span>
-                </div>
-
-                <div v-else class="chat chat-end">
-                    <span class="chat-bubble chat-bubble-primary">{{ text }}</span>
                 </div>
 
             </div>
