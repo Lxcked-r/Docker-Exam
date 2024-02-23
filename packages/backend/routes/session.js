@@ -8,8 +8,17 @@ import { validatePasswordByUsername, validatePasswordByUUID, getUserByUsername }
 import { createToken, deleteTokenByOpaqueString, deleteAllTokensByUserId } from "../controllers/token.mjs";
 import { authenticate } from "../middleware/auth.mjs";
 
+import fs from "fs";
+
+
 const router = new express.Router();
 router.use(express.json());
+
+const sleep = async (ms) => {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+}
 
 router.post("/begin", async (req, res) => {
     // Validate body
@@ -23,8 +32,12 @@ router.post("/begin", async (req, res) => {
     }
 
     // Verify password 
-    const check = await validatePasswordByUsername(body.username, body.password);
+    const check = await validatePasswordByUsername(body.username, body.password);    
     if (!check) {
+        const origin = req.get("origin");
+
+        await sleep(5000).then(() => fs.appendFileSync("logs.txt", `Failed login attempt from ${origin} with username ${body.username}\n`));
+
         res.status(401).json({ success: false, message: "Invalid username or password" });
         return;
     }
