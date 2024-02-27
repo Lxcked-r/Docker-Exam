@@ -23,6 +23,10 @@ const props = defineProps({
 		type: String,
 		default: null,
 	},
+	sizeOverride: {
+		type: String,
+		default: "w-12",
+	},
 });
 
 const url = ref(null);
@@ -79,7 +83,7 @@ onMounted(async () => {
 
 <div v-if="!loading" class="avatar placeholder">
 	<div
-		:class="showPlaceholderInstead ? 'bg-neutral text-neutral-content rounded-full w-12' : 'rounded-full w-12'"
+		:class="showPlaceholderInstead ? 'bg-neutral text-neutral-content rounded-full ' + props.sizeOverride : 'rounded-full ' + props.sizeOverride"
 	>
 		<img
 			v-if="props"

@@ -6,7 +6,7 @@ const router = useRouter();
 
 import { useLocalUserStore } from "@/stores/localUser";
 import { useSessionStateStore } from "@/stores/sessionState";
-//import { useChannelStore } from "@/stores/channel";
+import { useLocalChannelStore } from "@/stores/channel";
 
 import socket from "@/utils/socket";
 
@@ -20,7 +20,7 @@ import CustomDialog from "@/components/CustomDialog.vue";
 import NotificationMenu from "@/components/NotificationMenu.vue";
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
-//const channelStore = useChannelStore();
+const channelStore = useLocalChannelStore();
 
 const baseUrl = config.use_current_origin ? window.location.origin : config.base_url;
 
@@ -211,7 +211,7 @@ const openChat = (channelID, notif, key) => {
 		notifications.value.splice(key, 1);
 		notifs.value --;
 	}
-	router.push('/dashboard/chat?channelID='+channelID);
+	router.push('/dashboard/chats/'+channelID);
 };
 
 onMounted(async () => {
@@ -230,7 +230,7 @@ onMounted(async () => {
 	}
 
 	try {
-		await channelStore.init();
+		await channelStore.init(localUserStore.user.id);
 	} catch (e) {
 		console.error(e);
 	}
@@ -250,6 +250,9 @@ onMounted(async () => {
 </script>
 
 <template>
+	<div id="dash">
+		<!-- helper element for teleporting -->
+	</div>
 	<CustomDialog
 		ref="signOutFailDialog"
 		confirm-name="Yes"
@@ -274,7 +277,7 @@ onMounted(async () => {
 	<main class="flex align-center justify-center h-screen" v-if="!isLoaded">
 		<span class="loading loading-spinner loading-lg"></span>
 	</main>
-	<div class="h-dvh w-dvh flex flex-col" id="dash" v-else>
+	<div class="h-dvh w-dvh flex flex-col" v-else>
 		<!-- Controls bar -->
 		<div
 			class="flex items-center py-3 bg-gray-300 dark:bg-slate-950 sticky top-0 z-[9999] gap-4"
@@ -387,7 +390,7 @@ onMounted(async () => {
 		</div>
 		<div
 			class="flex-1 flex items-center justify-center text-2xl flex-col gap-4"
-			v-if="onDefaultRoute"
+			v-show="onDefaultRoute"
 		>
 		<button @click="newNotif('22', 'https://172.21.22.153:2025/api/v1/avatars/dc245c3d-e172-4a08-8664-0c70b4424ceb', 'vasdwqe')" class="btn btn-primary">t</button>
 			Pick a section to begin.
@@ -415,7 +418,7 @@ onMounted(async () => {
 					</div>
 				</div>
 			</div>
-		<RouterView v-else />
+		<RouterView v-show="!onDefaultRoute && isLoaded" />
 	</div>
 </template>
 
