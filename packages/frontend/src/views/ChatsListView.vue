@@ -74,9 +74,9 @@ const closeEditorAndSave = () => {
 </script>
 
 <template>
-	<div class="flex">
+	<div class="flex flex-1">
 
-		<div class="flex flex-col gap-4 min-w-60 p-2">
+		<div class="flex flex-col gap-4 min-w-60 p-2 bg-base-200">
 
 			<Teleport to="#dash">
 				<CustomDialog ref="createDialogRef" confirm-name="Save" cancel-name="Cancel" @cancel="createDialogRef.hide()"
