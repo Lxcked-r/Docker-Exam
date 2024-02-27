@@ -250,6 +250,9 @@ onMounted(async () => {
 </script>
 
 <template>
+	<div id="dash">
+		<!-- helper element for teleporting -->
+	</div>
 	<CustomDialog
 		ref="signOutFailDialog"
 		confirm-name="Yes"
@@ -274,7 +277,7 @@ onMounted(async () => {
 	<main class="flex align-center justify-center h-screen" v-if="!isLoaded">
 		<span class="loading loading-spinner loading-lg"></span>
 	</main>
-	<div class="h-dvh w-dvh flex flex-col" id="dash" v-else>
+	<div class="h-dvh w-dvh flex flex-col" v-else>
 		<!-- Controls bar -->
 		<div
 			class="flex items-center py-3 bg-gray-300 dark:bg-slate-950 sticky top-0 z-[9999] gap-4"

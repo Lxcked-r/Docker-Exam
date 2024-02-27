@@ -74,18 +74,19 @@ const closeEditorAndSave = () => {
 </script>
 
 <template>
-	<CustomDialog ref="createDialogRef" confirm-name="Save" cancel-name="Cancel" @cancel="createDialogRef.hide()"
-		@confirm="closeEditorAndSave();">
-		<template #content>
-			<h2>
-				Create a new chat
-			</h2>
-			<input type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" />
-		</template>
-
-	</CustomDialog>
-
 	<div class="flex flex-col gap-4">
+
+		<Teleport to="#dash">
+			<CustomDialog ref="createDialogRef" confirm-name="Save" cancel-name="Cancel" @cancel="createDialogRef.hide()"
+			@confirm="closeEditorAndSave();">
+				<template #content>
+					<h2>
+						Create a new chat
+					</h2>
+					<input type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" />
+				</template>
+			</CustomDialog>
+		</Teleport>
 
 
 		<button @click="backToDashBoard" class="btn btn-outline">
