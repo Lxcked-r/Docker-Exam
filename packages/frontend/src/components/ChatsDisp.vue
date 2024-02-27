@@ -12,7 +12,13 @@ const props = defineProps({
 
 <template>
     <div class="card" tabindex="0">
-		<AvatarCircle :id="props.id" :force-fallback="props.avatar === null" :name="props.name" :avatar="props.avatar"/>
+		<AvatarCircle
+			:id="props.id"
+			:force-fallback="props.avatar === null"
+			:name="props.name"
+			:avatar="props.avatar"
+			size-override="w-10"
+		/>
 		<div class="content select-none">
 			<div class="title">
                 {{ props.name }}
@@ -23,12 +29,11 @@ const props = defineProps({
 
 <style scoped>
 	.card {
-		@apply flex flex-row items-center gap-1 w-full p-4;
+		@apply flex flex-row items-center gap-1 w-full p-2;
 		@apply cursor-pointer;
 		@apply transition-all;
 		@apply bg-base-200;
-		@apply hover:bg-base-300;
-		@apply hover:shadow-lg;
+		@apply hover:bg-base-100;
 		@apply active:scale-100;
 		@apply active:bg-base-200;
 	}
