@@ -27,34 +27,34 @@ const selectedChannel = ref(null);
 const loading = ref(true);
 
 const getChannels = async () => {
-  const response = await API.fireServer('/api/v1/channelsrelations?userID='+localUserStore.user.id, {
-    method: 'GET',
-  });
+	const response = await API.fireServer('/api/v1/channelsrelations?userID=' + localUserStore.user.id, {
+		method: 'GET',
+	});
 
-  if (response.status === 200) {
-    channels.value = await response.json();
-  }
+	if (response.status === 200) {
+		channels.value = await response.json();
+	}
 };
 
 const backToDashBoard = () => {
-  router.push('/dashboard');
+	router.push('/dashboard');
 };
 
 onMounted(async () => {
-  await localUserStore.init();
-  if (localUserStore.kind !== 'api') {
-    router.push('/login');
-    return;
+	await localUserStore.init();
+	if (localUserStore.kind !== 'api') {
+		router.push('/login');
+		return;
 	} else {
-    await getChannels();
-    loading.value = false;	
+		await getChannels();
+		loading.value = false;
 	}
 });
 
 const openChat = (channel) => {
 
 	if (channel.key !== "") {
-		router.push('/dashboard/chat?channelID='+channel.channelID);
+		router.push('/dashboard/chat?channelID=' + channel.channelID);
 	} else {
 
 	}
@@ -74,24 +74,19 @@ const closeEditorAndSave = () => {
 </script>
 
 <template>
-	<CustomDialog 
-			ref="createDialogRef"
-			confirm-name="Save"
-			cancel-name="Cancel"
-			@cancel="createDialogRef.hide()"
-			@confirm="closeEditorAndSave();"
-		>
+	<CustomDialog ref="createDialogRef" confirm-name="Save" cancel-name="Cancel" @cancel="createDialogRef.hide()"
+		@confirm="closeEditorAndSave();">
 		<template #content>
 			<h2>
 				Create a new chat
 			</h2>
 			<input type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" />
 		</template>
-			
+
 	</CustomDialog>
-	
+
 	<div class="flex flex-col gap-4">
-				
+
 
 		<button @click="backToDashBoard" class="btn btn-outline">
 			Back to Dashboard
@@ -116,20 +111,11 @@ const closeEditorAndSave = () => {
 		</div>
 		<ChatsDisp
 			v-for="channel in channels"
-			v-else
-			:key="channel.id"
+			v-else :key="channel.id"
 			:id="channel.Channel.id"
 			:name="channel.Channel.name"
 			:avatar="channel.Channel.avatar"
-
 			@click="selectedChannel = channel; openChat(channel);"
 		/>
-
-		<CustomDialog
-			ref="dialogRef"
-			:is-acknowledgement="true"
-			confirm-name="Reload"
-			@confirm="reload();"
-		/>
-</div>
-  </template>
+	</div>
+</template>
