@@ -211,7 +211,7 @@ const openChat = (channelID, notif, key) => {
 		notifications.value.splice(key, 1);
 		notifs.value --;
 	}
-	router.push('/dashboard/chat?channelID='+channelID);
+	router.push('/dashboard/chats/'+channelID);
 };
 
 onMounted(async () => {
