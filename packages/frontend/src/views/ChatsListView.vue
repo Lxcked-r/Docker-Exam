@@ -54,7 +54,7 @@ onMounted(async () => {
 const openChat = (channel) => {
 
 	if (channel.key !== "") {
-		router.push('/dashboard/chat?channelID=' + channel.channelID);
+		router.push('/dashboard/chats/' + channel.channelID);
 	} else {
 
 	}
@@ -74,49 +74,57 @@ const closeEditorAndSave = () => {
 </script>
 
 <template>
-	<div class="flex flex-col gap-4">
+	<div class="flex">
 
-		<Teleport to="#dash">
-			<CustomDialog ref="createDialogRef" confirm-name="Save" cancel-name="Cancel" @cancel="createDialogRef.hide()"
-			@confirm="closeEditorAndSave();">
-				<template #content>
-					<h2>
-						Create a new chat
-					</h2>
-					<input type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" />
-				</template>
-			</CustomDialog>
-		</Teleport>
+		<div class="flex flex-col gap-4 min-w-60 p-2">
 
+			<Teleport to="#dash">
+				<CustomDialog ref="createDialogRef" confirm-name="Save" cancel-name="Cancel" @cancel="createDialogRef.hide()"
+				@confirm="closeEditorAndSave();">
+					<template #content>
+						<h2>
+							Create a new chat
+						</h2>
+						<input type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" />
+					</template>
+				</CustomDialog>
+			</Teleport>
 
-		<button @click="backToDashBoard" class="btn btn-outline">
-			Back to Dashboard
-		</button>
-		<button @click="createNewChan" class="btn btn-outline btn-primary">
-			Create New Chat
-		</button>
-
-		<h2>
-			Click on a chat to join it.
-		</h2>
-		<div v-if="loading" class="flex flex-col items-center gap-2">
-			<span class="loading loading-spinner"></span>
-			<p>
-				Getting the latest data...
-			</p>
+			
+			<div class="flex p-2">
+				<h2 class="flex-1 text-2xl font-bold">
+					Chatrooms
+				</h2>
+				
+				<button @click="createNewChan" class="btn btn-sm btn-outline btn-primary">
+					<i class="bi bi-plus text-2xl"></i>
+				</button>
+			</div>
+			<div v-if="loading" class="flex flex-col items-center gap-2">
+				<span class="loading loading-spinner"></span>
+				<p>
+					Getting the latest data...
+				</p>
+			</div>
+			<div v-else-if="channels.length === 0">
+				<p>
+					No chats found.
+				</p>
+			</div>
+			<ChatsDisp
+				v-for="channel in channels"
+				v-else :key="channel.id"
+				:id="channel.Channel.id"
+				:name="channel.Channel.name"
+				:avatar="channel.Channel.avatar"
+				@click="selectedChannel = channel; openChat(channel);"
+			/>
 		</div>
-		<div v-else-if="channels.length === 0">
-			<p>
-				No chats found.
-			</p>
+
+		<div class="flex-1">
+			<RouterView
+				v-if="selectedChannel !== null"
+			/>
 		</div>
-		<ChatsDisp
-			v-for="channel in channels"
-			v-else :key="channel.id"
-			:id="channel.Channel.id"
-			:name="channel.Channel.name"
-			:avatar="channel.Channel.avatar"
-			@click="selectedChannel = channel; openChat(channel);"
-		/>
 	</div>
 </template>
