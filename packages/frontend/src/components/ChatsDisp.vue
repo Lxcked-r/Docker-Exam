@@ -1,9 +1,6 @@
 <script setup>
 import AvatarCircle from "@/components/AvatarCircle.vue";
-import { ref, defineProps, defineEmits, onMounted } from "vue";
-
-const loading = ref(true);
-
+import { defineProps } from "vue";
 
 const props = defineProps({
 	id: { type: String, required: true },
@@ -11,17 +8,10 @@ const props = defineProps({
     notifs: { type: Number, required: false, default: 0 },
 	avatar: { type: String, required: false, default: null },
 });
-
-defineEmits(["checked"]);
-
-onMounted(() => {
-	loading.value = false;
-});
-
 </script>
 
 <template>
-    <div v-if="!loading" class="card" tabindex="0">
+    <div class="card" tabindex="0">
 		<AvatarCircle :id="props.id" :force-fallback="props.avatar === null" :name="props.name" :avatar="props.avatar"/>
 		<div class="content select-none">
 			<div class="title">
@@ -39,7 +29,6 @@ onMounted(() => {
 		@apply bg-base-200;
 		@apply hover:bg-base-300;
 		@apply hover:shadow-lg;
-		@apply transform hover:scale-[1.01];
 		@apply active:scale-100;
 		@apply active:bg-base-200;
 	}
