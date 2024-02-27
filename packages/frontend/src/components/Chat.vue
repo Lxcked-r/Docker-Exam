@@ -354,11 +354,8 @@ onMounted( async() => {
     <!-- component -->
     <div v-else class="flex-1 justify-between flex flex-col h-[50rem] overflow-x-scroll no-scrollbar">
 
-        <div class="flex sm:items-center justify-between py-3 border-b-2 border-gray-200">        
-            <button @click="backToChatsList" class="btn btn-outline">
-                Back to Chats list
-            </button>  
-            <div class="relative flex items-center space-x-4">
+        <div class="flex gap-2 sm:items-center justify-between py-3 border-b-2 border-gray-200">        
+            <div class="relative flex flex-1 items-center space-x-4">
                 <AvatarCircle 
                 :name="channelName"
                 :id="channelID"
@@ -367,7 +364,6 @@ onMounted( async() => {
                     <div class="text-2xl mt-1 flex items-center">
                         <span class="text-gray-700 mr-3">{{ channelName }}</span>
                     </div>
-                    <span class="text-lg text-gray-600"></span>
                 </div>
             </div>
             <div class="flex items-center space-x-2">
