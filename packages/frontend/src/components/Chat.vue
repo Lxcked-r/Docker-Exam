@@ -304,45 +304,45 @@ onMounted( async() => {
 <template>
 
     <Teleport to="#dash">
-    
-    <CustomDialog
-    ref="editChannelDialogRef"
-    :is-acknowledgement="true"
-    confirm-name="Save"
-    @confirm="editChannelDialogRef.hide()">
+        
+        <CustomDialog
+        ref="editChannelDialogRef"
+        :is-acknowledgement="true"
+        confirm-name="Save"
+        @confirm="editChannelDialogRef.hide()">
 
-        <template #title>
-            Edit channel
-        </template>
+            <template #title>
+                Edit channel
+            </template>
 
-        <template #content>
-            <input type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" :value="channelName"/>
-            <div class="flex flex-col">
-            <button @click="showUsersList"><i class="bi bi-people-fill"></i></button></div>
-            <div v-if="showUser" class="flex flex-col">
-                <div v-for="userchan in channelUsers" class="flex flex-row">
-                    <AvatarCircle :name="userchan.User.username" :id="userchan.userID" :avatar="userchan.User.avatar"/>
-                    <span>{{userchan.User.username}}<div v-if="userchan.userID!=ownerID&&userchan.id!=user.id">
-                        <button @click="removeFromChannel(userchan.userID)">X</button>
-                    </div></span>
+            <template #content>
+                <input type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" :value="channelName"/>
+                <div class="flex flex-col">
+                <button @click="showUsersList"><i class="bi bi-people-fill"></i></button></div>
+                <div v-if="showUser" class="flex flex-col">
+                    <div v-for="userchan in channelUsers" class="flex flex-row">
+                        <AvatarCircle :name="userchan.User.username" :id="userchan.userID" :avatar="userchan.User.avatar"/>
+                        <span>{{userchan.User.username}}<div v-if="userchan.userID!=ownerID&&userchan.id!=user.id">
+                            <button @click="removeFromChannel(userchan.userID)">X</button>
+                        </div></span>
+                    </div>
                 </div>
-            </div>
+            </template>
+
+        </CustomDialog>
+
+        
+        <CustomDialog 
+        ref="showUserProfileDialogRef"
+        :is-acknowledgement="true"
+        confirm-name="Close"
+        @confirm="showUserProfileDialogRef.hide()">
+        <template #title>
         </template>
-
-    </CustomDialog>
-
-    
-    <CustomDialog 
-    ref="showUserProfileDialogRef"
-    :is-acknowledgement="true"
-    confirm-name="Close"
-    @confirm="showUserProfileDialogRef.hide()">
-    <template #title>
-    </template>
-    <template #content>
-        {{ actualUser?.User?.username }}
-    </template>
-    </CustomDialog>
+        <template #content>
+            {{ actualUser?.User?.username }}
+        </template>
+        </CustomDialog>
     </Teleport>
   
     <div v-if="loading">
@@ -352,9 +352,9 @@ onMounted( async() => {
             </p>
     </div>
     <!-- component -->
-    <div v-else class="flex-1 justify-between flex flex-col h-[50rem] overflow-x-scroll no-scrollbar">
+    <div v-else class="flex-1 justify-between flex flex-col">
 
-        <div class="flex gap-2 sm:items-center justify-between py-3 border-b-2 border-gray-200">        
+        <div class="flex gap-2 sm:items-center justify-between py-3 border-b-2 border-gray-200 px-4">    
             <div class="relative flex flex-1 items-center space-x-4">
                 <AvatarCircle 
                 :name="channelName"
@@ -362,7 +362,7 @@ onMounted( async() => {
                 :avatar="channelAvatar" />
                 <div class="flex flex-col leading-tight">
                     <div class="text-2xl mt-1 flex items-center">
-                        <span class="text-gray-700 mr-3">{{ channelName }}</span>
+                        <span class="text-gray-700 mr-3 dark:text-gray-300">{{ channelName }}</span>
                     </div>
                 </div>
             </div>
@@ -390,7 +390,8 @@ onMounted( async() => {
         </ul>
     </div>
         </div>
-        <div ref="test" id="messages" class="flex flex-col space-y-4 p-3 overflow-y-auto h-full scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch">
+
+        <div ref="test" id="messages" class="inline-flex flex-1 flex-col space-y-4 p-3 max-h-[calc(100vh-195px)] overflow-y-auto">
             <div v-for="(message, index) in channelMessages" >
                 <Message
                 @mouseover="showDeleteMessage(message)"
@@ -404,9 +405,9 @@ onMounted( async() => {
                 :avatar="message.User.avatar? message.User.avatar : null"/>
             </div>
         </div>
-        <div ref="someoneIsTyping" class="chat-header">
+        <div ref="someoneIsTyping" class="chat-header flex">
         </div>
-        <div class="relative flex-col">          
+        <div class="flex flex-col">          
             <div class="relative"> 
                 <input @input="typing($event)" @keypress="typing($event)" ref="messageInput" type="text" placeholder="Write your message!" class="w-full focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-4 bg-gray-200 rounded-md py-3">
                 <div class="absolute right-0 items-center inset-y-0 hidden sm:flex">
