@@ -121,8 +121,7 @@ const getOwnerId = () => {
 					Getting the latest data...
 				</p>
 		</div>
-		<div v-else class="home">
-			<Chat 
+		<Chat v-else
 			:channelName="channelName"
 			:channelMessages="messages"
 			:channelID="channelID"
@@ -132,6 +131,6 @@ const getOwnerId = () => {
 			:isOwner="isOwner()"
 			:isOP="isOp()"
 			:ownerID="getOwnerId()"
-			:channelAvatar="actualChannel.avatar" />
-		</div>
+			:channelAvatar="actualChannel.avatar"
+		/>
 </template>
