@@ -73,18 +73,13 @@ const closeEditorAndSave = () => {
 
 </script>
 
-<style scoped>
-/* Add your custom styles here */
-</style>
 <template>
-		
-	<CustomDialog v-if="!loading"
+	<CustomDialog 
 			ref="createDialogRef"
 			confirm-name="Save"
 			cancel-name="Cancel"
 			@cancel="createDialogRef.hide()"
 			@confirm="closeEditorAndSave();"
-			:confirm-locked="isEditorSaving"
 		>
 		<template #content>
 			<h2>
@@ -94,14 +89,16 @@ const closeEditorAndSave = () => {
 		</template>
 			
 	</CustomDialog>
-
-	<button @click="backToDashBoard" class="btn btn-outline">
-		Back to Dashboard
-	</button>
-	<button @click="createNewChan" class="btn btn-outline btn-primary">
-		Create New Chat
-	</button>
+	
 	<div class="flex flex-col gap-4">
+				
+
+		<button @click="backToDashBoard" class="btn btn-outline">
+			Back to Dashboard
+		</button>
+		<button @click="createNewChan" class="btn btn-outline btn-primary">
+			Create New Chat
+		</button>
 
 		<h2>
 			Click on a chat to join it.
