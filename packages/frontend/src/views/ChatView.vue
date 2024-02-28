@@ -1,7 +1,7 @@
 <script setup>
 import API from "@/utils/apiWrapper";
 import { onMounted, ref, onBeforeMount } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 
 import Chat from "@/components/Chat.vue";
 
@@ -20,6 +20,7 @@ const user = ref({});
 const users = ref([]);
 
 const router = useRouter();
+const route = useRoute();
 
 const messages = ref([]);
 
@@ -29,9 +30,8 @@ const channelID = ref(null);
 const channelName = ref(null);
 
 const actualChannel = ref(null);
-const urlParams = new URLSearchParams(window.location.search);
 
-channelID.value = urlParams.get("channelID");
+channelID.value = route.params.id;
 
 onMounted(async () => {	
 	// Check if the user is logged in, and redirect them to the chat if they are.
@@ -44,7 +44,6 @@ onMounted(async () => {
 			router.push("/login");
 			return;
 		}
-		router.push("/dashboard/chat?channelID="+ urlParams.get("channelID"));
 	} catch (e) {
 		console.error(e);
 		status = false;
@@ -64,7 +63,7 @@ onMounted(async () => {
 });
 
 const getThisChannel = async () => {
-	const res = await API.fireServer("/api/v1/channels?id="+urlParams.get("channelID"), {
+	const res = await API.fireServer("/api/v1/channels?id="+channelID.value, {
 		method: "GET"
 	});
 
@@ -122,8 +121,7 @@ const getOwnerId = () => {
 					Getting the latest data...
 				</p>
 		</div>
-		<div v-else class="home">
-			<Chat 
+		<Chat v-else
 			:channelName="channelName"
 			:channelMessages="messages"
 			:channelID="channelID"
@@ -133,6 +131,6 @@ const getOwnerId = () => {
 			:isOwner="isOwner()"
 			:isOP="isOp()"
 			:ownerID="getOwnerId()"
-			:channelAvatar="actualChannel.avatar" />
-		</div>
+			:channelAvatar="actualChannel.avatar"
+		/>
 </template>
