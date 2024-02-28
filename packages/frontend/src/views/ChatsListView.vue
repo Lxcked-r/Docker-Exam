@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import API from '@/utils/apiWrapper';
 
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 import { useLocalUserStore } from '@/stores/localUser';
 
@@ -20,9 +20,13 @@ const localUserStore = useLocalUserStore();
 
 const router = useRouter();
 
+const route = useRoute();
+
 const channels = ref([]);
 
 const selectedChannel = ref(null);
+
+const chatViewRef = ref(null);
 
 const loading = ref(true);
 
@@ -52,12 +56,7 @@ onMounted(async () => {
 });
 
 const openChat = (channel) => {
-
-	if (channel.key !== "") {
-		router.push('/dashboard/chats/' + channel.channelID);
-	} else {
-
-	}
+	router.replace('/dashboard/chats/' + channel.channelID);
 };
 
 const createNewChan = () => {
@@ -122,9 +121,9 @@ const closeEditorAndSave = () => {
 		</div>
 
 		<div class="flex flex-1">
-			<RouterView
-				v-if="selectedChannel !== null"
-			/>
+			<router-view v-slot="{ Component }">
+  				<component :is="Component" ref="chatViewRef" />
+			</router-view>
 		</div>
 	</div>
 </template>
