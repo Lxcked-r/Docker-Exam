@@ -1,6 +1,6 @@
 <script setup>
 import API from "@/utils/apiWrapper";
-import { onMounted, ref, onBeforeMount } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
 import Chat from "@/components/Chat.vue";
@@ -32,6 +32,13 @@ const channelName = ref(null);
 const actualChannel = ref(null);
 
 channelID.value = route.params.id;
+
+watch(() => route.params.id, async (newVal, oldVal) => {
+	channelID.value = newVal;
+	await getThisChannel();
+	await getMessages();
+	await getUsers();
+});
 
 onMounted(async () => {	
 	// Check if the user is logged in, and redirect them to the chat if they are.

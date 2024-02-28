@@ -114,10 +114,6 @@ const props = defineProps({
 
 user.value.id = props.userID;
 user.value.name = "John Doe";
-    
-const reload = () => {
-    window.location.reload();
-};
 
 const isSameThanActualUser = (message) => {
     return message.userID === props.userID;
@@ -285,10 +281,9 @@ const removeFromChannel = async (userID) => {
 
 };
 
-onMounted( async() => {
-
+const reload = async () => {
     channelStore.init(localUserStore.user.userID);
-    
+
     let data = {channelID: props.channelID, userID: localUserStore.user.id, userName: localUserStore.user.userName};
     data = await encryptData(data);
     socket.emit("channel", data);
@@ -298,7 +293,18 @@ onMounted( async() => {
         scrollToBottom();
     }, 2);
     loading.value = false;
+};
+
+onMounted(
+    async () => {
+        await reload();
+    }
+);
+
+defineExpose({
+    reload,
 });
+
 </script>
 
 <template>
