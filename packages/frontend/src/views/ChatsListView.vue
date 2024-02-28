@@ -121,7 +121,7 @@ const closeEditorAndSave = () => {
 			/>
 		</div>
 
-		<div class="flex-1">
+		<div class="flex flex-1">
 			<RouterView
 				v-if="selectedChannel !== null"
 			/>
