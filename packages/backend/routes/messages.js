@@ -8,6 +8,8 @@ import { createMessage, getMessages } from '../controllers/messages.mjs';
 
 import { authenticate } from "../middleware/auth.mjs";
 
+import { hasAccessToChannel } from '../middleware/access.mjs';
+
 const router = express.Router();
 router.use(express.json());
 
@@ -18,7 +20,7 @@ router.use(express.json());
  * @param {string} userID - The user's id.
  * @returns {Object} The created message.
  */
-router.post('/', authenticate(), async (req, res) => {
+router.post('/', authenticate(), hasAccessToChannel(), async (req, res) => {
     const body = req.body;
     if (!body.text || !body.channelID || !body.userID)
     {
@@ -37,7 +39,7 @@ router.post('/', authenticate(), async (req, res) => {
  * @param {string} channelID - The destination user's id.
  * @returns {Array<Object>} All messages.
  */
-router.get('/', authenticate(), async (req, res) => {
+router.get('/', authenticate(), hasAccessToChannel(), async (req, res) => {
     const messages = await getMessages(req.query.channelID);
     if (!messages) {
         return res.status(400).send('Missing required field');

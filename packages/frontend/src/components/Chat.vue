@@ -400,6 +400,7 @@ defineExpose({
         <div ref="test" id="messages" class="inline-flex flex-1 flex-col space-y-4 p-3 max-h-[calc(100vh-195px)] overflow-y-auto">
             <div v-for="(message, index) in channelMessages" >
                 <Message
+                @showUser="showUserProfile(message)"
                 @mouseover="showDeleteMessage(message)"
                 :text=message.text
                 :isOwnMessage=isSameThanActualUser(message)

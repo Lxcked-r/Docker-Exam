@@ -9,6 +9,7 @@ import { useLocalUserStore } from "@/stores/localUser";
 import { useSessionStateStore } from "@/stores/sessionState";
 import CustomDialog from "@/components/CustomDialog.vue";
 import crypter from "@/utils/crypter";
+import App from "@/App.vue";
 
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
@@ -36,7 +37,9 @@ channelID.value = route.params.id;
 watch(() => route.params.id, async (newVal, oldVal) => {
 	channelID.value = newVal;
 	await getThisChannel();
-	await getMessages();
+	if(!await getMessages()){
+		
+	}
 	await getUsers();
 });
 
@@ -59,8 +62,12 @@ onMounted(async () => {
 	if (status) {
 		user.value = localUserStore.user;
 		await getThisChannel();
-		await getMessages();
-		console.log(messages.value);
+		if (!await getMessages()){
+			dialogRef.value.show();
+			loading.value = false;
+			router.push("/dashboard")
+			return;
+		}
 		await getUsers();
 		loading.value = false;
 	} else {
@@ -89,9 +96,14 @@ const getMessages = async () => {
 		method: "GET"}
 	);
 
+	if(res.status === 403) {
+		return false;
+	}
+
 	const encryptedMessages = await res.json();
 
 	messages.value = await crypter.decrypt(encryptedMessages);
+	return true;
 }
 
 const getUserFromLocalStore = async () => {
@@ -122,6 +134,23 @@ const getOwnerId = () => {
 </script>
 
 <template>
+	<Teleport to="#dash">
+		<CustomDialog
+			ref="dialogRef"
+			confirm-name="Yes"
+			:isAcknowledgement="true"
+			@confirm="dialogRef.hide()"
+		>
+			<template #title>
+				ERROR
+			</template>
+			<template #content>
+				<p>
+					You are not allowed to access this channel.
+				</p>
+			</template>
+		</CustomDialog>
+	</Teleport>
 		<div v-if="loading">
 			<span class="loading loading-spinner"></span>
 				<p>
