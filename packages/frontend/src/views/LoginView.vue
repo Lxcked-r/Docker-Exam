@@ -93,5 +93,8 @@ const login = async () => {
 			Login
 		</button>
 		</div>
+		<div>
+			Dont have an account? <router-link to="/register">Register</router-link>
+		</div>
 	</div>
 </template>
