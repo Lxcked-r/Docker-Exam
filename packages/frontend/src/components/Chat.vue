@@ -225,12 +225,12 @@ const backToChatsList = () => {
 };
 
 const checkScroll = async (event) => {
-    await setTimeout(async () => {
+    /*await setTimeout(async () => {
         if (messagesRef.value.scrollTop === 0) {
             await getTwentyNewMessages(lastPage.value+1);
             lastPage.value++;
         }
-    }, 1000);
+    }, 1000);*/
 };
 
 const sendNewMessage = async () => {
