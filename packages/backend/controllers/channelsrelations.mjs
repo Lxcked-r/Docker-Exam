@@ -43,7 +43,51 @@ const createChannelRelation = async (options) => {
         await transaction.rollback();
         return null;
     }
+}
 
+/**
+ * Create a new channel relation by username and channel id.
+ * @param {Object} options - The channel's information.
+ * @param {string} options.username - The user's username.
+ * @param {string} options.channelID - The channel's id.
+ * @returns {Promise<Object>} The created channel relation.
+ */
+const createChannelRelationByUsername = async (options) => {
+    // Validate the options
+    if (!options.username || !options.channelID) {
+        logger.error("Missing required field", { caller: callerName });
+        return null;
+    }
+
+    const transaction = await db.transaction();
+
+    try {
+        const user = await User.findOne({
+            where: {
+                username: options.username
+            }
+        });
+
+        if (!user) {
+            logger.error("User not found", { caller: callerName });
+            return null;
+        }
+
+        const channelRelation = await ChannelsRelations.create({
+            userID: user.id,
+            channelID: options.channelID,
+        }, { transaction });
+
+        logger.info(`Created channel relation ${channelRelation.id}`, { caller: callerName });
+
+        await transaction.commit();
+
+        return channelRelation;
+    } catch (error) {
+        logger.error(error, { caller: callerName });
+        await transaction.rollback();
+        return null;
+    }
 }
 
 /**
@@ -156,4 +200,5 @@ export {
     deleteChannelRelation,
     getChannelsRelations,
     getChannelsRelationsByChannel,
+    createChannelRelationByUsername
 }

@@ -71,6 +71,10 @@ const lastPage = ref(0);
 
 const editChannelDialogRef = ref(null);
 
+const showAddPersonDialogRef = ref(null);
+
+const addSomeoneInputRef = ref(null);
+
 const showUser = ref(false);
 
 const showUserProfile = (user) => {
@@ -328,6 +332,10 @@ const reload = async () => {
     await refreshAvatarImage();
 };
 
+const showAddPerson = () => {
+    showAddPersonDialogRef.value.show();
+}
+
 const refreshAvatarImage = async () => {
     const htmlImage = document.getElementById(props.channelID);
     if(!htmlImage) {
@@ -341,6 +349,21 @@ const getAvatar = async () => {
         return props.channelAvatar;
     }
     return "/avatar.png";
+};
+
+const addSomeone = async () => {
+    const data = {username: addSomeoneInputRef.value.value, channelID: props.channelID};
+    const res = await API.fireServer("/api/v1/channelsrelations", {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+
+    if(res.status === 200) {
+        await reload();
+        showAddPersonDialogRef.value.hide();
+    }
+    socket.emit("newChan", {userID: localUserStore.user.id, channelID: props.channelID});
+
 };
 
 onBeforeMount(async () => {
@@ -405,6 +428,20 @@ defineExpose({
             {{ actualUser?.User?.username }}
         </template>
         </CustomDialog>
+
+        <CustomDialog
+        ref="showAddPersonDialogRef"
+        :is-acknowledgement="true"
+        confirm-name="Close"
+        @confirm="showAddPersonDialogRef.hide()">
+        <template #title>
+            Add person
+        </template>
+        <template #content>
+            <input ref="addSomeoneInputRef" type="text" placeholder="Username" class="input input-bordered w-full max-w-xs"/>
+            <button @click="addSomeone" class="btn btn-primary">Add</button>
+        </template>
+        </CustomDialog>
     </Teleport>
   
     <div v-if="loading">
@@ -442,6 +479,13 @@ defineExpose({
         </div>
 
         <ul tabindex="0" class="dropdown-content mt-2 z-[1] menu p-2 shadow bg-base-200 rounded-box w-52">
+            <li>    
+                <div class="flex flex-row btn" @click="showAddPerson">
+                    <i class="bi bi-person-fill-add"></i>
+                    Add user
+                </div>
+
+            </li>
             <li v-for="userchan in channelUsers" >
                 <div class="flex flex-row" @click="showUserProfile(userchan)">
                     <AvatarCircle :name="userchan.User.username" :id="userchan.userID" :avatar="userchan.User.avatar"/>

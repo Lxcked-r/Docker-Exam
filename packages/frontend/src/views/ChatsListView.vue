@@ -116,6 +116,13 @@ const saveChan = async () => {
 	}
 };
 
+socket.on("newChan", async (data) => {
+	const decryptedData = await crypter.decrypt(data);
+	if (decryptedData.userID === localUserStore.user.id) {
+		await getChannels();
+	}
+});
+
 
 </script>
 
