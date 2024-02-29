@@ -357,12 +357,13 @@ const addSomeone = async () => {
         method: "POST",
         body: JSON.stringify(data),
     });
-
     if(res.status === 200) {
         await reload();
+        const temp = await res.json();
+        const encryptedData = await crypter.encrypt({userID: temp.userID, channelID: props.channelID});
+        socket.emit("newChan", encryptedData);
         showAddPersonDialogRef.value.hide();
     }
-    socket.emit("newChan", {userID: localUserStore.user.id, channelID: props.channelID});
 
 };
 
