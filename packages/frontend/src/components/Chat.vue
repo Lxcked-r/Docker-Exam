@@ -1,6 +1,6 @@
 <script setup>
 //chat view component
-import { ref, onMounted, inject } from "vue";
+import { ref, onMounted, inject, watch } from "vue";
 import { useRouter } from "vue-router";
 
 import { useLocalUserStore } from "@/stores/localUser";
@@ -22,6 +22,8 @@ import config from "@/../config.json";
 import router from "@/router";
 
 import crypter from "@/utils/crypter";
+
+const channelAvatarRef = ref(null);
 
 const checkAvatars = ref([]);
 
@@ -69,7 +71,6 @@ const editChannelDialogRef = ref(null);
 
 const showUser = ref(false);
 
-
 const showUserProfile = (user) => {
     actualUser.value = user;
 
@@ -110,7 +111,18 @@ const props = defineProps({
     isOwner: Boolean,
     isOP: Boolean,
     ownerID: String,
+    isWatched: {
+        type: Boolean,
+        default: false,
+    },
+    
 });
+
+watch(() => props.channelAvatar, async (newVal, oldVal) => {
+    channelAvatarRef.value.avatar = newVal;
+});
+
+
 
 user.value.id = props.userID;
 user.value.name = "John Doe";
@@ -292,17 +304,40 @@ const reload = async () => {
     setTimeout(() => {
         scrollToBottom();
     }, 2);
-    loading.value = false;
+    await refreshAvatarImage();
 };
 
-onMounted(
-    async () => {
-        await reload();
+const refreshAvatarImage = async () => {
+    const htmlImage = document.getElementById(props.channelID);
+    if(!htmlImage) {
+        return;
     }
+    htmlImage.src = htmlImage.src + "?t=" + new Date().getTime();
+}
+
+const getAvatar = async () => {
+    if (props.channelAvatar) {
+        return props.channelAvatar;
+    }
+    return "/avatar.png";
+};
+
+onMounted(async () => {
+
+    await reload();
+    await getAvatar();
+
+    await refreshAvatarImage();
+
+    loading.value = false;
+    },
+    
 );
 
 defineExpose({
     reload,
+    refreshAvatarImage,
+    onMounted,
 });
 
 </script>
@@ -365,7 +400,10 @@ defineExpose({
                 <AvatarCircle 
                 :name="channelName"
                 :id="channelID"
-                :avatar="channelAvatar" />
+                :avatar="channelAvatar" 
+                :is-chan="true"
+                ref="channelAvatarRef"/>
+                
                 <div class="flex flex-col leading-tight">
                     <div class="text-2xl mt-1 flex items-center">
                         <span class="text-gray-700 mr-3 dark:text-gray-300">{{ channelName }}</span>

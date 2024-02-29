@@ -16,6 +16,8 @@ const sessionStateStore = useSessionStateStore();
 
 const loading = ref(true);
 
+const chatRef = ref(null);
+
 const user = ref({});
 
 const users = ref([]);
@@ -29,6 +31,7 @@ const dialogRef = ref(null);
 
 const channelID = ref(null);
 const channelName = ref(null);
+const channelAvatar = ref(null);
 
 const actualChannel = ref(null);
 
@@ -36,11 +39,35 @@ channelID.value = route.params.id;
 
 watch(() => route.params.id, async (newVal, oldVal) => {
 	channelID.value = newVal;
-	await getThisChannel();
-	if(!await getMessages()){
+	// Check if the user is logged in, and redirect them to the chat if they are.
+	let status = true;
+		try {
+			await localUserStore.init();
+			sessionStateStore.setSignedInState(true);
+			if (localUserStore.kind !== "api") {
+				status = false;
+				router.push("/login");
+				return;
+			}
+		} catch (e) {
+			console.error(e);
+			status = false;
+			router.push("/login");
+		}
+		if (status) {
+			user.value = localUserStore.user;
+			if (!await getMessages()){
+				dialogRef.value.show();
+				loading.value = false;
+				return;
+			}
+			await getThisChannel();
+			await getUsers();
+			loading.value = false;
+		} else {
+			router.push("/login");
+		}
 		
-	}
-	await getUsers();
 });
 
 onMounted(async () => {	
@@ -61,18 +88,18 @@ onMounted(async () => {
 	}
 	if (status) {
 		user.value = localUserStore.user;
-		await getThisChannel();
 		if (!await getMessages()){
 			dialogRef.value.show();
-			loading.value = false;
-			router.push("/dashboard")
 			return;
 		}
+		await getThisChannel();
 		await getUsers();
 		loading.value = false;
 	} else {
 		router.push("/login");
 	}
+	loading.value = false;
+
 
 });
 
@@ -84,7 +111,7 @@ const getThisChannel = async () => {
 	const channel = await res.json();
 	channelName.value = channel.name;
 	actualChannel.value = channel;
-
+	channelAvatar.value = channel.avatar;
 }
 
 const reload = () => {
@@ -139,7 +166,7 @@ const getOwnerId = () => {
 			ref="dialogRef"
 			confirm-name="Yes"
 			:isAcknowledgement="true"
-			@confirm="dialogRef.hide()"
+			@confirm="router.push('/dashboard')"
 		>
 			<template #title>
 				ERROR
@@ -158,6 +185,7 @@ const getOwnerId = () => {
 				</p>
 		</div>
 		<Chat v-else
+			ref="chatRef"
 			:channelName="channelName"
 			:channelMessages="messages"
 			:channelID="channelID"
@@ -167,6 +195,6 @@ const getOwnerId = () => {
 			:isOwner="isOwner()"
 			:isOP="isOp()"
 			:ownerID="getOwnerId()"
-			:channelAvatar="actualChannel.avatar"
+			:channelAvatar="loading? null: channelAvatar"
 		/>
 </template>

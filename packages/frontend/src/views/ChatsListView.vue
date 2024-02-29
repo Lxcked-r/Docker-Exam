@@ -26,9 +26,13 @@ const channels = ref([]);
 
 const selectedChannel = ref(null);
 
+const newChanInput = ref(null);
+
 const chatViewRef = ref(null);
 
 const loading = ref(true);
+
+const allImgs = ref([]);
 
 const getChannels = async () => {
 	const response = await API.fireServer('/api/v1/channelsrelations?userID=' + localUserStore.user.id, {
@@ -38,6 +42,17 @@ const getChannels = async () => {
 	if (response.status === 200) {
 		channels.value = await response.json();
 	}
+};
+
+
+const getAllImagesFromPage = () => {
+	const imgs = document.querySelectorAll('img');
+	const imgSrcs = [];
+	imgs.forEach((img) => {
+		imgSrcs.push(img);
+	});
+	allImgs.value = imgSrcs;
+
 };
 
 const backToDashBoard = () => {
@@ -64,9 +79,41 @@ const createNewChan = () => {
 	createDialogRef.value.show();
 };
 
-const closeEditorAndSave = () => {
-	creating.value = false;
-	createDialogRef.value.hide();
+const saveChan = async () => {
+	if (newChanInput.value.value === '') {
+		return;
+	}
+
+	const response = await API.fireServer('/api/v1/channels', {
+		method: 'POST',
+		body: JSON.stringify({
+			name: newChanInput.value.value,
+			owner: localUserStore.user.id,
+		}),
+	});
+
+	if (response.status === 200) {
+		const newChannel = await response.json();
+		const response2 = await API.fireServer('/api/v1/channelsrelations', {
+			method: 'POST',
+			body: JSON.stringify({
+				userID: localUserStore.user.id,
+				channelID: newChannel.id,
+			}),
+		});
+
+		if (response2.status === 200) {
+			await getChannels();
+			let data = {
+				channelID: newChannel.id,
+				userID: localUserStore.user.id,
+			};
+			const encryptedData = await crypter.encrypt(data);
+			socket.emit("channel", encryptedData);
+			creating.value = false;
+			createDialogRef.value.hide();
+		}
+	}
 };
 
 
@@ -79,12 +126,12 @@ const closeEditorAndSave = () => {
 
 			<Teleport to="#dash">
 				<CustomDialog ref="createDialogRef" confirm-name="Save" cancel-name="Cancel" @cancel="createDialogRef.hide()"
-				@confirm="closeEditorAndSave();">
+					@confirm="saveChan();">
 					<template #content>
 						<h2>
 							Create a new chat
 						</h2>
-						<input type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" />
+						<input ref="newChanInput" type="text" placeholder="Channel Name" class="input input-bordered w-full max-w-xs" />
 					</template>
 				</CustomDialog>
 			</Teleport>

@@ -27,6 +27,10 @@ const props = defineProps({
 		type: String,
 		default: "w-12",
 	},
+	isChan: {
+		type: Boolean,
+		default: false,
+	},
 });
 
 const url = ref(null);
@@ -65,15 +69,26 @@ watch(() => localUserStore.user.avatar, () => {
 	timestamp.value = Date.now();
 });
 
+watch(() => props.avatar, () => {
+	if(props.isChan)
+	{
+		gotAvatar();
+	}
+});
 
-onMounted(async () => {
-	if(props.avatar) {
+const gotAvatar = () => {
+	if(props.avatar && props.avatar.length >0 && props.avatar !== null) {
 		url.value = `${baseUrl}/api/v1/avatars/${props.id}`;
 		loading.value = false;
 	} else {
 		url.value = `${baseUrl}/api/v1/avatars/null`;
 		loading.value = false;
 	}
+};
+
+
+onMounted(async () => {
+	gotAvatar();
 });
 
 
@@ -88,6 +103,7 @@ onMounted(async () => {
 		<img
 			v-if="props"
 			:src="hasChangedOnce ? `${url}?t=${timestamp}` : `${url}`"
+			:class="props.id"
 		/>
 		<span v-else class="select-none">
 			{{ usedName ? usedName.split(' ').map((item) => item.charAt(0)).join('').toUpperCase() : '?' }}
