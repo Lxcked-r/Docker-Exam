@@ -20,10 +20,8 @@ const hasAccessToChannel = () => {
             logger.error("Missing required field", { caller: callerName });
             return res.status(400).json({ error: "Missing required field" });
         }
-        console.log(userID, "userID");
         const channelsRelations = await getChannelsRelations(userID);
 
-        console.log(channelsRelations, "channelsRelations")
         if (channelsRelations === null) {
             logger.error("Failed to get channels relations", { caller: callerName });
             return res.status(500).json({ error: "Failed to get channels relations" });
