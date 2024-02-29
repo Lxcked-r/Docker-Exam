@@ -120,6 +120,7 @@ const props = defineProps({
 
 watch(() => props.channelAvatar, async (newVal, oldVal) => {
     channelAvatarRef.value.avatar = newVal;
+    scrollToBottom();
 });
 
 
