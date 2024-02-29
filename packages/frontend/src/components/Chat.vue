@@ -1,6 +1,6 @@
 <script setup>
 //chat view component
-import { ref, onMounted, inject, watch } from "vue";
+import { ref, onMounted, inject, watch, onBeforeMount } from "vue";
 import { useRouter } from "vue-router";
 
 import { useLocalUserStore } from "@/stores/localUser";
@@ -57,7 +57,7 @@ const message = ref({});
 
 const messageHTML = ref(null);
 
-const test = ref(null);
+const messagesRef = ref(null);
 
 const actualTyper = ref(null);
 
@@ -66,6 +66,8 @@ const someoneIsTyping = ref(null);
 const audioNotif = ref(null);
 
 const notifs = ref(0);
+
+const lastPage = ref(0);
 
 const editChannelDialogRef = ref(null);
 
@@ -218,6 +220,15 @@ const backToChatsList = () => {
     router.push("/dashboard/chats");
 };
 
+const checkScroll = async (event) => {
+    await setTimeout(async () => {
+        if (messagesRef.value.scrollTop === 0) {
+            await getTwentyNewMessages(lastPage.value+1);
+            lastPage.value++;
+        }
+    }, 1000);
+};
+
 const sendNewMessage = async () => {
     if(messageInput.value.value === "") {
         return;
@@ -232,10 +243,11 @@ const updateLastMessage = (message) => {
 };
 
 const scrollToBottom = async () => {
-    if(!test.value) {
+    messagesRef.value.addEventListener("scroll", checkScroll);
+    if(!messagesRef.value) {
         return;
     }
-    test.value.scrollTop = test.value.scrollHeight;
+    messagesRef.value.scrollTop = messagesRef.value.scrollHeight;
 };
 
 const typing = async (event) => {
@@ -277,6 +289,14 @@ const tryAvatar = async (id) => {
 	return false;
 };
 
+
+const getTwentyNewMessages = async (page) => {
+    const res = await API.fireServer("/api/v1/messages?channelID="+props.channelID+"&p="+page, {
+        method: "GET",
+    });
+
+    console.log(await res.json());
+};
 
 
 const getIsOp = () => {
@@ -323,17 +343,17 @@ const getAvatar = async () => {
     return "/avatar.png";
 };
 
-onMounted(async () => {
+onBeforeMount(async () => {
 
     await reload();
     await getAvatar();
-
     await refreshAvatarImage();
-
     loading.value = false;
-    },
-    
-);
+});
+
+onMounted(async () => {
+    reload();
+});
 
 defineExpose({
     reload,
@@ -436,7 +456,7 @@ defineExpose({
     </div>
         </div>
 
-        <div ref="test" id="messages" class="inline-flex flex-1 flex-col space-y-4 p-3 max-h-[calc(100vh-195px)] overflow-y-auto">
+        <div ref="messagesRef" id="messages" class="inline-flex flex-1 flex-col space-y-4 p-3 max-h-[calc(100vh-195px)] overflow-y-auto">
             <div v-for="(message, index) in channelMessages" >
                 <Message
                 @showUser="showUserProfile(message)"
