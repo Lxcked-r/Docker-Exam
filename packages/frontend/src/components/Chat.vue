@@ -33,6 +33,8 @@ const showUserProfileDialogRef = ref(null);
 
 const tt = ref(false);
 
+const friends = ref([]);
+
 const baseUrl = config.use_current_origin ? window.location.origin : config.base_url;
 
 const showDeleteMessageVar = ref(null);
@@ -41,7 +43,11 @@ const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
 const channelStore = useLocalChannelStore();
 
-const socket = inject("socket");
+const msg = ref({});
+
+const socket = inject("socket")
+
+const notify = inject("notify");
 
 const user = ref({});
 
@@ -77,6 +83,10 @@ const addSomeoneInputRef = ref(null);
 
 const showUser = ref(false);
 
+const channelUsers = ref([]);
+
+const notifRef = ref(null);
+
 const showUserProfile = (user) => {
     actualUser.value = user;
 
@@ -101,6 +111,7 @@ const encryptData = (data) => {
 const showDeleteMessage = (message) => {
     showDeleteMessageVar.value = message;
 };
+
 
 const props = defineProps({
     userID: String,
@@ -129,7 +140,9 @@ watch(() => props.channelAvatar, async (newVal, oldVal) => {
     scrollToBottom();
 });
 
-
+socket.on("newUser", (event) => {
+    channelUsers.value = event;
+});
 
 user.value.id = props.userID;
 user.value.name = "John Doe";
@@ -165,14 +178,25 @@ const setSocketMessage = (userID, text, channelID, userName, avatar) => {
 
     const encrypted = encryptData(messageData);
     socket.emit("message", encrypted);
-
 }
 
+const internalNotif = (title, content) => {
+    msg.value = {title: title, body: content};
+    notify(msg.value);
+};
+
 socket.on("message", (event) => {
+    internalNotif("New message", "You have a new message from " + event.User.username);
     if(event.channelID !== props.channelID) {
         return;
     }
 	const message = event;
+
+    if(message.User.username === "Server") {
+        props.channelMessages.push(message);
+        scrollToBottom();
+        return;
+    }
 
 	props.channelMessages.push(message);
 
@@ -190,8 +214,6 @@ socket.on("message", (event) => {
     
 });
 
-socket.on("notif", (event) => {
-});
 
 socket.on("typing", async (event) => {
     if (event.userID === props.userID || event.channelID !== props.channelID) {
@@ -352,6 +374,15 @@ const getAvatar = async () => {
 };
 
 const addSomeone = async () => {
+    if(addSomeoneInputRef.value.value === "") {
+        return;
+    }
+    if(addSomeoneInputRef.value.value === props.userName) {
+        return;
+    }
+    if(channelUsers.value.find((user) => user.User.username === addSomeoneInputRef.value.value)) {
+        return;
+    }
     const data = {username: addSomeoneInputRef.value.value, channelID: props.channelID};
     const res = await API.fireServer("/api/v1/channelsrelations", {
         method: "POST",
@@ -366,8 +397,20 @@ const addSomeone = async () => {
     }
 
 };
+const checkIfFriend = async (userID) => {
+    const res = await API.fireServer("/api/v1/friends/"+userID, {
+        method: "GET",
+    });
+    const data = await res.json();
+    if(data.length > 0) {
+        return true;
+    }
+    return false;
+};
 
 onBeforeMount(async () => {
+
+    channelUsers.value = props.channelUsers;
 
     await reload();
     await getAvatar();
@@ -375,8 +418,8 @@ onBeforeMount(async () => {
     loading.value = false;
 });
 
+
 onMounted(async () => {
-    reload();
 });
 
 defineExpose({
@@ -388,8 +431,9 @@ defineExpose({
 </script>
 
 <template>
-
     <Teleport to="#dash">
+
+        
         
         <CustomDialog
         ref="editChannelDialogRef"
@@ -424,9 +468,13 @@ defineExpose({
         confirm-name="Close"
         @confirm="showUserProfileDialogRef.hide()">
         <template #title>
+                <AvatarCircle :name="actualUser?.User?.username" :id="actualUser?.userID" :avatar="actualUser?.User?.avatar"/><br>
+                {{ actualUser?.User?.username }}
         </template>
-        <template #content>
-            {{ actualUser?.User?.username }}
+        <template #content v-if="!actualUser?.isFriend">
+            <button class="btn btn-outline"><i class="bi bi-person-plus-fill"></i>
+                Send friend request
+            </button>
         </template>
         </CustomDialog>
 

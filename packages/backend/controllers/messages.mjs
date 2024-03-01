@@ -21,11 +21,13 @@ const callerName = "Message";
  * @returns {Promise<Object>} The created message.
  */
 const createMessage = async (options) => {
+    
     // Validate the options
     if (!options.text || !options.userID || !options.channelID) {
         logger.error("Missing required field", { caller: callerName });
         return null;
     }
+    
 
     const transaction = await db.transaction();
 

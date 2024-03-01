@@ -69,6 +69,8 @@ import { updateAvatar } from "./controllers/user.mjs";
 app.use("/api/v1/notifications", notificationsRouter);
 
 
+import friendsRouter from "./routes/friends.js";
+app.use("/api/v1/friends", friendsRouter);
   
 // Default route
 app.get("/", (req, res) => {

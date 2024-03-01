@@ -38,7 +38,7 @@ const connect = async () => {
  */
 const syncModels = async () => {
     try {
-        await db.sync();
+        await db.sync( );
         logger.info("Synced models with the database");
         return true;
     } catch (error) {

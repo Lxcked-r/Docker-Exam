@@ -151,6 +151,10 @@ const getChannelsRelations = async (userID) => {
             {
                 model: Channel,
                 attributes: ["name", "avatar", "id"],
+            },
+            {
+                model: User,
+                attributes: ["username", "avatar", "id"],
             }],
             where: {
                 userID: userID

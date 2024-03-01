@@ -35,6 +35,8 @@ const notifs = ref(0);
 
 const lastNotif = ref(null);
 
+const friends = ref([]);
+
 const onDefaultRoute = computed(() => {
 	return router.currentRoute.value.path === "/dashboard";
 });
@@ -57,6 +59,15 @@ const headerText = computed(() => {
 		return "Home";
 	}
 });
+
+
+const getFriends = async () => {
+    const res = await API.fireServer("/api/v1/friends/user/" + localUserStore.user.id, {
+        method: "GET",
+    });
+    const data = await res.json();
+    friends.value = data;
+};
 
 const signOut = async () => {
 	try {
@@ -241,6 +252,8 @@ onMounted(async () => {
 
 	await getChannels();
 	await emitJoinChannels();
+	await getFriends();
+	console.log(friends.value);
 
 	isLoaded.value = true;
 
@@ -309,12 +322,11 @@ onMounted(async () => {
 							</li>
 						</RouterLink>
 						<RouterLink
-							to="/dashboard/admin"
-							v-if="localUserStore.user.operator"
+							to="/dashboard/friendslist"
 						>
 							<li>
 								<a>
-									Administration
+									Friends list
 								</a>
 							</li>
 						</RouterLink>
@@ -403,11 +415,10 @@ onMounted(async () => {
 					</HomeSquare>
 					<div class="flex flex-col gap-4">
 						<HomeSquare
-							to="/dashboard/admin"
+							to="/dashboard/friendslist"
 							icon="bi-people"
-							text="Administrate"
+							text="Friends List"
 							styles="half-v"
-							v-if="localUserStore.user.operator"
 						/>
 						<HomeSquare
 							to="/dashboard/settings"

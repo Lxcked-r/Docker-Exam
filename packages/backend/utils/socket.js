@@ -3,7 +3,7 @@ import { Server } from "socket.io";
 
 import { createMessage, getMessageByID } from "../controllers/messages.mjs";
 
-import { getChannelsRelations } from "../controllers/channelsrelations.mjs";
+import { getChannelsRelations, getChannelsRelationsByChannel } from "../controllers/channelsrelations.mjs";
 
 import CryptoJS from "crypto-js";
 import { getChannelById } from "../controllers/channels.mjs";
@@ -26,6 +26,28 @@ const serverApp = async (app) => {
     io.on('connection', async socket => {
         console.log("connected");
 
+        socket.on("newChan" , async (data) => {
+            data = await decryptData(data);
+            if(data === null) {
+                logger.error("Failed to decrypt message", { caller: caller });
+                return;
+            }
+            console.log(data.userID + " joined A new channels relations" + data.channelID);
+            const channelsRelations = await getChannelsRelationsByChannel(data.channelID);
+            io.to(data.userID).emit("newChan", "ww");
+
+            const msgData = {text: "[SERVER] : Say hello to " + channelsRelations[channelsRelations.length-1].User.username + ", he is new to this channel", channelID: data.channelID, userID: "server"};
+
+            
+            let message = await createMessage(msgData);
+
+            console.log(message);
+            const temp = await getMessageByID(message.id);
+            io.to(data.channelID).emit("message", temp);
+
+            io.to(data.channelID).emit("newUser", channelsRelations);
+        });
+
         // sync user to channel (socket.io room)
         socket.on('channel', async (data) => {
             data = await decryptData(data);
@@ -33,6 +55,7 @@ const serverApp = async (app) => {
             console.log(data.userID + " joined " + data.channelID);
 
             socket.join(data.channelID);
+            socket.join(data.userID);
         });
 
         // send message in db and to all users in a channel (socket.io room)

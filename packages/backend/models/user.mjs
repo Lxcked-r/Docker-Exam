@@ -28,6 +28,16 @@ const User = db.define('User', {
 		type: DataTypes.STRING,
 		allowNull: true,
 	},
+	allowFriendsNotifs: {
+		type: DataTypes.BOOLEAN,
+		defaultValue: true,
+		allowNull: false,
+	},
+	type: {
+		type: DataTypes.STRING,
+		allowNull: false,
+		defaultValue: "user",
+	},
 });
 
 export default User;
