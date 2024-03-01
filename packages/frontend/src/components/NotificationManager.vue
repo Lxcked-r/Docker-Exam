@@ -18,7 +18,9 @@ const add = async (data) => {
 	dummy.body = data?.body;
 	dummy.icon = data?.icon;
 	dummy.level = data?.level;
-	dummy.timeout = data?.timeout;
+	dummy.timeout = data?.timeout?.length ? data.timeout : dummy.timeout;
+
+	console.log(dummy);
 
 	notifications.value.push(dummy);
 
