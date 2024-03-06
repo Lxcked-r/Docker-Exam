@@ -13,6 +13,7 @@ onMounted(() => {
 	
 	// provide the socket
 	provide("socket", socket);
+	
 });
 </script>
 

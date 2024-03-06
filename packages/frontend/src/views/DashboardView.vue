@@ -6,7 +6,7 @@ const router = useRouter();
 
 import { useLocalUserStore } from "@/stores/localUser";
 import { useSessionStateStore } from "@/stores/sessionState";
-import { useLocalChannelStore } from "@/stores/channel";
+import { useFriendsStore } from "@/stores/friends";
 
 import socket from "@/utils/socket";
 
@@ -20,7 +20,8 @@ import CustomDialog from "@/components/CustomDialog.vue";
 import NotificationMenu from "@/components/NotificationMenu.vue";
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
-const channelStore = useLocalChannelStore();
+
+const friendsStore = useFriendsStore();
 
 const baseUrl = config.use_current_origin ? window.location.origin : config.base_url;
 
@@ -36,12 +37,9 @@ const notifs = ref(0);
 const lastNotif = ref(null);
 
 const friends = ref([]);
-
 const onDefaultRoute = computed(() => {
 	return router.currentRoute.value.path === "/dashboard";
 });
-
-
 
 const headerText = computed(() => {
 	switch (router.currentRoute.value.path) {
@@ -62,7 +60,7 @@ const headerText = computed(() => {
 
 
 const getFriends = async () => {
-    const res = await API.fireServer("/api/v1/friends/user/" + localUserStore.user.id, {
+    const res = await API.fireServer("/api/v1/friends/" + localUserStore.user.id, {
         method: "GET",
     });
     const data = await res.json();
@@ -225,6 +223,15 @@ const openChat = (channelID, notif, key) => {
 	router.push('/dashboard/chats/'+channelID);
 };
 
+const getPendingFriendsRequestsFromSpecificFriendID = (id) => {
+	if(friends.value.length > 0) {
+		if(friends.value.find(friend => friend.id === id).pending && friends.value.find(friend => friend.user.id !== localUserStore.user.id)) {
+			notifs.value ++;
+			//notifications.value.push({message: {text: "UwU", userID: id}, user: {username: "UwU"}});
+		}
+	}
+}
+
 onMounted(async () => {
 
 	// Check if the user is logged in, and redirect them to the dashboard if they are.
@@ -241,7 +248,7 @@ onMounted(async () => {
 	}
 
 	try {
-		await channelStore.init(localUserStore.user.id);
+		await friendsStore.init(localUserStore.user.id);
 	} catch (e) {
 		console.error(e);
 	}
@@ -253,7 +260,10 @@ onMounted(async () => {
 	await getChannels();
 	await emitJoinChannels();
 	await getFriends();
-	console.log(friends.value);
+
+	for ( const friend of friends.value) {
+		getPendingFriendsRequestsFromSpecificFriendID(friend.id);
+	}
 
 	isLoaded.value = true;
 
@@ -322,7 +332,7 @@ onMounted(async () => {
 							</li>
 						</RouterLink>
 						<RouterLink
-							to="/dashboard/friendslist"
+							to="/dashboard/friends"
 						>
 							<li>
 								<a>
@@ -415,7 +425,7 @@ onMounted(async () => {
 					</HomeSquare>
 					<div class="flex flex-col gap-4">
 						<HomeSquare
-							to="/dashboard/friendslist"
+							to="/dashboard/friends"
 							icon="bi-people"
 							text="Friends List"
 							styles="half-v"

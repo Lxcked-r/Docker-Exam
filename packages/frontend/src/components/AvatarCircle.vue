@@ -31,6 +31,10 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	debug: {
+		type: String,
+		default: null,
+	}
 });
 
 const url = ref(null);
@@ -77,13 +81,20 @@ watch(() => props.avatar, () => {
 });
 
 const gotAvatar = () => {
+	if(props.avatar === null)
+	{
+	}
 	if(props.avatar && props.avatar.length >0 && props.avatar !== null) {
-		url.value = `${baseUrl}/api/v1/avatars/${props.id}`;
-		loading.value = false;
+		url.value = `${baseUrl}/api/v1/avatars/${props.id}?t=${timestamp}`;
 	} else {
 		url.value = `${baseUrl}/api/v1/avatars/null`;
-		loading.value = false;
 	}
+	if(props.debug)
+	{
+		url.value = url.value + "?debug=" + props.debug;
+	}
+		
+	loading.value = false;
 };
 
 

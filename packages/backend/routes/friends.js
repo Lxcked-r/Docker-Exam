@@ -12,7 +12,7 @@ router.use(express.json());
 
 router.post('/', authenticate(), async (req, res) => {
     const options = req.body;
-    const friend = await createFriend(options, req.user.id);
+    const friend = await createFriend(options);
     if (!friend) {
         res.status(400).json({ success: false, message: "Missing required fields" });
         return;
@@ -27,7 +27,6 @@ router.get('/', authenticate(), async (req, res) => {
         res.status(400).json({ success: false, message: "Missing required fields" });
         return;
     }
-    console.log(friends);
         res.send(friends);
     } catch (error) {
         console.log(error);
@@ -35,7 +34,7 @@ router.get('/', authenticate(), async (req, res) => {
 });
 
 router.get('/:id', authenticate(), async (req, res) => {
-    const friend = await getFriend(req.params.id);
+    const friend = await getFriends(req.params.id);
     if (!friend) {
         res.status(400).json({ success: false, message: "Missing required fields" });
         return;

@@ -1,10 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, inject } from 'vue';
 import API from '@/utils/apiWrapper';
 
 import { useRoute, useRouter } from 'vue-router';
 
 import { useLocalUserStore } from '@/stores/localUser';
+import { useFriendsStore } from '@/stores/friends';
 
 import ChatsDisp from '@/components/ChatsDisp.vue';
 import CustomDialog from '@/components/CustomDialog.vue';
@@ -17,12 +18,15 @@ const creating = ref(false);
 const createDialogRef = ref(null);
 
 const localUserStore = useLocalUserStore();
+const friendsStore = useFriendsStore();
 
 const router = useRouter();
 
 const route = useRoute();
 
 const channels = ref([]);
+
+const actualChannel = ref(null);
 
 const selectedChannel = ref(null);
 
@@ -34,6 +38,10 @@ const loading = ref(true);
 
 const allImgs = ref([]);
 
+const userName = ref(null);
+
+const friends = ref([]);
+
 const getChannels = async () => {
 	const response = await API.fireServer('/api/v1/channelsrelations?userID=' + localUserStore.user.id, {
 		method: 'GET',
@@ -44,19 +52,50 @@ const getChannels = async () => {
 	}
 };
 
+const getUserName = (channel) => {
+	if(channel.Channel.type === 'public') {
+		return null;
+	}
+	for (const friend of friends.value) {
+		if (friend.id === channel.Channel.id) {
+			if(friend.user.id === localUserStore.user.id) {
+				return friend.otherUser.username;
+			} else {
+				return friend.user.username;
+			}
+		}
+	}
+}
 
-const getAllImagesFromPage = () => {
-	const imgs = document.querySelectorAll('img');
-	const imgSrcs = [];
-	imgs.forEach((img) => {
-		imgSrcs.push(img);
-	});
-	allImgs.value = imgSrcs;
-
+const getAvatar = (channel) => {
+	if (channel.Channel.type === 'public') {
+		return channel.Channel.avatar;
+	} else{
+	for (const friend of friends.value) {
+		if (friend.id === channel.Channel.id) {
+			if(friend.user.id === localUserStore.user.id) {
+				return friend.otherUser.avatar;
+			} else {
+				return friend.user.avatar;
+			}
+		}
+	}
+}
 };
 
-const backToDashBoard = () => {
-	router.push('/dashboard');
+const getUserId = (channel) => {
+	if (channel.Channel.type === 'public') {
+		return null;
+	}
+	for (const friend of friends.value) {
+		if (friend.id === channel.Channel.id) {
+			if(friend.user.id === localUserStore.user.id) {
+				return friend.otherUser.id;
+			} else {
+				return friend.user.id;
+			}
+		}
+	}
 };
 
 onMounted(async () => {
@@ -66,8 +105,13 @@ onMounted(async () => {
 		return;
 	} else {
 		await getChannels();
-		loading.value = false;
 	}
+
+	friendsStore.init(localUserStore.user.id);
+
+	friends.value = friendsStore.friends;
+
+	loading.value = false;
 });
 
 const openChat = (channel) => {
@@ -163,12 +207,17 @@ socket.on("newChan", async (data) => {
 			</div>
 			<ChatsDisp
 				v-for="channel in channels"
-				v-else :key="channel.id"
+				v-else 
+				:key="channel.id"
 				:id="channel.Channel.id"
 				:name="channel.Channel.name"
-				:avatar="channel.Channel.avatar"
+				:avatar="getAvatar(channel)"
+				:type="channel.Channel.type"
+				:userName="getUserName(channel)"
+				:userID="getUserId(channel)"
 				@click="selectedChannel = channel; openChat(channel);"
-			/>
+			>
+			</ChatsDisp>
 		</div>
 
 		<div class="flex flex-1">

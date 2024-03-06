@@ -12,6 +12,18 @@ import User from "../models/user.mjs";
 
 const callerName = "Message";
 
+const paginate = (query, { page, pageSize }) => {
+    const offset = page * pageSize;
+    const limit = pageSize;
+  
+    return {
+      ...query,
+      offset,
+      limit,
+    };
+  };
+  
+
 /**
  * Create a new message.
  * @param {Object} options - The message's information.
@@ -55,7 +67,11 @@ const createMessage = async (options) => {
  * @param {string} channelID - The destination user's id.
  * @returns {Promise<Array<Object>>} All messages.
  */
-const getMessages = async (channelID) => {
+const getMessages = async (channelID, page) => {
+    let offset=null;
+    if(page=1) {
+        offset=0;
+    }
     // Validate the options
     if (!channelID) {
         logger.error("Missing required field", { caller: callerName });
@@ -72,6 +88,9 @@ const getMessages = async (channelID) => {
             where: {
                 channelID,
             },
+            offset: offset===0?offset:page*25,
+            limit: 25,
+            order: [["createdAt", "DESC"]],
         });
 
         return JSON.stringify(await encrypt(messages));

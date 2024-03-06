@@ -2,10 +2,10 @@
 import AvatarCircle from "@/components/AvatarCircle.vue";
 
 const props = defineProps({
-	id: { type: String, required: true },
-	name: { type: String, required: true },
+	id: { type: String, required: false },
+	name: { type: String, required: false },
 	username: { type: String, required: true },
-	operator: { type: Boolean, required: true },
+	operator: { type: Boolean, required: false },
 	avatar: { type: String, required: false },
 });
 
@@ -14,7 +14,7 @@ defineEmits(["checked"]);
 
 <template>
     <div class="card" tabindex="0">
-		<AvatarCircle :id="props.id" :force-fallback="props.avatar === null" :name="props.username" />
+		<AvatarCircle :id="props.id" :force-fallback="props.avatar === null" :name="props.username" :avatar="props.avatar" debug="userDisp" />
 		<div class="content select-none">
 			<div class="title">
 				<p class="text-lg font-bold flex-1">

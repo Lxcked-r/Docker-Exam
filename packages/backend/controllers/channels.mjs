@@ -15,6 +15,8 @@ const callerName = "ChannelController";
  * @param {Object} options - The channel's information.
  * @param {string} options.name - The channel's name.
  * @param {Array<string>} options.users - The users' ids. Default is an empty array.
+ * @param {String} [options.id=randomUUID] - The channel's id. Default is a random UUID.
+ * @param {String} [options.type=public] - The channel's type. Default is public.
  * @returns {Promise<Object>} The created channel.
  */
 const createChannel = async (options) => {
@@ -31,6 +33,8 @@ const createChannel = async (options) => {
             name: options.name,
             key: options.key || "",
             owner: options.owner,
+            id: options.id || "",
+            type: options.type || "public",
         }, { transaction });
 
         logger.info(`Created channel ${channel.id}`, { caller: callerName });

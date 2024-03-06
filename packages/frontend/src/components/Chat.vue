@@ -5,7 +5,7 @@ import { useRouter } from "vue-router";
 
 import { useLocalUserStore } from "@/stores/localUser";
 import { useSessionStateStore } from "@/stores/sessionState";
-import { useLocalChannelStore } from "@/stores/channel";
+import { useFriendsStore } from "@/stores/friends";
 
 import NotificationManager from "./NotificationManager.vue";
 
@@ -41,7 +41,7 @@ const showDeleteMessageVar = ref(null);
 
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
-const channelStore = useLocalChannelStore();
+const friendsStore = useFriendsStore();
 
 const msg = ref({});
 
@@ -87,8 +87,19 @@ const channelUsers = ref([]);
 
 const notifRef = ref(null);
 
+const isNewImageUserProfile = ref(null);
+
+watch(() => actualUser, (newVal, oldVal) => {
+    if (newVal) {
+        actualUser.value.User.avatar = newVal.User.avatar + "?t=" + new Date().getTime();
+        isNewImageUserProfile.value = newVal;
+    }
+});
+
 const showUserProfile = (user) => {
     actualUser.value = user;
+
+    actualUser.value.isFriend = isFriend(user.userID);
 
     try {
     showUserProfileDialogRef.value.show();
@@ -128,6 +139,7 @@ const props = defineProps({
     isOwner: Boolean,
     isOP: Boolean,
     ownerID: String,
+    channelType: String,
     isWatched: {
         type: Boolean,
         default: false,
@@ -149,6 +161,13 @@ user.value.name = "John Doe";
 
 const isSameThanActualUser = (message) => {
     return message.userID === props.userID;
+};
+
+const isFriend = (userID) => {
+    if (friendsStore.friends.find((x) => x.user.id === userID) || friendsStore.friends.find((x) => x.otherUser.id === userID) || userID == localUserStore.user.id) {
+        return true;
+    }
+    return false;
 };
 
 const isFirst = (message, key) => {
@@ -255,6 +274,20 @@ const checkScroll = async (event) => {
     }, 1000);*/
 };
 
+const sendFriendRequest = async (userID) => {
+    const data = {userID: localUserStore.user.id, friendID: userID};
+    console.log(data)
+    const res = await API.fireServer("/api/v1/friends", {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+
+    if(res.status === 200) {
+        friendsStore.friends.push({user: {id: userID}});
+        actualUser.value.isFriend = true;
+    }
+};
+
 const sendNewMessage = async () => {
     if(messageInput.value.value === "") {
         return;
@@ -321,7 +354,6 @@ const getTwentyNewMessages = async (page) => {
         method: "GET",
     });
 
-    console.log(await res.json());
 };
 
 
@@ -341,7 +373,6 @@ const removeFromChannel = async (userID) => {
 };
 
 const reload = async () => {
-    channelStore.init(localUserStore.user.userID);
 
     let data = {channelID: props.channelID, userID: localUserStore.user.id, userName: localUserStore.user.userName};
     data = await encryptData(data);
@@ -397,29 +428,46 @@ const addSomeone = async () => {
     }
 
 };
-const checkIfFriend = async (userID) => {
-    const res = await API.fireServer("/api/v1/friends/"+userID, {
-        method: "GET",
-    });
-    const data = await res.json();
-    if(data.length > 0) {
-        return true;
+
+const convertFriends = (data) => {
+    for (let key in data) {
+        if (data[key].User.id === localUserStore.user.id) {
+            data[key].User = data[key].otherUser;
+        }
     }
-    return false;
+    return data;
+};
+
+
+const reloadImages = async () => {
+    for (let message in channelMessages) {
+        if (message.User.avatar) {
+            message.User.avatar = message.User.avatar + "?t=" + new Date().getTime();
+        }
+    }
+}
+
+const closeFriendDialogRef = () => {
+    editChannelDialogRef.value.hide();
+    actualUser.value = null;
 };
 
 onBeforeMount(async () => {
 
     channelUsers.value = props.channelUsers;
 
+    const dataa = convertFriends(channelUsers.value);
+
     await reload();
     await getAvatar();
     await refreshAvatarImage();
-    loading.value = false;
 });
 
 
 onMounted(async () => {
+    for (let usr of props.channelUsers) {
+    }
+    loading.value = false;
 });
 
 defineExpose({
@@ -431,10 +479,7 @@ defineExpose({
 </script>
 
 <template>
-    <Teleport to="#dash">
-
-        
-        
+    <Teleport to="#dash">        
         <CustomDialog
         ref="editChannelDialogRef"
         :is-acknowledgement="true"
@@ -451,10 +496,12 @@ defineExpose({
                 <button @click="showUsersList"><i class="bi bi-people-fill"></i></button></div>
                 <div v-if="showUser" class="flex flex-col">
                     <div v-for="userchan in channelUsers" class="flex flex-row">
-                        <AvatarCircle :name="userchan.User.username" :id="userchan.userID" :avatar="userchan.User.avatar"/>
-                        <span>{{userchan.User.username}}<div v-if="userchan.userID!=ownerID&&userchan.id!=user.id">
-                            <button @click="removeFromChannel(userchan.userID)">X</button>
-                        </div></span>
+                        <div v-if="userchan.User">
+                            <AvatarCircle :name="userchan.User.username? userchan.User.username : userchan.user.username" :id="userchan.userID" :avatar="userchan.User.avatar"/>
+                            <span>{{userchan.User.username}}<div v-if="userchan.userID!=ownerID&&userchan.id!=user.id">
+                                <button @click="removeFromChannel(userchan.userID)">X</button>
+                            </div></span>
+                        </div>
                     </div>
                 </div>
             </template>
@@ -462,17 +509,18 @@ defineExpose({
         </CustomDialog>
 
         
-        <CustomDialog 
+        <CustomDialog
         ref="showUserProfileDialogRef"
         :is-acknowledgement="true"
         confirm-name="Close"
-        @confirm="showUserProfileDialogRef.hide()">
+        @confirm="closeFriendDialogRef()">
         <template #title>
-                <AvatarCircle :name="actualUser?.User?.username" :id="actualUser?.userID" :avatar="actualUser?.User?.avatar"/><br>
-                {{ actualUser?.User?.username }}
+            <AvatarCircle v-if="actualUser" :name="actualUser?.User.username" :id="actualUser?.userID" :avatar="isNewImageUserProfile? isNewImageUserProfile : actualUser.User.avatar" debug="showUser"/><br>
+            
+            {{ actualUser?.User.username }}
         </template>
-        <template #content v-if="!actualUser?.isFriend">
-            <button class="btn btn-outline"><i class="bi bi-person-plus-fill"></i>
+        <template #content>
+            <button  @click="sendFriendRequest(actualUser?.userID)" v-if="!actualUser?.isFriend" class="btn btn-outline"><i class="bi bi-person-plus-fill"></i>
                 Send friend request
             </button>
         </template>
@@ -504,31 +552,39 @@ defineExpose({
 
         <div class="flex gap-2 sm:items-center justify-between py-3 border-b-2 border-gray-200 px-4">    
             <div class="relative flex flex-1 items-center space-x-4">
-                <AvatarCircle 
+                <AvatarCircle v-if="channelType==='public'"
                 :name="channelName"
                 :id="channelID"
                 :avatar="channelAvatar" 
                 :is-chan="true"
                 ref="channelAvatarRef"/>
+                <AvatarCircle v-if="channelType==='private'"
+                :name="channelName"
+                :id="channelUsers.find((x) => x.userID !== user.id).userID"
+                :avatar="channelUsers.find((x) => x.userID !== user.id).User.avatar"
+                :is-chan="false"
+                ref="channelAvatarRef"/>
+
                 
                 <div class="flex flex-col leading-tight">
                     <div class="text-2xl mt-1 flex items-center">
-                        <span class="text-gray-700 mr-3 dark:text-gray-300">{{ channelName }}</span>
+                        <span v-if="channelType==='public'" class="text-gray-700 mr-3 dark:text-gray-300">{{ channelName }}</span>
+                        <span v-if="channelType==='private'" class="text-gray-700 mr-3 dark:text-gray-300">{{ props.channelUsers.find((x) => x.userID !== user.id).User.username }}</span>
                     </div>
                 </div>
             </div>
-            <div class="flex items-center space-x-2">
+            <div v-if="channelType==='public'" class="flex items-center space-x-2">
                 <button v-if="getIsOp()" type="button" @click="openChannelEdit(channelID)">
                     <i class="bi bi-gear"></i>
                 </button>
             </div>
             <div class="dropdown dropdown-end pr-2">
-        <div tabindex="0" class="">
+        <div v-if="channelType==='public'" tabindex="0" class="">
             <button @click="showUsersList"><i class="bi bi-people-fill"></i></button>
         </div>
 
         <ul tabindex="0" class="dropdown-content mt-2 z-[1] menu p-2 shadow bg-base-200 rounded-box w-52">
-            <li>    
+            <li v-if="channelType==='public'">
                 <div class="flex flex-row btn" @click="showAddPerson">
                     <i class="bi bi-person-fill-add"></i>
                     Add user
@@ -537,11 +593,13 @@ defineExpose({
             </li>
             <li v-for="userchan in channelUsers" >
                 <div class="flex flex-row" @click="showUserProfile(userchan)">
-                    <AvatarCircle :name="userchan.User.username" :id="userchan.userID" :avatar="userchan.User.avatar"/>
-                    <span>{{userchan.User.username}}
-                        <div v-if="userchan.userID!=ownerID&&userchan.id!=user.id">
-                        </div>
-                    </span> 
+                    <div v-if="userchan.User">
+                        <AvatarCircle :id="userchan.userID" :avatar="userchan.User.avatar"/>
+                        <span>{{userchan.User.username}}
+                            <div v-if="userchan.userID!=ownerID&&userchan.id!=user.id">
+                            </div>
+                        </span> 
+                    </div>
                 </div>
             </li>
 

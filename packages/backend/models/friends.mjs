@@ -26,7 +26,7 @@ const Friend = db.define("Friend", {
 
 });
 
-Friend.belongsTo(User, { foreignKey: "userID" });
-Friend.belongsTo(User, { foreignKey: "friendID" });
+Friend.belongsTo(User, { as: "user", foreignKey: "userID" });
+Friend.belongsTo(User, { as: "otherUser", foreignKey: "friendID"});
 
 export default Friend;

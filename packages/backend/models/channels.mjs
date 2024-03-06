@@ -29,6 +29,10 @@ const Channel = db.define("Channel", {
         type: DataTypes.UUID,
         allowNull: false,
     },
+    type : {
+        type: DataTypes.STRING,
+        defaultValue: "public",
+    }
 
 
 });

@@ -37,10 +37,11 @@ router.post('/', authenticate(), hasAccessToChannel(), async (req, res) => {
  * Get all messages between 2 users.
  * @name GET /api/v1/messages
  * @param {string} channelID - The destination user's id.
+ * @param {string} page - The page number.
  * @returns {Array<Object>} All messages.
  */
 router.get('/', authenticate(), hasAccessToChannel(), async (req, res) => {
-    const messages = await getMessages(req.query.channelID);
+    const messages = await getMessages(req.query.channelID, req.query.page);
     if (!messages) {
         return res.status(400).send('Missing required field');
     }

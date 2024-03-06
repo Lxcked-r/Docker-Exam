@@ -202,6 +202,21 @@ const deleteFriend = async (id) => {
 const getFriends = async (id) => {
     let friends = [];
     const friendsFromUserID = await Friend.findAll({
+
+        include : [            
+            {
+                model: User,
+                as: 'user',
+                attributes: ['id', 'username', 'avatar'],
+            },
+            {
+                model: User,
+                as: 'otherUser',
+                attributes: ['id', 'username', 'avatar'],
+            }
+        ],
+        subQuery: true,
+
         where: {
             userID: id
         }
@@ -212,6 +227,19 @@ const getFriends = async (id) => {
     });
 
     const friendsFromFriendID = await Friend.findAll({
+        include : [
+            {
+                model: User,
+                as: 'otherUser',
+                attributes: ["id", 'username', 'avatar'],
+            },
+            {
+                model: User,
+                as: 'user',
+                attributes: ["id", 'username', 'avatar'],
+            }
+        ],
+        subQuery: true,
         where: {
             friendID: id
         }

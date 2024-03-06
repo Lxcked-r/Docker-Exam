@@ -1,7 +1,8 @@
 <script setup>
 import AvatarCircle from './AvatarCircle.vue';
+import { onBeforeMount, onMounted, ref } from 'vue';
 
-
+const loading = ref(false);
 
 const props = defineProps({
     text: String,
@@ -15,10 +16,17 @@ const props = defineProps({
     avatar: String,
 });
 
+onBeforeMount(() => {
+    loading.value = false;
+});
+
 </script>
 
 <template>
-    <div class="flex items-start gap-2.5">
+    <div v-if="loading">
+
+    </div>
+    <div v-else class="flex items-start gap-2.5">
         <AvatarCircle v-if="isFirst" :id="userID" :force-fallback="true" :name="userName" :url="url" :avatar="avatar" @click="$emit('showUser')"/>
         <div class="flex flex-col w-full max-w-[320px] leading-1.5">                            
             <div class="flex items-center space-x-2 rtl:space-x-reverse">

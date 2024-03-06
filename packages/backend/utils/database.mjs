@@ -38,10 +38,11 @@ const connect = async () => {
  */
 const syncModels = async () => {
     try {
-        await db.sync( );
+        await db.sync();
         logger.info("Synced models with the database");
         return true;
     } catch (error) {
+        console.log(error);
         logger.error("Failed to sync models with the database", { error });
         return false;
     }

@@ -150,7 +150,7 @@ const getChannelsRelations = async (userID) => {
             include: [
             {
                 model: Channel,
-                attributes: ["name", "avatar", "id"],
+                attributes: ["name", "avatar", "id", "type"],
             },
             {
                 model: User,

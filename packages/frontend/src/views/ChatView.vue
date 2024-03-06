@@ -35,6 +35,8 @@ const channelAvatar = ref(null);
 
 const actualChannel = ref(null);
 
+const page = 1;
+
 channelID.value = route.params.id;
 
 watch(() => route.params.id, async (newVal, oldVal) => {
@@ -119,7 +121,7 @@ const reload = () => {
 };
 
 const getMessages = async () => {
-	const res = await API.fireServer("/api/v1/messages?channelID="+channelID.value, {
+	const res = await API.fireServer("/api/v1/messages?channelID="+channelID.value+"&page=" + page, {
 		method: "GET"}
 	);
 
@@ -129,7 +131,8 @@ const getMessages = async () => {
 
 	const encryptedMessages = await res.json();
 
-	messages.value = await crypter.decrypt(encryptedMessages);
+	const decryptedMessages = await crypter.decrypt(encryptedMessages);
+	messages.value = decryptedMessages.reverse();
 	return true;
 }
 
@@ -196,5 +199,6 @@ const getOwnerId = () => {
 			:isOP="isOp()"
 			:ownerID="getOwnerId()"
 			:channelAvatar="loading? null: channelAvatar"
+			:channelType="actualChannel.type"
 		/>
 </template>
