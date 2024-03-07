@@ -10,6 +10,8 @@ import { encrypt } from "../utils/crypter.js";
 
 import User from "../models/user.mjs";
 
+import fs from "fs";
+
 const callerName = "Message";
 
 const paginate = (query, { page, pageSize }) => {
@@ -65,11 +67,12 @@ const createMessage = async (options) => {
 /**
  * Get pagination of messages from channel.
  * @param {string} channelID - The destination user's id.
+ * @param {number} page - The page number.
  * @returns {Promise<Array<Object>>} All messages.
  */
 const getMessages = async (channelID, page) => {
     let offset=null;
-    if(page=1) {
+    if(page===1) {
         offset=0;
     }
     // Validate the options
@@ -92,7 +95,6 @@ const getMessages = async (channelID, page) => {
             limit: 25,
             order: [["createdAt", "DESC"]],
         });
-
         return JSON.stringify(await encrypt(messages));
     } catch (error) {
         logger.error(error, { caller: callerName });

@@ -14,7 +14,7 @@ const callerName = "ChannelController";
  * Create a new channel.
  * @param {Object} options - The channel's information.
  * @param {string} options.name - The channel's name.
- * @param {Array<string>} options.users - The users' ids. Default is an empty array.
+ * @param {String} options.owner - The owner's ids. Default is null.
  * @param {String} [options.id=randomUUID] - The channel's id. Default is a random UUID.
  * @param {String} [options.type=public] - The channel's type. Default is public.
  * @returns {Promise<Object>} The created channel.

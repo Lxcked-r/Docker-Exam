@@ -61,6 +61,8 @@ const messageInput = ref(null);
 
 const message = ref({});
 
+const messages = ref([]);
+
 const messageHTML = ref(null);
 
 const messagesRef = ref(null);
@@ -88,6 +90,8 @@ const channelUsers = ref([]);
 const notifRef = ref(null);
 
 const isNewImageUserProfile = ref(null);
+
+const page = ref(2);
 
 watch(() => actualUser, (newVal, oldVal) => {
     if (newVal) {
@@ -148,6 +152,7 @@ const props = defineProps({
 });
 
 watch(() => props.channelAvatar, async (newVal, oldVal) => {
+    page.value = 2;
     channelAvatarRef.value.avatar = newVal;
     scrollToBottom();
 });
@@ -266,12 +271,14 @@ const backToChatsList = () => {
 };
 
 const checkScroll = async (event) => {
-    /*await setTimeout(async () => {
         if (messagesRef.value.scrollTop === 0) {
-            await getTwentyNewMessages(lastPage.value+1);
-            lastPage.value++;
+            await setTimeout(() => {
+                messagesRef.value.scrollTop = 1;
+            }, 1000);
+            await getTwentyNewMessages(page.value);
+            page.value++;
         }
-    }, 1000);*/
+
 };
 
 const sendFriendRequest = async (userID) => {
@@ -349,10 +356,25 @@ const tryAvatar = async (id) => {
 };
 
 
-const getTwentyNewMessages = async (page) => {
-    const res = await API.fireServer("/api/v1/messages?channelID="+props.channelID+"&p="+page, {
+const getTwentyNewMessages = async () => {
+    const res = await API.fireServer("/api/v1/messages?channelID="+props.channelID+"&page="+page.value, {
         method: "GET",
     });
+
+    const encrypted = await res.json();
+
+    const data = await crypter.decrypt(encrypted);
+
+    console.log(data);
+
+    if(data.length === 0) {
+        return;
+    }
+
+    for (let message of data) {
+        messages.value.unshift(message);
+    }
+
 
 };
 
@@ -411,7 +433,8 @@ const addSomeone = async () => {
     if(addSomeoneInputRef.value.value === props.userName) {
         return;
     }
-    if(channelUsers.value.find((user) => user.User.username === addSomeoneInputRef.value.value)) {
+    debugger;
+    if(channelUsers.value.find((user) => user.User?.username === addSomeoneInputRef.value.value)) {
         return;
     }
     const data = {username: addSomeoneInputRef.value.value, channelID: props.channelID};
@@ -438,15 +461,6 @@ const convertFriends = (data) => {
     return data;
 };
 
-
-const reloadImages = async () => {
-    for (let message in channelMessages) {
-        if (message.User.avatar) {
-            message.User.avatar = message.User.avatar + "?t=" + new Date().getTime();
-        }
-    }
-}
-
 const closeFriendDialogRef = () => {
     editChannelDialogRef.value.hide();
     actualUser.value = null;
@@ -467,6 +481,7 @@ onBeforeMount(async () => {
 onMounted(async () => {
     for (let usr of props.channelUsers) {
     }
+    messages.value = props.channelMessages;
     loading.value = false;
 });
 
@@ -619,7 +634,7 @@ defineExpose({
                 :userID="message.userID"
                 :isFirst="isFirst(message, index)"
                 :createdAt="new Date(message.createdAt).toLocaleString()"
-                :avatar="message.User.avatar? message.User.avatar : null"/>
+                :avatar="message.User.avatar? message.User.avatar : message.userID"/>
             </div>
         </div>
         <div ref="someoneIsTyping" class="chat-header flex">

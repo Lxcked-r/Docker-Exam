@@ -27,7 +27,7 @@ onBeforeMount(() => {
 
     </div>
     <div v-else class="flex items-start gap-2.5">
-        <AvatarCircle v-if="isFirst" :id="userID" :force-fallback="true" :name="userName" :url="url" :avatar="avatar" @click="$emit('showUser')"/>
+        <AvatarCircle v-if="isFirst" :id="userID" :force-fallback="true" :name="userName":avatar="avatar" @click="$emit('showUser')"/>
         <div class="flex flex-col w-full max-w-[320px] leading-1.5">                            
             <div class="flex items-center space-x-2 rtl:space-x-reverse">
                 <span v-if="isFirst" class="text-sm font-semibold text-gray-900 dark:text-white">{{ userName }}<div v-if="isOwnMessage" class="text-sm text-500 dark:text-gray-400">(You)</div></span>

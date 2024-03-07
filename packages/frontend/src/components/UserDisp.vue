@@ -7,6 +7,7 @@ const props = defineProps({
 	username: { type: String, required: true },
 	operator: { type: Boolean, required: false },
 	avatar: { type: String, required: false },
+	pending: { type: Boolean, default: false },
 });
 
 defineEmits(["checked"]);
@@ -21,9 +22,6 @@ defineEmits(["checked"]);
 					{{ props.username }} <span class="font-normal text-gray-500">({{ props.username }})</span>
 				</p>
 			</div>
-			<p>
-				{{ props.operator ? "Operator" : "User" }}
-			</p>
 		</div>
     </div>
 </template>

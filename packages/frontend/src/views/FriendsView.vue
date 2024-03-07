@@ -9,6 +9,7 @@ import UserDisp from "@/components/UserDisp.vue";
 import router from "@/router";
 
 import API from "@/utils/apiWrapper";
+import AvatarCircle from "@/components/AvatarCircle.vue";
 
 const loading = ref(true);
 const friends = ref([]);
@@ -33,6 +34,25 @@ const convertFriends = (data) => {
 const friendCheck = (userID) => {
     return friends.value.find((x) => x.id === userID);
 };
+
+const acceptFriend = async (friend) => {
+    const res = await API.fireServer("/api/v1/friends/" + friend.id, {
+        method: "PUT",
+        body: JSON.stringify({
+            pending: false,
+        }),
+    });
+    if (res.status === 200) {
+        await getFriends();
+        convertFriends(friends.value);
+    }
+}
+
+const denyFriend = async (friend) => {
+    const res = await API.fireServer("/api/v1/friends/" + friend.id, {
+        method: "DELETE",
+    });
+}
 
 const createChannelRelation = async (userID, channelID) => {
     const res = await API.fireServer("/api/v1/channelsrelations", {
@@ -112,15 +132,28 @@ onMounted(async () => {
         </div>
 
     
-        <div v-else>
-            <UserDisp v-for="friend in friends"
-            @click="openChatFromFriend(friend, friend.id)"
+        <div v-else v-for="friend in friends" class="flex flex-1">
+            <UserDisp
+            @click=" () => { if(friend.pending===false) {openChatFromFriend(friend, friend.id)}}"
             :id="friend.user.id"
             :key="friend.id" 
             :user="friendCheck(friend.user.id)" 
             :username="friend.user.username"
-            :avatar="friend.user.avatar" >
+            :avatar="friend.user.avatar"
+            :pending="friend.pending" >
             </UserDisp>
+            <div v-if="friend.pending && friend.userID !== localUserStore.user.id" class="inline-flex">
+                <button @click="acceptFriend(friend)" class="btn btn-outline btn-success" style="margin-top: 14px; margin-left: 15px;">
+                    <i class="bi bi-check" style="font-size: 25px;"></i>
+                </button>
+                <button @click="denyFriend(friend)" class="btn btn-outline btn-error" style="margin-top: 14px; margin-left: 15px;">
+                    <i class="bi bi-x-lg" style="font-size: 20px;"></i>
+                </button>
+            </div>
+            <div v-if="friend.pending&&friend.userID === localUserStore.user.id">
+                Pending
+            </div>
+
         </div>
     </div>
 </template>
