@@ -149,7 +149,13 @@ socket.on("notification", async (notif) => {
 	}
 });
 
-
+socket.on("newFriend", async (friend) => {
+	if(friend.id === localUserStore.user.id) {
+		return;
+	} else {
+		getPendingFriendsRequestsFromSpecificFriendID(friend.id);
+	}
+});
 
 const emitJoinChannels = () => {
 	for (const channel of channels.value) {

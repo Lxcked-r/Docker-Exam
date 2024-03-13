@@ -33,7 +33,7 @@ const createChannel = async (options) => {
             name: options.name,
             key: options.key || "",
             owner: options.owner,
-            id: options.id || "",
+            id: options.id || undefined,
             type: options.type || "public",
         }, { transaction });
 

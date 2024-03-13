@@ -38,8 +38,6 @@ export const useFriendsStore = defineStore("friends", () => {
                 apiInitFailed = true;
                 throw new Error("Invalid response format");
             }
-            // copy this to local storage
-            localStorage.setItem("friends", JSON.stringify(response.data));
 
             // copy to live store
             friends.value = response.data;

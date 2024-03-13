@@ -24,6 +24,7 @@ import router from "@/router";
 import crypter from "@/utils/crypter";
 
 const channelAvatarRef = ref(null);
+const channelPrivateAvatarRef = ref(null);
 
 const checkAvatars = ref([]);
 
@@ -93,12 +94,7 @@ const isNewImageUserProfile = ref(null);
 
 const page = ref(2);
 
-watch(() => actualUser, (newVal, oldVal) => {
-    if (newVal) {
-        actualUser.value.User.avatar = newVal.User.avatar + "?t=" + new Date().getTime();
-        isNewImageUserProfile.value = newVal;
-    }
-});
+const lastLoadedMessages = ref([]);
 
 const showUserProfile = (user) => {
     actualUser.value = user;
@@ -151,11 +147,34 @@ const props = defineProps({
     
 });
 
-watch(() => props.channelAvatar, async (newVal, oldVal) => {
+watch(() => props.channelUsers, async (newVal, oldVal) => {
     page.value = 2;
-    channelAvatarRef.value.avatar = newVal;
+    lastLoadedMessages.value = [];
+    const newUsers = convertFriends(newVal);
+    channelUsers.value = newUsers;
     scrollToBottom();
 });
+
+watch(() => props.channelMessages, async (newVal, oldVal) => {
+    messages.value = newVal;
+    scrollToBottom();
+});
+
+const getAvatarFromUsers = (channel) => {
+	if (channel.Channel.type === 'public') {
+		return channel.Channel.avatar;
+	} else{
+		for (const friend of friends.value) {
+			if (friend.id === channel.Channel.id) {
+				if(friend.user.id === localUserStore.user.id) {
+					return friend.otherUser.avatar;
+				} else {
+					return friend.user.avatar;
+				}
+			}
+		}
+}
+};
 
 socket.on("newUser", (event) => {
     channelUsers.value = event;
@@ -210,7 +229,6 @@ const internalNotif = (title, content) => {
 };
 
 socket.on("message", (event) => {
-    internalNotif("New message", "You have a new message from " + event.User.username);
     if(event.channelID !== props.channelID) {
         return;
     }
@@ -233,6 +251,7 @@ socket.on("message", (event) => {
         return;
     } else {
        //audioNotif.value.play();
+        internalNotif("New message", "You have a new message from " + event.User.username);
        notifs.value++;
     }
     
@@ -283,7 +302,6 @@ const checkScroll = async (event) => {
 
 const sendFriendRequest = async (userID) => {
     const data = {userID: localUserStore.user.id, friendID: userID};
-    console.log(data)
     const res = await API.fireServer("/api/v1/friends", {
         method: "POST",
         body: JSON.stringify(data),
@@ -291,6 +309,7 @@ const sendFriendRequest = async (userID) => {
 
     if(res.status === 200) {
         friendsStore.friends.push({user: {id: userID}});
+        socket.emit("newFriend", await crypter.encrypt({userID: localUserStore.user.id, friendID: userID}));
         actualUser.value.isFriend = true;
     }
 };
@@ -357,6 +376,9 @@ const tryAvatar = async (id) => {
 
 
 const getTwentyNewMessages = async () => {
+	if(lastLoadedMessages.value.length<=0 && page.value!==2) {
+		return false;
+	}
     const res = await API.fireServer("/api/v1/messages?channelID="+props.channelID+"&page="+page.value, {
         method: "GET",
     });
@@ -365,15 +387,16 @@ const getTwentyNewMessages = async () => {
 
     const data = await crypter.decrypt(encrypted);
 
-    console.log(data);
+    lastLoadedMessages.value = data;
 
     if(data.length === 0) {
         return;
     }
+    
+    const newMessages = data.reverse();
+    //unshift adds the new messages to the beginning of the array without using a loop
+    messages.value.unshift(...newMessages);
 
-    for (let message of data) {
-        messages.value.unshift(message);
-    }
 
 
 };
@@ -423,7 +446,7 @@ const getAvatar = async () => {
     if (props.channelAvatar) {
         return props.channelAvatar;
     }
-    return "/avatar.png";
+    return null;
 };
 
 const addSomeone = async () => {
@@ -433,7 +456,6 @@ const addSomeone = async () => {
     if(addSomeoneInputRef.value.value === props.userName) {
         return;
     }
-    debugger;
     if(channelUsers.value.find((user) => user.User?.username === addSomeoneInputRef.value.value)) {
         return;
     }
@@ -451,7 +473,11 @@ const addSomeone = async () => {
     }
 
 };
-
+/**
+ * Converts the friends data by replacing the current user with the other user.
+ * @param {Object} data - The friends data to be converted.
+ * @returns {Object} - The converted friends data.
+ */
 const convertFriends = (data) => {
     for (let key in data) {
         if (data[key].User.id === localUserStore.user.id) {
@@ -469,6 +495,8 @@ const closeFriendDialogRef = () => {
 onBeforeMount(async () => {
 
     channelUsers.value = props.channelUsers;
+
+    messages.value = props.channelMessages;
 
     const dataa = convertFriends(channelUsers.value);
 
@@ -520,15 +548,13 @@ defineExpose({
                     </div>
                 </div>
             </template>
-
         </CustomDialog>
 
-        
         <CustomDialog
         ref="showUserProfileDialogRef"
         :is-acknowledgement="true"
         confirm-name="Close"
-        @confirm="closeFriendDialogRef()">
+        @confirm="showUserProfileDialogRef.hide()">
         <template #title>
             <AvatarCircle v-if="actualUser" :name="actualUser?.User.username" :id="actualUser?.userID" :avatar="isNewImageUserProfile? isNewImageUserProfile : actualUser.User.avatar" debug="showUser"/><br>
             
@@ -577,8 +603,8 @@ defineExpose({
                 :name="channelName"
                 :id="channelUsers.find((x) => x.userID !== user.id).userID"
                 :avatar="channelUsers.find((x) => x.userID !== user.id).User.avatar"
-                :is-chan="false"
-                ref="channelAvatarRef"/>
+                :is-chan="true"
+                ref="channelPrivateAvatarRef"/>
 
                 
                 <div class="flex flex-col leading-tight">
@@ -622,8 +648,8 @@ defineExpose({
     </div>
         </div>
 
-        <div ref="messagesRef" id="messages" class="inline-flex flex-1 flex-col space-y-4 p-3 max-h-[calc(100vh-195px)] overflow-y-auto">
-            <div v-for="(message, index) in channelMessages" >
+        <div ref="messagesRef" id="messages" class="inline-flex flex-1 flex-col space-y-4 p-3 max-h-[calc(100vh-195px)] overflow-y-auto overflow-x-hidden">
+            <div v-for="(message, index) in messages" >
                 <Message
                 @showUser="showUserProfile(message)"
                 @mouseover="showDeleteMessage(message)"

@@ -25,7 +25,6 @@ const props = defineProps({
 
 		<AvatarCircle v-else
 			:id="props.userID"
-			:name="props.userName"
 			:avatar="props.avatar"
 			size-override="w-10" />
 

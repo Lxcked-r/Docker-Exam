@@ -4,15 +4,20 @@ import { inject, onBeforeMount, onMounted, ref, watch } from "vue";
 import { useLocalUserStore } from "@/stores/localUser";
 const localUserStore = useLocalUserStore();
 
+import ContextMenu from '@imengyu/vue3-context-menu'
+
 import UserDisp from "@/components/UserDisp.vue";
 
 import router from "@/router";
 
 import API from "@/utils/apiWrapper";
 import AvatarCircle from "@/components/AvatarCircle.vue";
+import CustomDialog from "@/components/CustomDialog.vue";
 
 const loading = ref(true);
 const friends = ref([]);
+const contextMenuDialogRef = ref(null);
+const actualFriend = ref(null);
 
 const getFriends = async () => {
     const res = await API.fireServer("/api/v1/friends/" + localUserStore.user.id, {
@@ -52,6 +57,10 @@ const denyFriend = async (friend) => {
     const res = await API.fireServer("/api/v1/friends/" + friend.id, {
         method: "DELETE",
     });
+    if (res.status === 200) {
+        await getFriends();
+        convertFriends(friends.value);
+    }
 }
 
 const createChannelRelation = async (userID, channelID) => {
@@ -102,6 +111,49 @@ const openChatFromFriend = async (friend, friendRelationID) => {
     });
 };
 
+const deleteFriend = async (friend) => {
+    const res = await API.fireServer("/api/v1/friends/" + friend.id, {
+        method: "DELETE",
+        body: JSON.stringify({userFriendID: friend.userID}),
+    });
+    if (res.status === 200) {
+        await getFriends();
+        convertFriends(friends.value);
+    }
+};
+
+const openContextMenu = (friend, e) => {
+    actualFriend.value = friend;
+
+    console.log(friend.id);
+
+    ContextMenu.showContextMenu({
+    x: e.x,
+    y: e.y,
+    theme: "default dark",
+    items: [
+      { 
+        label: "Open Chat", 
+        onClick: () => {
+          if(friend.pending)
+          {
+            return;
+          }
+        openChatFromFriend(friend, friend.id);
+        }
+      },
+      { 
+        label: "More", 
+        children: [
+          { label: "Delete Friend", onClick: () => deleteFriend(friend)}
+        ]
+      },
+    ]
+    });
+
+    //contextMenuDialogRef.value.show();
+};
+
 onBeforeMount(async () => {
     loading.value = true;
 });
@@ -130,11 +182,11 @@ onMounted(async () => {
                 <p>There are no friends yet.</p>
             </div>
         </div>
-
     
         <div v-else v-for="friend in friends" class="flex flex-1">
             <UserDisp
-            @click=" () => { if(friend.pending===false) {openChatFromFriend(friend, friend.id)}}"
+            @contextmenu.prevent="openContextMenu(friend, $event)"
+            @click="openContextMenu(friend, $event)"
             :id="friend.user.id"
             :key="friend.id" 
             :user="friendCheck(friend.user.id)" 
@@ -156,4 +208,28 @@ onMounted(async () => {
 
         </div>
     </div>
+    <Teleport to="#dash">
+        <CustomDialog
+        ref="contextMenuDialogRef"
+        :is-acknowledgement="true"
+        confirm-name="cancel"
+        @confirm="contextMenuDialogRef.hide()"
+        >   
+            <template #title>
+                <div class="flex items
+                -center">
+                    <AvatarCircle :id="actualFriend?.user?.id" :avatar="actualFriend?.user?.avatar"/>
+                    <h3 class="text-lg font-semibold">{{ actualFriend?.user?.username}}</h3>
+                </div>
+            </template>
+
+            <template #content>
+                <div class="flex flex-col gap-2">
+                    <button @click="openChatFromFriend(actualFriend, actualFriend.id)" class="btn btn-primary">Open Chat</button>
+                    <button @click="deleteFriend(actualFriend)" class="btn btn-error">Delete Friend</button>
+                </div>
+            </template>
+
+        </CustomDialog>
+    </Teleport>
 </template>

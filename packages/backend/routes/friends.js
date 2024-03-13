@@ -5,7 +5,7 @@
 import express from 'express';
 import { createFriend, getFriends, getFriend, getFriendsByUserID, deleteFriend, acceptFriend } from '../controllers/friends.mjs';
 import { createChannel } from '../controllers/channels.mjs';
-import { createChannelRelation } from '../controllers/channelsRelations.mjs';
+import { createChannelRelation, deleteChannelRelation } from '../controllers/channelsRelations.mjs';
 
 import { authenticate } from "../middleware/auth.mjs";
 import logger from '../utils/logger.mjs';
@@ -75,12 +75,27 @@ router.get('/user/:id', authenticate(), async (req, res) => {
 });
 
 router.delete('/:id', authenticate(), async (req, res) => {
+    const friendID = req.params.id;
+    const userID = req.user.id;
+    const userFriendID = req.body.userFriendID;
+
+    if (!friendID || !userID || !userFriendID) {
+        res.status(400).json({ success: false, message: "Missing required fields" });
+        return;
+    }
+
+    console.log("friendID: ", friendID, "userID: ", userID, "userFriendID: ", userFriendID);
+
+    const channelRelation = await deleteChannelRelation(friendID, userFriendID);
+    const channelRelation2 = await deleteChannelRelation(friendID, userID);
     const friend = await deleteFriend(req.params.id);
+    console.log(friend);
+    
     if (!friend) {
         res.status(400).json({ success: false, message: "Missing required fields" });
         return;
     }
-    res.send(friend);
+    res.send("ee");
 });
 
 export default router;

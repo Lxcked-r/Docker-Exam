@@ -1,7 +1,7 @@
 <script setup>
 import { useLocalUserStore } from "@/stores/localUser";
 import { useSessionStateStore } from "@/stores/sessionState";
-import { ref, watch, computed, onMounted } from "vue";
+import { ref, watch, computed, onMounted, onBeforeMount } from "vue";
 import config from "@/../config";
 
 const lastAvatar = ref(null);
@@ -74,10 +74,14 @@ watch(() => localUserStore.user.avatar, () => {
 });
 
 watch(() => props.avatar, () => {
-	if(props.isChan)
-	{
-		gotAvatar();
-	}
+	hasChangedOnce.value = true;
+	gotAvatar();
+});
+
+watch(() => props.debug, () => {
+	hasChangedOnce.value = true;
+	gotAvatar();
+
 });
 
 const gotAvatar = () => {
@@ -85,7 +89,7 @@ const gotAvatar = () => {
 	{
 	}
 	if(props.avatar && props.avatar.length >0 && props.avatar !== null) {
-		url.value = `${baseUrl}/api/v1/avatars/${props.id}?t=${timestamp}`;
+		url.value = `${baseUrl}/api/v1/avatars/${props.id}`;
 	} else {
 		url.value = `${baseUrl}/api/v1/avatars/null`;
 	}
@@ -93,13 +97,14 @@ const gotAvatar = () => {
 	{
 		url.value = url.value + "?debug=" + props.debug;
 	}
-		
 	loading.value = false;
 };
 
+onBeforeMount(async () => {
+	gotAvatar();
+});
 
 onMounted(async () => {
-	gotAvatar();
 });
 
 
@@ -107,18 +112,15 @@ onMounted(async () => {
 
 <template>
 
-<div v-if="!loading" class="avatar placeholder">
+<div class="avatar placeholder">
 	<div
 		:class="showPlaceholderInstead ? 'bg-neutral text-neutral-content rounded-full ' + props.sizeOverride : 'rounded-full ' + props.sizeOverride"
 	>
 		<img
 			v-if="props"
-			:src="hasChangedOnce ? `${url}?t=${timestamp}` : `${url}`"
+			:src="hasChangedOnce ? `${url}` : `${url}`"
 			:class="props.id"
 		/>
-		<span v-else class="select-none">
-			{{ usedName ? usedName.split(' ').map((item) => item.charAt(0)).join('').toUpperCase() : '?' }}
-		</span>
 	</div>
 </div>
 

@@ -26,6 +26,17 @@ const serverApp = async (app) => {
     io.on('connection', async socket => {
         console.log("connected");
 
+        
+        socket.on("newFriend" , async (data) => {
+            data = await decryptData(data);
+            if(data === null) {
+                logger.error("Failed to decrypt message", { caller: caller });
+                return;
+            }
+            const channelsRelations = await getChannelsRelations(data.userID);
+            io.to(data.userID).emit("newFriend", "New friend request");
+        });
+
         socket.on("newChan" , async (data) => {
             data = await decryptData(data);
             if(data === null) {

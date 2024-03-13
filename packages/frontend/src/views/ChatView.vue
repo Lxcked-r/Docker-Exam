@@ -35,6 +35,8 @@ const channelAvatar = ref(null);
 
 const actualChannel = ref(null);
 
+const lastLoadedMessages = ref([]);
+
 const page = 1;
 
 channelID.value = route.params.id;
@@ -65,6 +67,9 @@ watch(() => route.params.id, async (newVal, oldVal) => {
 			}
 			await getThisChannel();
 			await getUsers();
+			channelAvatar.value = actualChannel.value.avatar;
+			channelID.value = route.params.id;
+			chatRef.value.channelAvatar = actualChannel.value.avatar;
 			loading.value = false;
 		} else {
 			router.push("/login");
@@ -96,6 +101,7 @@ onMounted(async () => {
 		}
 		await getThisChannel();
 		await getUsers();
+		channelAvatar.value = actualChannel.value.avatar;
 		loading.value = false;
 	} else {
 		router.push("/login");
@@ -132,6 +138,9 @@ const getMessages = async () => {
 	const encryptedMessages = await res.json();
 
 	const decryptedMessages = await crypter.decrypt(encryptedMessages);
+
+	lastLoadedMessages.value = decryptedMessages.reverse();
+	decryptedMessages.reverse();
 	messages.value = decryptedMessages.reverse();
 	return true;
 }
@@ -198,7 +207,7 @@ const getOwnerId = () => {
 			:isOwner="isOwner()"
 			:isOP="isOp()"
 			:ownerID="getOwnerId()"
-			:channelAvatar="loading? null: channelAvatar"
+			:channelAvatar="channelAvatar"
 			:channelType="actualChannel.type"
 		/>
 </template>

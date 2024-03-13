@@ -72,9 +72,6 @@ const createMessage = async (options) => {
  */
 const getMessages = async (channelID, page) => {
     let offset=null;
-    if(page===1) {
-        offset=0;
-    }
     // Validate the options
     if (!channelID) {
         logger.error("Missing required field", { caller: callerName });
@@ -91,8 +88,8 @@ const getMessages = async (channelID, page) => {
             where: {
                 channelID,
             },
-            offset: offset===0?offset:page*25,
-            limit: 25,
+            offset: page>1?(page-1)*35:0,
+            limit: 35,
             order: [["createdAt", "DESC"]],
         });
         return JSON.stringify(await encrypt(messages));

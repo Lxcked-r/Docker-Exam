@@ -71,15 +71,15 @@ const getAvatar = (channel) => {
 	if (channel.Channel.type === 'public') {
 		return channel.Channel.avatar;
 	} else{
-	for (const friend of friends.value) {
-		if (friend.id === channel.Channel.id) {
-			if(friend.user.id === localUserStore.user.id) {
-				return friend.otherUser.avatar;
-			} else {
-				return friend.user.avatar;
+		for (const friend of friends.value) {
+			if (friend.id === channel.Channel.id) {
+				if(friend.user.id === localUserStore.user.id) {
+					return friend.otherUser.avatar;
+				} else {
+					return friend.user.avatar;
+				}
 			}
 		}
-	}
 }
 };
 
@@ -205,19 +205,51 @@ socket.on("newChan", async (data) => {
 					No chats found.
 				</p>
 			</div>
-			<ChatsDisp
-				v-for="channel in channels"
-				v-else 
-				:key="channel.id"
-				:id="channel.Channel.id"
-				:name="channel.Channel.name"
-				:avatar="getAvatar(channel)"
-				:type="channel.Channel.type"
-				:userName="getUserName(channel)"
-				:userID="getUserId(channel)"
-				@click="selectedChannel = channel; openChat(channel);"
-			>
-			</ChatsDisp>
+			<div v-else class="overflow-y-auto">
+
+				<div class="collapse collapse-arrow bg-base-200" >
+					<input type="radio" name="my-accordion-2" checked="checked" /> 
+					<div class="collapse-title text-xl font-medium">
+						Groups
+					</div>
+					<div class="collapse-content">
+						<div v-for="channel in channels">						
+							<ChatsDisp
+							v-if="channel.Channel.type === 'public'"
+							:key="channel.id"
+							:id="channel.Channel.id"
+							:name="channel.Channel.name"
+							:avatar="channel.Channel.avatar"
+							:type="channel.Channel.type"
+							:userName="getUserName(channel)"
+							:userID="getUserId(channel)"
+							@click="selectedChannel = channel; openChat(channel);"
+						/>
+						</div>
+					</div>
+				</div>
+				<div class="collapse collapse-arrow bg-base-200">
+					<input type="radio" name="my-accordion-2" /> 
+					<div class="collapse-title text-xl font-medium">
+						friends
+					</div>
+					<div class="collapse-content">
+						<div v-for="channel in channels">
+							<ChatsDisp
+							v-if="channel.Channel.type === 'private'"
+							:key="channel.id"
+							:id="channel.Channel.id"
+							:name="channel.Channel.name"
+							:avatar="getAvatar(channel)"
+							:type="channel.Channel.type"
+							:userName="getUserName(channel)"
+							:userID="getUserId(channel)"
+							@click="selectedChannel = channel; openChat(channel);"
+						/>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 
 		<div class="flex flex-1">
