@@ -2,7 +2,9 @@
 import { inject, onBeforeMount, onMounted, ref, watch } from "vue";
 
 import { useLocalUserStore } from "@/stores/localUser";
+import { useFriendsStore } from "@/stores/friends";
 const localUserStore = useLocalUserStore();
+const friendsStore = useFriendsStore();
 
 import ContextMenu from '@imengyu/vue3-context-menu'
 
@@ -97,7 +99,6 @@ const createChannel = async (friend, friendRelationID) => {
 
 const openChatFromFriend = async (friend, friendRelationID) => {
     await checkChannel(friendRelationID).then(async (data) => {
-        console.log(data);
         if (data.length > 0) {
             router.push("/dashboard/chats/" + friendRelationID);
         } else {
@@ -124,8 +125,6 @@ const deleteFriend = async (friend) => {
 
 const openContextMenu = (friend, e) => {
     actualFriend.value = friend;
-
-    console.log(friend.id);
 
     ContextMenu.showContextMenu({
     x: e.x,
@@ -160,7 +159,9 @@ onBeforeMount(async () => {
 
 onMounted(async () => {
 
-    await getFriends();
+    friendsStore.init();
+
+    friends.value = friendsStore.friends;
 
     const convertedFriends = convertFriends(friends.value);
     friends.value = convertedFriends;
@@ -183,7 +184,13 @@ onMounted(async () => {
             </div>
         </div>
     
-        <div v-else v-for="friend in friends" class="flex flex-1">
+        <div v-else>
+            <ul class="menu menu-horizontal bg-base-200 m-2 center">
+                <li><a>all friends</a></li>
+                <li><a>online friends</a></li>
+                <li><a>peding</a></li>
+            </ul>
+        <div v-for="friend in friends" class="flex flex-1 ml-6 mr-6">
             <UserDisp
             @contextmenu.prevent="openContextMenu(friend, $event)"
             @click="openContextMenu(friend, $event)"
@@ -207,6 +214,7 @@ onMounted(async () => {
             </div>
 
         </div>
+    </div>
     </div>
     <Teleport to="#dash">
         <CustomDialog

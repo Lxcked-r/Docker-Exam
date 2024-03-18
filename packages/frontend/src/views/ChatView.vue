@@ -101,6 +101,7 @@ onMounted(async () => {
 		}
 		await getThisChannel();
 		await getUsers();
+		console.log(users.value);
 		channelAvatar.value = actualChannel.value.avatar;
 		loading.value = false;
 	} else {
@@ -127,6 +128,8 @@ const reload = () => {
 };
 
 const getMessages = async () => {
+	let msgs;
+	let secondEncrypt;
 	const res = await API.fireServer("/api/v1/messages?channelID="+channelID.value+"&page=" + page, {
 		method: "GET"}
 	);
@@ -139,23 +142,27 @@ const getMessages = async () => {
 
 	const decryptedMessages = await crypter.decrypt(encryptedMessages);
 
-	lastLoadedMessages.value = decryptedMessages.reverse();
-	decryptedMessages.reverse();
-	messages.value = decryptedMessages.reverse();
+
+	msgs = decryptedMessages;
+
+	lastLoadedMessages.value = msgs.reverse();
+	msgs.reverse();
+	messages.value = msgs.reverse();
 	return true;
 }
 
-const getUserFromLocalStore = async () => {
-	user.value = localUserStore.user;
-}
-
 const getUsers = async () => {
-	const res = await API.fireServer("/api/v1/channelsRelations?channelID=" + channelID.value, {
+	users.value = [];
+	const res = await API.fireServer("/api/v1/channelsRelations?channelID=" + channelID.value + "&test=chatView", {
 		method: "GET"
 	});
+	const tt = await res.clone();
+	const json2 = await tt.json();
 
-	users.value = await res.json();
-	return users;
+	users.value = json2;
+
+	console.log(users.value);
+	return users.value;
 }
 
 const isOp = () => {

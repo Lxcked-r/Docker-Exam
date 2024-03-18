@@ -7,7 +7,7 @@ import { getChannelsRelations, getChannelsRelationsByChannel } from "../controll
 
 import CryptoJS from "crypto-js";
 import { getChannelById } from "../controllers/channels.mjs";
-import { decryptData } from "./crypter.js";
+import { decryptData, encrypt } from "./crypter.js";
 
 const serverApp = async (app) => {
 
@@ -81,8 +81,14 @@ const serverApp = async (app) => {
             data.createdAt = createdAt;
 
             console.log(data.createdAt);
+            
+            let dataV2 = data;
 
-            let message = await createMessage(data);
+            dataV2.text = await encrypt(data.text);
+
+            console.log(dataV2.text)
+
+            let message = await createMessage(dataV2);
             const tempMessage = await getMessageByID(message.id);
             const tempChannel = await getChannelById(data.channelID);
             message.user = tempMessage.User;

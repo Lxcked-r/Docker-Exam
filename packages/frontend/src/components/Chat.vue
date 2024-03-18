@@ -144,15 +144,17 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
-    
 });
 
 watch(() => props.channelUsers, async (newVal, oldVal) => {
+    loading.value = true;
     page.value = 2;
     lastLoadedMessages.value = [];
     const newUsers = convertFriends(newVal);
     channelUsers.value = newUsers;
+    loading.value = false;
     scrollToBottom();
+
 });
 
 watch(() => props.channelMessages, async (newVal, oldVal) => {
@@ -228,11 +230,18 @@ const internalNotif = (title, content) => {
     notify(msg.value);
 };
 
-socket.on("message", (event) => {
+socket.on("message", async (event) => {
     if(event.channelID !== props.channelID) {
         return;
     }
 	const message = event;
+
+    try {
+        
+        message.text = await crypter.decrypt(message.text);
+    } catch {
+
+    }
 
     if(message.User.username === "Server") {
         props.channelMessages.push(message);
@@ -387,6 +396,16 @@ const getTwentyNewMessages = async () => {
 
     const data = await crypter.decrypt(encrypted);
 
+    for (let message of data) {
+        try {
+            let newText = await crypter.decrypt(message.text);
+            if(newText !== null) {
+                message.text = newText;
+            }
+        } catch {
+
+        }
+    }
     lastLoadedMessages.value = data;
 
     if(data.length === 0) {
@@ -498,18 +517,29 @@ onBeforeMount(async () => {
 
     messages.value = props.channelMessages;
 
-    const dataa = convertFriends(channelUsers.value);
 
     await reload();
     await getAvatar();
     await refreshAvatarImage();
 });
 
+const showMessageOptions = (message, e) => {
+    console.log(message);
+};
+
 
 onMounted(async () => {
     for (let usr of props.channelUsers) {
     }
     messages.value = props.channelMessages;
+
+    for (let message of messages.value) {
+        try {
+            message.text = await crypter.decrypt(message.text);
+        } catch {
+
+        }
+    }
     loading.value = false;
 });
 
@@ -599,7 +629,7 @@ defineExpose({
                 :avatar="channelAvatar" 
                 :is-chan="true"
                 ref="channelAvatarRef"/>
-                <AvatarCircle v-if="channelType==='private'"
+                <AvatarCircle v-if="channelType==='private' && channelUsers"
                 :name="channelName"
                 :id="channelUsers.find((x) => x.userID !== user.id).userID"
                 :avatar="channelUsers.find((x) => x.userID !== user.id).User.avatar"
@@ -648,21 +678,23 @@ defineExpose({
     </div>
         </div>
 
-        <div ref="messagesRef" id="messages" class="inline-flex flex-1 flex-col space-y-4 p-3 max-h-[calc(100vh-195px)] overflow-y-auto overflow-x-hidden">
-            <div v-for="(message, index) in messages" >
-                <Message
-                @showUser="showUserProfile(message)"
-                @mouseover="showDeleteMessage(message)"
-                :text=message.text
-                :isOwnMessage=isSameThanActualUser(message)
-                :isLast="!isSameThanNext(message, index)"
-                :userName="message.User.username"
-                :userID="message.userID"
-                :isFirst="isFirst(message, index)"
-                :createdAt="new Date(message.createdAt).toLocaleString()"
-                :avatar="message.User.avatar? message.User.avatar : message.userID"/>
+        <ul role="list" ref="messagesRef" id="messages" class="inline-flex flex-1 flex-col space-y-4 p-3 max-h-[calc(100vh-195px)] overflow-y-auto overflow-x-hidden">
+            <div v-for="(message, index) in messages" >      
+                    <Message
+                    @showUser="showUserProfile(message)"
+                    @showMessageOptions="showMessageOptions(message)"
+                    @mouseover="showDeleteMessage(message)"
+                    :text=message.text
+                    :isOwnMessage=isSameThanActualUser(message)
+                    :isLast="!isSameThanNext(message, index)"
+                    :userName="message.User.username"
+                    :userID="message.userID"
+                    :isFirst="isFirst(message, index)"
+                    :createdAt="new Date(message.createdAt).toLocaleString()"
+                    :id="message.id"
+                  :avatar="message.User.avatar? message.User.avatar : message.userID"/>
             </div>
-        </div>
+        </ul>
         <div ref="someoneIsTyping" class="chat-header flex">
         </div>
         <div class="flex flex-col">          

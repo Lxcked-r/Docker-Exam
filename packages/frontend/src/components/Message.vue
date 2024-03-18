@@ -14,6 +14,7 @@ const props = defineProps({
     isFirst: Boolean,
     url: String,
     avatar: String,
+    id: String,
 });
 
 onBeforeMount(() => {
@@ -25,11 +26,11 @@ onBeforeMount(() => {
 <template>
     <div class="flex items-start gap-2.5">
         <AvatarCircle v-if="isFirst" :id="userID" :force-fallback="true" :name="userName":avatar="avatar" @click="$emit('showUser')"/>
-        <div class="flex flex-col w-full max-w-[320px] leading-1.5 mb-2">
+        <li class="group/item hover:bg-slate-100 flex flex-col w-full max-w-[320px] leading-1.5 mb-2">
                 <span v-if="isFirst" class="text-sm font-semibold text-gray-900 dark:text-white">{{ userName }}<div v-if="isOwnMessage" class="text-sm text-500 dark:text-gray-400">(You)</div></span>
                 <span v-if="isFirst" class="text-sm font-normal text-gray-500 dark:text-gray-400">{{ createdAt }}</span>
-            <span v-if="isFirst" class="text-sm font-normal pt-1 mt-0 text-gray-900 dark:text-white">{{ text }}</span>
-            <span v-else class="text-sm font-normal text-gray-900 -mt-6 dark:text-white ml-[58px]">{{ text }}</span>
-        </div>
+            <span v-if="isFirst" :id="id" class="text-sm font-normal pt-1 mt-0 text-gray-900 dark:text-white" @mouseover="$emit('showMessageOptions')">{{ text }}</span>
+            <span v-else :id="id" class="text-sm font-normal text-gray-900 -mt-6 dark:text-white ml-[58px]" @mouseover="$emit('showMessageOptions')">{{ text }}</span>
+        </li>
     </div>
 </template>

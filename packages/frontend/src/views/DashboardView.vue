@@ -18,6 +18,7 @@ import AvatarCircle from "@/components/AvatarCircle.vue";
 import HomeSquare from "@/components/HomeSquare.vue";
 import CustomDialog from "@/components/CustomDialog.vue";
 import NotificationMenu from "@/components/NotificationMenu.vue";
+import FriendNotif from "@/components/FriendNotif.vue";
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
 
@@ -229,11 +230,19 @@ const openChat = (channelID, notif, key) => {
 	router.push('/dashboard/chats/'+channelID);
 };
 
+const openFriendsList = (notif) => {
+	router.push('/dashboard/friends');
+};
+
 const getPendingFriendsRequestsFromSpecificFriendID = (id) => {
 	if(friends.value.length > 0) {
-		if(friends.value.find(friend => friend.id === id).pending && friends.value.find(friend => friend.user.id !== localUserStore.user.id)) {
-			notifs.value ++;
+		if(friends.value.find(friend => friend.id === id).pending && friends.value.find(friend => friend.user.id !== localUserStore.user.id) !== undefined) {
+			if(friends.value.find(friend => friend.id === id).userID !== localUserStore.user.id) {
+			addNotif({message: {text: "UwU", userID: id}, user: {username: "UwU"}, type: "friend"});
+			}
+		
 			//notifications.value.push({message: {text: "UwU", userID: id}, user: {username: "UwU"}});
+			
 		}
 	}
 }
@@ -373,7 +382,8 @@ onMounted(async () => {
 				<ul  v-if="notifications.length>0" tabindex="0" class="dropdown-content mt-2 z-[1] menu p-2 shadow bg-base-200 rounded-box w-max">
 					<div class="p-2 flex items-center gap-2">
 						<li v-for="notif, key in notifications">
-							<NotificationMenu @click="openChat(notif.message.channelID, notif, key)" :message="notif.message.text" :user="notif.user.username" :channel="notif.channel" :userID="notif.message.userID"/>
+							<NotificationMenu v-if="notif.type!=='friend'" @click="openChat(notif.message.channelID, notif, key)" :message="notif.message.text" :user="notif.user.username" :channel="notif.channel" :userID="notif.message.userID"/>
+							<FriendNotif @click="openFriendsList(notif)" v-else :user="notif.user"/> 
 						</li>
 					</div>
 				</ul>
