@@ -21,12 +21,20 @@ const friends = ref([]);
 const contextMenuDialogRef = ref(null);
 const actualFriend = ref(null);
 
+const isShowedFriendID = ref(false);
+
+const addFriendDialogRef = ref(null);
+
 const getFriends = async () => {
     const res = await API.fireServer("/api/v1/friends/" + localUserStore.user.id, {
         method: "GET",
     });
     const data = await res.json();
     friends.value = data;
+};
+
+const showAddFriend = () => {
+    addFriendDialogRef.value.show();
 };
 
 const convertFriends = (data) => {
@@ -112,6 +120,10 @@ const openChatFromFriend = async (friend, friendRelationID) => {
     });
 };
 
+const changeIsFriendID = () => {
+    isShowedFriendID.value = !isShowedFriendID.value;
+};
+
 const deleteFriend = async (friend) => {
     const res = await API.fireServer("/api/v1/friends/" + friend.id, {
         method: "DELETE",
@@ -189,7 +201,12 @@ onMounted(async () => {
                 <li><a>all friends</a></li>
                 <li><a>online friends</a></li>
                 <li><a>peding</a></li>
+                <li><a>blocked</a></li>
+                <li><a @click="showAddFriend()"><i class="bi bi-person-add"></i>Add Friend</a></li>
             </ul>
+            <div @click="changeIsFriendID()">
+                Your Own Friend ID : {{ isShowedFriendID? localUserStore.user.id + " (press to hide)" : "**************" + " (press to show)"}}  
+            </div>
         <div v-for="friend in friends" class="flex flex-1 ml-6 mr-6">
             <UserDisp
             @contextmenu.prevent="openContextMenu(friend, $event)"
@@ -238,6 +255,24 @@ onMounted(async () => {
                 </div>
             </template>
 
+        </CustomDialog>
+
+        <CustomDialog
+        ref="addFriendDialogRef"
+        :is-acknowledgement="true"
+        confirm-name="cancel"
+        @confirm="addFriendDialogRef.hide()"
+        >   
+            <template #title>
+                <h3 class="text-lg font-semibold">Add Friend</h3>
+            </template>
+
+            <template #content>
+                <div class="flex flex-col gap-2">
+                    <input type="text" class="input input-primary" placeholder="User friend ID"/>
+                    <button class="btn btn-primary">Add</button>
+                </div>
+            </template>
         </CustomDialog>
     </Teleport>
 </template>

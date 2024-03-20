@@ -1,6 +1,6 @@
 <script setup>
 import AvatarCircle from "@/components/AvatarCircle.vue";
-import { defineProps, watch } from "vue";
+import { watch } from "vue";
 
 const props = defineProps({
 	id: { type: String, required: true },

@@ -32,6 +32,7 @@ const dialogRef = ref(null);
 const channelID = ref(null);
 const channelName = ref(null);
 const channelAvatar = ref(null);
+const channelKey = ref(null);
 
 const actualChannel = ref(null);
 
@@ -70,6 +71,9 @@ watch(() => route.params.id, async (newVal, oldVal) => {
 			channelAvatar.value = actualChannel.value.avatar;
 			channelID.value = route.params.id;
 			chatRef.value.channelAvatar = actualChannel.value.avatar;
+			if(actualChannel.value.key) {
+				channelKey.value = actualChannel.value.key;
+			}
 			loading.value = false;
 		} else {
 			router.push("/login");
@@ -80,6 +84,7 @@ watch(() => route.params.id, async (newVal, oldVal) => {
 onMounted(async () => {	
 	// Check if the user is logged in, and redirect them to the chat if they are.
 	let status = true;
+
 	try {
 		await localUserStore.init();
 		sessionStateStore.setSignedInState(true);
@@ -101,7 +106,6 @@ onMounted(async () => {
 		}
 		await getThisChannel();
 		await getUsers();
-		console.log(users.value);
 		channelAvatar.value = actualChannel.value.avatar;
 		loading.value = false;
 	} else {
@@ -121,6 +125,7 @@ const getThisChannel = async () => {
 	channelName.value = channel.name;
 	actualChannel.value = channel;
 	channelAvatar.value = channel.avatar;
+	channelKey.value = channel.key;
 }
 
 const reload = () => {
@@ -142,7 +147,6 @@ const getMessages = async () => {
 
 	const decryptedMessages = await crypter.decrypt(encryptedMessages);
 
-
 	msgs = decryptedMessages;
 
 	lastLoadedMessages.value = msgs.reverse();
@@ -161,7 +165,6 @@ const getUsers = async () => {
 
 	users.value = json2;
 
-	console.log(users.value);
 	return users.value;
 }
 
@@ -204,6 +207,7 @@ const getOwnerId = () => {
 				</p>
 		</div>
 		<Chat v-else
+			class="flex flex-col w-full h-full max-h-full"
 			ref="chatRef"
 			:channelName="channelName"
 			:channelMessages="messages"
@@ -216,5 +220,6 @@ const getOwnerId = () => {
 			:ownerID="getOwnerId()"
 			:channelAvatar="channelAvatar"
 			:channelType="actualChannel.type"
+			:key="channelKey"
 		/>
 </template>

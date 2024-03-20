@@ -17,3 +17,8 @@
         scrollbar-width: none;  /* Firefox */
   }
 }
+
+
+p {
+    word-wrap: break-word;
+}    

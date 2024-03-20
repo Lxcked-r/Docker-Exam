@@ -77,6 +77,10 @@ const serverApp = async (app) => {
                 return;
             }
 
+        /*    if(data.text === "" || data.text === null || data.text.length > 300 || data.text.length < 1) {
+                return;
+            }*/
+
             let createdAt = new Date();
             data.createdAt = createdAt;
 
