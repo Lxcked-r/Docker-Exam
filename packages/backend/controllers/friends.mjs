@@ -170,7 +170,7 @@ const getFriendsByFriendID = async (id) => {
  */
 const deleteFriend = async (id) => {
     // Validate the options
-    console.log(id);
+    
     if (!id) {
         logger.error("Missing required field", { caller: callerName });
         return null;

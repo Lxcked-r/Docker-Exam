@@ -51,8 +51,6 @@ const serverApp = async (app) => {
 
             
             let message = await createMessage(msgData);
-
-            console.log(message);
             const temp = await getMessageByID(message.id);
             io.to(data.channelID).emit("message", temp);
 
@@ -90,8 +88,6 @@ const serverApp = async (app) => {
 
             dataV2.text = await encrypt(data.text);
 
-            console.log(dataV2.text)
-
             let message = await createMessage(dataV2);
             const tempMessage = await getMessageByID(message.id);
             const tempChannel = await getChannelById(data.channelID);
@@ -119,8 +115,6 @@ const serverApp = async (app) => {
                 return;
             }
 
-            console.log(await decryptFile(data.image));
-            console.log("qewq");
             try {
                 await updateAvatar(data.userID, data.path);
             } catch (err) {

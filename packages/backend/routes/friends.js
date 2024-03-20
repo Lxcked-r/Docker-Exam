@@ -84,12 +84,10 @@ router.delete('/:id', authenticate(), async (req, res) => {
         return;
     }
 
-    console.log("friendID: ", friendID, "userID: ", userID, "userFriendID: ", userFriendID);
 
     const channelRelation = await deleteChannelRelation(friendID, userFriendID);
     const channelRelation2 = await deleteChannelRelation(friendID, userID);
     const friend = await deleteFriend(req.params.id);
-    console.log(friend);
     
     if (!friend) {
         res.status(400).json({ success: false, message: "Missing required fields" });

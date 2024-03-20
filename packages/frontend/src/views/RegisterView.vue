@@ -70,7 +70,6 @@ const register = async () => {
         }
         const response = await loginRes.json();
 
-        console.log(response);
         API.setToken(response.token);
         router.push("/dashboard");
         loading.value = false;

@@ -20,7 +20,6 @@ const add = async (data) => {
 	dummy.level = data?.level;
 	dummy.timeout = data?.timeout?.length ? data.timeout : dummy.timeout;
 
-	console.log(dummy);
 
 	notifications.value.push(dummy);
 
