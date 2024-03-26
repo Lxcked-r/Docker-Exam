@@ -25,6 +25,13 @@ const isShowedFriendID = ref(false);
 
 const addFriendDialogRef = ref(null);
 
+const notify = inject("notify");
+
+const copyUserID = () => {
+    navigator.clipboard.writeText(localUserStore.user.id);
+    notify({title: "Copied", body: "Your user ID has been copied to the clipboard.", level: "success"});
+};
+
 const getFriends = async () => {
     const res = await API.fireServer("/api/v1/friends/" + localUserStore.user.id, {
         method: "GET",
@@ -204,8 +211,13 @@ onMounted(async () => {
                 <li><a>blocked</a></li>
                 <li><a @click="showAddFriend()"><i class="bi bi-person-add"></i>Add Friend</a></li>
             </ul>
-            <div @click="changeIsFriendID()">
-                Your Own Friend ID : {{ isShowedFriendID? localUserStore.user.id + " (press to hide)" : "**************" + " (press to show)"}}  
+            <div class="flex justify-center">
+                {{ isShowedFriendID? "Your friend ID: " + localUserStore.user.id : "****************"}}<button class="btn btn-outline" @click="copyUserID()">Copy your ID</button>
+                <button class="btn btn-outline" 
+                    @click="changeIsFriendID()"
+                > 
+                    {{ isShowedFriendID? "Click to hide" : "Click to show"}} Friend ID
+                </button> 
             </div>
         <div v-for="friend in friends" class="flex flex-1 ml-6 mr-6">
             <UserDisp
