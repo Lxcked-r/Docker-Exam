@@ -26,6 +26,14 @@ const route = useRoute();
 
 const channels = ref([]);
 
+const lastPublicChannelCheck = ref(true);
+
+const lastPrivateChannelCheck = ref(true);
+
+const publicChannelsRef = ref(null);
+
+const privateChannelsRef = ref(null);
+
 const actualChannel = ref(null);
 
 const selectedChannel = ref(null);
@@ -49,6 +57,17 @@ const getChannels = async () => {
 
 	if (response.status === 200) {
 		channels.value = await response.json();
+	}
+};
+
+const swapPublicChannelsRefCheck = (state) => {
+	publicChannelsRef.value.checked = !state;
+};
+
+const swapPrivateChannelsRefCheck = (state) => {
+	console.log(privateChannelsRef.value.checked);
+	if(state) {
+		privateChannelsRef.value.checked = false;
 	}
 };
 
@@ -208,7 +227,7 @@ socket.on("newChan", async (data) => {
 			<div v-else class="overflow-y-auto">
 
 				<div class="collapse collapse-arrow bg-base-200" >
-					<input type="radio" name="my-accordion-2" checked="checked" /> 
+					<input type="radio" name="my-accordion-2" checked="checked" ref="publicChannelsRef" @click="swapPublicChannelsRefCheck(publicChannelsRef.checked)"/>
 					<div class="collapse-title text-xl font-medium">
 						Groups
 					</div>
@@ -229,7 +248,7 @@ socket.on("newChan", async (data) => {
 					</div>
 				</div>
 				<div class="collapse collapse-arrow bg-base-200">
-					<input type="radio" name="my-accordion-2" /> 
+					<input type="radio" name="my-accordion-2" ref="privateChannelsRef" @click="swapPrivateChannelsRefCheck(privateChannelsRef.checked)"/> 
 					<div class="collapse-title text-xl font-medium">
 						friends
 					</div>
