@@ -29,6 +29,13 @@ const baseUrl = config.use_current_origin ? window.location.origin : config.base
 const signOutFailDialog = ref(null);
 const notifications = ref([]);
 
+const createNewDialog = ref(null);
+
+const newInput = ref({
+	title: "",
+	body: "",
+});
+
 const isLoaded = ref(false);
 
 const channels = ref([]);
@@ -61,6 +68,50 @@ const headerText = computed(() => {
 	}
 });
 
+const deleteNew = async (id) => {
+	const res = await API.fireServer("/api/v1/news", {
+		method: "DELETE",
+		body: JSON.stringify({id: id}),
+	});
+	if(res.status === 200) {
+		news.value = await getNews();
+	}
+	const data = await res.json();
+	return data;
+};
+
+const openNewDialog = () => {
+	createNewDialog.value.show();
+};
+
+const createNew = async () => {
+	const res = await API.fireServer("/api/v1/news", {
+		method: "POST",
+		body: JSON.stringify(newInput.value),
+	});
+	if(res.status === 200) {
+		createNewDialog.value.hide();
+		newInput.value = {
+			title: "",
+			body: "",
+		};
+		news.value = await res.json();
+	}
+	const data = await res.json();
+
+	return data;
+};
+
+const getNews = async () => {
+	const res = await API.fireServer("/api/v1/news", {
+		method: "GET",
+	});
+	if(res.status === 200) {
+		const data = await res.json();
+		return data;
+	}
+	return null;
+};
 
 const getFriends = async () => {
     const res = await API.fireServer("/api/v1/friends/" + localUserStore.user.id, {
@@ -246,14 +297,6 @@ const openFriendsList = (notif) => {
 	router.push('/dashboard/friends');
 };
 
-const getNews = async () => {
-	const res = await API.fireServer("/api/v1/news", {
-		method: "GET",
-	});
-	const data = await res.json();
-	return data;
-};
-
 const getPendingFriendsRequestsFromSpecificFriendID = (id) => {
 	if(friends.value.length > 0) {
 		if(friends.value.find(friend => friend.id === id).pending && friends.value.find(friend => friend.user.id !== localUserStore.user.id) !== undefined) {
@@ -332,6 +375,24 @@ onMounted(async () => {
 				Do you want to clear the local data and try signing in again? This will not affect the data on the server,<br>
 				but you will lose any unsaved changes.
 			</p>
+		</template>
+	</CustomDialog>
+
+	<CustomDialog
+		ref="createNewDialog"
+		confirm-name="Save"
+		cancel-name="Cancel"
+		@cancel="createNewDialog.hide()"
+		@confirm="createNew();"
+	>
+		<template #title>
+			Create New
+		</template>
+		<template #content>
+			<div class="flex flex-col">
+				<input type="text" placeholder="Title" v-model="newInput.title" class="input input-bordered mb-2">
+				<textarea placeholder="Body" v-model="newInput.body" class="textarea textarea-bordered"></textarea>
+			</div>
 		</template>
 	</CustomDialog>
 	<main class="flex align-center justify-center h-screen" v-if="!isLoaded">
@@ -455,12 +516,17 @@ onMounted(async () => {
 			v-show="onDefaultRoute"
 		>
 		
-		<div class="flex-1 flex justify-center max-h-32 flex-col flex-center items-center">
+		<div v-if="news" class="flex-1 flex justify-center max-h-32 flex-col flex-center items-center">
 			<h1>NEWS : </h1>
 			<div> {{ news.title }}</div>
 			<div> {{ news.body }}</div>
+			<button v-if="localUserStore.user.operator" @click="deleteNew(news.id)" class="btn btn-error">
+				Delete This New
+			</button>
 		</div>
-		<button @click="newNotif('22', 'https://172.21.22.153:2025/api/v1/avatars/dc245c3d-e172-4a08-8664-0c70b4424ceb', 'vasdwqe')" class="btn btn-primary">t</button>
+		<button v-if="localUserStore.user.operator" @click="openNewDialog()" class="btn btn-success">
+			Create New
+		</button>
 			Pick a section to begin.
 				<div class="flex gap-4">
 					<HomeSquare
