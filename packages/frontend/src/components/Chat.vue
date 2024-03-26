@@ -229,7 +229,7 @@ const isFriend = (userID) => {
 };
 
 const isFirst = (message, key) => {
-    if (message.userID !== props.channelMessages[key-1]?.userID) {
+    if (message.userID !== props.channelMessages[key-1]?.userID || new Date(message.createdAt) > new Date(props.channelMessages[key-1].createdAt).getTime() + 600000){
         return true;
     } else {
         return false;
@@ -800,13 +800,13 @@ defineExpose({
                     ref="messageInput"
                     type="text"
                     placeholder="Write your message!"
-                    class="w-full focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 pl-4 bg-gray-200 rounded-md py-3"
+                    class="input input-bordered w-full"
                 />
                 <div class="absolute right-0 items-center inset-y-0 hidden sm:flex">
                     <button type="button" class="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out text-gray-500">
                         <i class="bi bi-emoji-smile-fill"></i>
                     </button>
-                    <button @click="sendNewMessage" type="button" class="gap-2 inline-flex items-center justify-center rounded-lg px-4 py-3 transition duration-500 ease-in-out text-white bg-blue-500 focus:outline-none">
+                    <button @click="sendNewMessage" type="button" class="btn btn-outline">
                         <span class="font-bold">Send</span>
                         <i class="bi bi-send"></i>
                     </button>
