@@ -386,7 +386,7 @@ onMounted(async () => {
 		@confirm="createNew();"
 	>
 		<template #title>
-			Create New
+			Create News
 		</template>
 		<template #content>
 			<div class="flex flex-col">
@@ -521,11 +521,11 @@ onMounted(async () => {
 			<div> {{ news.title }}</div>
 			<div> {{ news.body }}</div>
 			<button v-if="localUserStore.user.operator" @click="deleteNew(news.id)" class="btn btn-error">
-				Delete This New
+				Delete This News
 			</button>
 		</div>
 		<button v-if="localUserStore.user.operator" @click="openNewDialog()" class="btn btn-success">
-			Create New
+			Create News
 		</button>
 			Pick a section to begin.
 				<div class="flex gap-4">
