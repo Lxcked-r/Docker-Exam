@@ -37,8 +37,11 @@ router.post('/', async (req, res) => {
  */
 router.get('/', async (req, res) => {
     const news = await getLastNews();
-    if (!news) {
+    if (!news){
         return res.status(400).send('Missing required field');
+    }
+    if (news.createdAt < new Date(new Date().setDate(new Date().getDate() - 2))){
+        return res.status(400).send('No news in the last 48 hours');
     }
     res.send(news);
 });

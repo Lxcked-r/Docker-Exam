@@ -47,7 +47,6 @@ const createNews = async (options) => {
  * @returns {Promise<Object>} The last news article.
  */
 const getLastNews = async () => {
-    let news;
     try {
         const
             news = await News.findOne({

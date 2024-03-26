@@ -14,7 +14,7 @@ const News = db.define("News", {
     body: {
         type: DataTypes.STRING,
         allowNull: false
-    }
+    },
 });
 
 export default News;
