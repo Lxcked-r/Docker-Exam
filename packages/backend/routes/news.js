@@ -4,7 +4,7 @@
 */
 
 import express from 'express';
-import { createNews, getLastNews } from '../controllers/news.mjs';
+import { createNews, getLastNews, deleteNews } from '../controllers/news.mjs';
 
 import { authenticate } from "../middleware/auth.mjs";
 
@@ -28,8 +28,7 @@ router.post('/', async (req, res) => {
         return res.status(400).send('Missing required field');
     }
     res.send(news);
-}
-);
+});
 
 /**
  * Get last new.
@@ -42,7 +41,24 @@ router.get('/', async (req, res) => {
         return res.status(400).send('Missing required field');
     }
     res.send(news);
-}
-);
+});
+
+/**
+ * Delete a news article.
+ * @name DELETE /api/v1/news
+ * @param {string} id - The news article's id.
+ * @returns {Object} The deleted news article.
+ */
+router.delete('/', authenticate(), async (req, res) => {
+    const body = req.body;
+    if (!body.id) {
+        return res.status(400).send('Missing required field');
+    }
+    const news = await deleteNews(body.id);
+    if (!news) {
+        return res.status(400).send('Missing required field');
+    }
+    res.send(news);
+});
 
 export default router;

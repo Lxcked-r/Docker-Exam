@@ -62,7 +62,38 @@ const getLastNews = async () => {
     }
 }
 
+/**
+ * Delete a news article.
+ * @param {number} id - The news article's ID.
+ * @returns {Promise<boolean>} Whether the news article was deleted.
+ */
+const deleteNews = async (id) => {
+    const transaction = await db.transaction();
+
+    try {
+        const news = await News.findByPk(id, { transaction });
+
+        if (!news) {
+            logger.error("News article not found", { caller: callerName });
+            return false;
+        }
+
+        await news.destroy({ transaction });
+
+        logger.info(`Deleted news article ${id}`, { caller: callerName });
+
+        await transaction.commit();
+
+        return true;
+    } catch (error) {
+        logger.error(error, { caller: callerName });
+        await transaction.rollback();
+        return false;
+    }
+}
+
 export {
     createNews,
-    getLastNews
+    getLastNews,
+    deleteNews
 };
