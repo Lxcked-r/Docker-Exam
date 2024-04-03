@@ -21,4 +21,5 @@
 
 p {
     word-wrap: break-word;
+    overflow-wrap: break-all;
 }    
