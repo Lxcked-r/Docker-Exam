@@ -207,7 +207,6 @@ const getOwnerId = () => {
 				</p>
 		</div>
 		<Chat v-else
-			class="flex flex-col w-full h-full max-h-full"
 			ref="chatRef"
 			:channelName="channelName"
 			:channelMessages="messages"
