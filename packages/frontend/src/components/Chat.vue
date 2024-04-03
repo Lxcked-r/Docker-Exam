@@ -157,6 +157,7 @@ const props = defineProps({
 });
 
 watch(() => props.channelUsers, async (newVal, oldVal) => {
+    console.log('channelUsers changed');
     loading.value = true;
     page.value = 2;
     lastLoadedMessages.value = [];
@@ -167,11 +168,14 @@ watch(() => props.channelUsers, async (newVal, oldVal) => {
 
     await nextTick(() => {
         scrollToBottom();
+        
+        messagesRef.value.addEventListener("scroll", checkScroll);
     });
 
 });
 
 watch(() => props.channelMessages, async (newVal, oldVal) => {
+    console.log('channelMessages changed');
     loading.value = true;
     messages.value = newVal;
     let tmp;
@@ -188,14 +192,11 @@ watch(() => props.channelMessages, async (newVal, oldVal) => {
     loading.value = false;
     await nextTick(() => {
         scrollToBottom();
+        
+        messagesRef.value.addEventListener("scroll", checkScroll);
     });
 });
 
-watch(() => props.type, async (newVal, oldVal) => {
-    loading.value = true;
-    channelType.value = newVal;
-    loading.value = false;
-});
 
 const getAvatarFromUsers = (channel) => {
 	if (channel.Channel.type === 'public') {
@@ -331,15 +332,19 @@ socket.on("typing", async (event) => {
 const backToChatsList = () => {
     router.push("/dashboard/chats");
 };
-
+let t = 0;
 const checkScroll = async (event) => {
-        if (messagesRef.value.scrollTop === 0) {
-            await setTimeout(() => {
-                messagesRef.value.scrollTop = 1;
-            }, 1000);
-            await getTwentyNewMessages(page.value);
-            page.value++;
-        }
+    if(new Date().getTime() - t < 1000 || messagesRef.value.scrollTop >= 1) {
+        return;
+    }
+
+    t = new Date().getTime();
+
+    if (messagesRef.value.scrollTop <= 1) {
+        await getTwentyNewMessages(page.value);
+        page.value++;
+        
+    }
 
 };
 
