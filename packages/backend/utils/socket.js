@@ -24,7 +24,6 @@ const serverApp = async (app) => {
 
     // Socket.io
     io.on('connection', async socket => {
-        console.log("connected");
 
         
         socket.on("newFriend" , async (data) => {
@@ -43,7 +42,6 @@ const serverApp = async (app) => {
                 logger.error("Failed to decrypt message", { caller: caller });
                 return;
             }
-            console.log(data.userID + " joined A new channels relations" + data.channelID);
             const channelsRelations = await getChannelsRelationsByChannel(data.channelID);
             io.to(data.userID).emit("newChan", "ww");
 
@@ -60,9 +58,6 @@ const serverApp = async (app) => {
         // sync user to channel (socket.io room)
         socket.on('channel', async (data) => {
             data = await decryptData(data);
-
-            console.log(data.userID + " joined " + data.channelID);
-
             socket.join(data.channelID);
             socket.join(data.userID);
         });
@@ -81,8 +76,6 @@ const serverApp = async (app) => {
 
             let createdAt = new Date();
             data.createdAt = createdAt;
-
-            console.log(data.createdAt);
             
             let dataV2 = data;
 
@@ -123,6 +116,10 @@ const serverApp = async (app) => {
             }
             io.to(data.channelID).emit("avatar", data);
         });
+        socket._onclose = async (data) => {
+            console.log(data);
+
+        }
         
     });
 

@@ -21,6 +21,8 @@ const friends = ref([]);
 const contextMenuDialogRef = ref(null);
 const actualFriend = ref(null);
 
+const friendsListType = ref("all");
+
 const isShowedFriendID = ref(false);
 
 const addFriendDialogRef = ref(null);
@@ -185,6 +187,7 @@ onMounted(async () => {
     const convertedFriends = convertFriends(friends.value);
     friends.value = convertedFriends;
 
+
     loading.value = false;
 });
 
@@ -197,53 +200,54 @@ onMounted(async () => {
 
     </div>
     <div v-else class="container">
-        <div v-if="friends.length<1" class="row">
-            <div class="col-12">
-                <p>There are no friends yet.</p>
-            </div>
-        </div>
     
-        <div v-else>
+        <div>
             <ul class="menu menu-horizontal bg-base-200 m-2 center">
-                <li><a>all friends</a></li>
-                <li><a>online friends</a></li>
-                <li><a>peding</a></li>
-                <li><a>blocked</a></li>
+                <li><a @click="friendsListType='all'">all friends</a></li>
+                <li><a @click="friendsListType='online'">online friends</a></li>
+                <li><a @click="friendsListType='pending'">peding</a></li>
+                <li><a @click="friendsListType='blocked'">blocked</a></li>
                 <li><a @click="showAddFriend()"><i class="bi bi-person-add"></i>Add Friend</a></li>
             </ul>
             <div class="flex justify-center">
-                {{ isShowedFriendID? "Your friend ID: " + localUserStore.user.id : "****************"}}<button class="btn btn-outline" @click="copyUserID()">Copy your ID</button>
+                Your friend ID:  {{ isShowedFriendID? localUserStore.user.id : "****************"}}<button class="btn btn-outline" @click="copyUserID()">Copy your ID</button>
                 <button class="btn btn-outline" 
                     @click="changeIsFriendID()"
                 > 
                     {{ isShowedFriendID? "Click to hide" : "Click to show"}} Friend ID
-                </button> 
-            </div>
-        <div v-for="friend in friends" class="flex flex-1 ml-6 mr-6">
-            <UserDisp
-            @contextmenu.prevent="openContextMenu(friend, $event)"
-            @click="openContextMenu(friend, $event)"
-            :id="friend.user.id"
-            :key="friend.id" 
-            :user="friendCheck(friend.user.id)" 
-            :username="friend.user.username"
-            :avatar="friend.user.avatar"
-            :pending="friend.pending" >
-            </UserDisp>
-            <div v-if="friend.pending && friend.userID !== localUserStore.user.id" class="inline-flex">
-                <button @click="acceptFriend(friend)" class="btn btn-outline btn-success" style="margin-top: 14px; margin-left: 15px;">
-                    <i class="bi bi-check" style="font-size: 25px;"></i>
                 </button>
-                <button @click="denyFriend(friend)" class="btn btn-outline btn-error" style="margin-top: 14px; margin-left: 15px;">
-                    <i class="bi bi-x-lg" style="font-size: 20px;"></i>
-                </button>
-            </div>
-            <div v-if="friend.pending&&friend.userID === localUserStore.user.id">
-                Pending
             </div>
 
+            <div v-if="friends.length<1" class="row">
+                <div class="col-12">
+                    <p>There are no friends yet.</p>
+                </div>
+            </div>
+            <div v-else v-for="friend in friends" class="flex flex-1 ml-6 mr-6" >
+                <UserDisp v-if="friendsListType === 'all' || (friendsListType === 'online' && friend.user.online) || (friendsListType === 'pending' && friend.pending) || (friendsListType === 'blocked' && friend.blocked)"
+                @contextmenu.prevent="openContextMenu(friend, $event)"
+                @click="openContextMenu(friend, $event)"
+                :id="friend.user.id"
+                :key="friend.id" 
+                :user="friendCheck(friend.user.id)" 
+                :username="friend.user.username"
+                :avatar="friend.user.avatar"
+                :pending="friend.pending" >
+                </UserDisp>
+                <div v-if="(friend.pending && friend.userID !== localUserStore.user.id )" class="inline-flex">
+                        <button @click="acceptFriend(friend)" class="btn btn-outline btn-success" style="margin-top: 14px; margin-left: 15px;">
+                            <i class="bi bi-check" style="font-size: 25px;"></i>
+                        </button>
+                        <button @click="denyFriend(friend)" class="btn btn-outline btn-error" style="margin-top: 14px; margin-left: 15px;">
+                            <i class="bi bi-x-lg" style="font-size: 20px;"></i>
+                        </button>
+                    </div>
+                    <div v-if="friend.pending&&friend.userID === localUserStore.user.id && friendsListType === 'all' || (friendsListType === 'online' && friend.user.online) || (friendsListType === 'pending' && friend.pending) || (friendsListType === 'blocked' && friend.blocked)">
+                        Pending
+                    </div>
+                
+            </div>
         </div>
-    </div>
     </div>
     <Teleport to="#dash">
         <CustomDialog

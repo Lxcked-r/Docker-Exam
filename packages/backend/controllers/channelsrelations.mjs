@@ -171,7 +171,7 @@ const getChannelsRelations = async (userID) => {
 /**
  * Get all channels relations of a channel.
  * @param {string} channelID - The channel's id.
- * @returns {Array<Object>} The channels relations.
+ * @returns {Promise<Array>} The channels relations.
  */
 const getChannelsRelationsByChannel = async (channelID) => {
     // Validate the options

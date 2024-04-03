@@ -44,6 +44,9 @@ const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
 const friendsStore = useFriendsStore();
 
+const actualChars = ref(0);
+const maxChars = 2000;
+
 const msg = ref({});
 
 const socket = inject("socket")
@@ -800,7 +803,7 @@ defineExpose({
                     ref="messageInput"
                     type="text"
                     placeholder="Write your message!"
-                    class="input input-bordered w-full"
+                    class="input input-bordered w-full max-w-[97rem]"
                 />
                 <div class="absolute right-0 items-center inset-y-0 hidden sm:flex">
                     <button type="button" class="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out text-gray-500">

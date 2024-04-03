@@ -9,6 +9,7 @@ import { useFriendsStore } from '@/stores/friends';
 
 import ChatsDisp from '@/components/ChatsDisp.vue';
 import CustomDialog from '@/components/CustomDialog.vue';
+
 import socket from '@/utils/socket';
 
 import crypter from '@/utils/crypter';
@@ -33,6 +34,8 @@ const lastPrivateChannelCheck = ref(true);
 const publicChannelsRef = ref(null);
 
 const privateChannelsRef = ref(null);
+
+const resetInputRef = ref(null);
 
 const actualChannel = ref(null);
 
@@ -60,16 +63,14 @@ const getChannels = async () => {
 	}
 };
 
-const swapPublicChannelsRefCheck = (state) => {
-	publicChannelsRef.value.checked = !state;
-};
-
-const swapPrivateChannelsRefCheck = (state) => {
-	console.log(privateChannelsRef.value.checked);
-	if(state) {
-		privateChannelsRef.value.checked = false;
+const swapPublicChannelsRefCheck = () => {
+	if(lastPublicChannelCheck.value) {
+		
 	}
 };
+
+const swapPrivateChannelsRefCheck = () => {
+}
 
 const getUserName = (channel) => {
 	if(channel.Channel.type === 'public') {
@@ -84,7 +85,7 @@ const getUserName = (channel) => {
 			}
 		}
 	}
-}
+};
 
 const getAvatar = (channel) => {
 	if (channel.Channel.type === 'public') {
@@ -232,7 +233,7 @@ socket.on("newChan", async (data) => {
 						Groups
 					</div>
 					<div class="collapse-content">
-						<div v-for="channel in channels">						
+						<div v-for="channel in channels">
 							<ChatsDisp
 							v-if="channel.Channel.type === 'public'"
 							:key="channel.id"

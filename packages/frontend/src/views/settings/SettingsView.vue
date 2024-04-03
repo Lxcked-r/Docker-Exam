@@ -117,6 +117,15 @@ onMounted(async () => {
 
 		<div class="divider my-4"></div>
 
+		<h2 class="text-xl font-bold">Notifications</h2>
+
+		<div class="flex flex-col gap-4 mt-4">
+			<div class="flex flex-box items-center">
+				<h3>Enable Notifications &nbsp;</h3>
+				<input type="checkbox" class="toggle" checked />
+			</div>
+		</div>
+
 		<h2 class="text-xl font-bold">Profile Picture</h2>
 
 		<div class="flex flex-col gap-4 mt-4">
