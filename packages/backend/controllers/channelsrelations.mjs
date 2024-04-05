@@ -93,13 +93,13 @@ const createChannelRelationByUsername = async (options) => {
 /**
  * Delete a channel relation.
  * @param {Object} options - The channel's information.
- * @param {string} userID - The user's id.
- * @param {string} channelID - The channel's id.
+ * @param {string} options.userID - The user's id.
+ * @param {string} options.channelID - The channel's id.
  * @returns {Promise<Object>} The deleted channel relation.
  */
-const deleteChannelRelation = async (channelID, userID) => {
+const deleteChannelRelation = async (options) => {
     // Validate the options
-    if (!userID || !channelID) {
+    if (!options.userID || !options.channelID) {
         logger.error("Missing required field", { caller: callerName });
         return null;
     }
@@ -109,8 +109,8 @@ const deleteChannelRelation = async (channelID, userID) => {
     try {
         const channelRelation = await ChannelsRelations.findOne({
             where: {
-                userID: userID,
-                channelID: channelID,
+                userID: options.userID,
+                channelID: options.channelID,
             }
         });
 
