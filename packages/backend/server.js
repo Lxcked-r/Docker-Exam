@@ -68,6 +68,10 @@ import { createNotification } from "./controllers/notifications.mjs";
 import { updateAvatar } from "./controllers/user.mjs";
 app.use("/api/v1/notifications", notificationsRouter);
 
+import filesRouter from "./routes/files.js";
+app.use("/api/v1/files", filesRouter);
+
+
 
 import friendsRouter from "./routes/friends.js";
 app.use("/api/v1/friends", friendsRouter);
