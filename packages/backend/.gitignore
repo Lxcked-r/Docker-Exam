@@ -2,3 +2,4 @@ node_modules
 logs
 *.sqlite
 avatars
+files
