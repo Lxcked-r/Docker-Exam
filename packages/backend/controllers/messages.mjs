@@ -50,6 +50,7 @@ const createMessage = async (options) => {
             text: options.text,
             userID: options.userID,
             channelID: options.channelID,
+            type: options.type || "text",
         }, { transaction });
 
         logger.info(`Created message ${message.id}`, { caller: callerName });

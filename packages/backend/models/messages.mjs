@@ -22,6 +22,11 @@ const Message = db.define("Message", {
         type: DataTypes.UUID,
         allowNull: false,
     },
+    type: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "text",
+    },
     createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -31,5 +36,7 @@ const Message = db.define("Message", {
 });
 
 Message.belongsTo(User, { foreignKey: "userID" });
+
+Message.sync({ alter: true});
 
 export default Message;

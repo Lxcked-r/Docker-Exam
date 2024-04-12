@@ -31,6 +31,9 @@ const checkAvatars = ref([]);
 const actualUser = ref(null);
 
 const showUserProfileDialogRef = ref(null);
+const showImageDialogRef = ref(null);
+
+const showImageRef = ref(null);
 
 const tt = ref(false);
 
@@ -43,6 +46,8 @@ const showDeleteMessageVar = ref(null);
 const localUserStore = useLocalUserStore();
 const sessionStateStore = useSessionStateStore();
 const friendsStore = useFriendsStore();
+
+const actualIMG = ref(null);
 
 const actualChars = ref(0);
 const maxChars = 2000;
@@ -88,6 +93,10 @@ const editChannelDialogRef = ref(null);
 const showAddPersonDialogRef = ref(null);
 
 const addSomeoneInputRef = ref(null);
+
+const uploadFileDialogRef = ref(null);
+
+const uploadFileInputRef = ref(null);
 
 const showUser = ref(false);
 
@@ -197,6 +206,23 @@ watch(() => props.channelMessages, async (newVal, oldVal) => {
     });
 });
 
+const checkDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+};
+
+const openDragFile = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const dt = e.dataTransfer;
+    const files = dt.files;
+
+    if (files.length > 0) {
+        uploadFileInputRef.value.files = files;
+        uploadFileDialogRef.value.show();
+    }
+};
 
 const getAvatarFromUsers = (channel) => {
 	if (channel.Channel.type === 'public') {
@@ -266,6 +292,12 @@ const internalNotif = (title, content) => {
     notify(msg.value);
 };
 
+
+const getImg = (tryer) => {
+    return `https://172.21.22.153:2025/api/v1/files/${tryer}`;
+
+}
+
 socket.on("message", async (event) => {
     if(event.channelID !== props.channelID) {
         return;
@@ -277,7 +309,6 @@ socket.on("message", async (event) => {
     } catch {
 
     }
-
     if(message.User.username === "Server") {
         props.channelMessages.push(message);
         scrollToBottom();
@@ -289,14 +320,13 @@ socket.on("message", async (event) => {
     setTimeout(() => {
         scrollToBottom();
     }, 2);
-
     
     if (message.userID === props.userID) {
         return;
     } else {
-       //audioNotif.value.play();
+        //audioNotif.value.play();
         internalNotif("New message", "You have a new message from " + event.User.username);
-       notifs.value++;
+        notifs.value++;
     }
     
 });
@@ -469,9 +499,6 @@ const getTwentyNewMessages = async () => {
     const newMessages = data.reverse();
     //unshift adds the new messages to the beginning of the array without using a loop
     messages.value.unshift(...newMessages);
-
-
-
 };
 
 
@@ -506,6 +533,15 @@ const reload = async () => {
 const showAddPerson = () => {
     showAddPersonDialogRef.value.show();
 }
+
+const showUploadFile = () => {
+    uploadFileDialogRef.value.show();
+};
+
+const showImageDialog = (message) => {
+    actualIMG.value = message;
+    showImageDialogRef.value.show();
+};
 
 const refreshAvatarImage = async () => {
     const htmlImage = document.getElementById(props.channelID);
@@ -558,6 +594,55 @@ const convertFriends = (data) => {
         }
     }
     return data;
+};
+
+const getImage = async (id) => {
+    const res = await API.fireServer("/api/v1/files/" + id, {
+        method: "GET",
+    });
+
+    const url = res.url;
+    return url;
+};
+
+const donwloadImage = async (url) => {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "image";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
+
+/**
+ * Upload File to conversation
+ */
+const uploadFile = async () => {
+    const file = uploadFileInputRef.value.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", file.name.substring(file.name.lastIndexOf('.')+1, file.name.length) || file.name);
+    formData.append("channelID", props.channelID);
+    formData.append("userID", localUserStore.user.id);
+    const res = await API.fireServer("/api/v1/files", {
+        method: "POST",
+        headers: {
+            "Content-Type": false,
+        },
+        body: formData,
+    });
+    if (res.status === 200) {
+        const data = await res.json();
+
+        data.text = data.id;
+        data.User = localUserStore.user;
+
+        const encryptedData = await crypter.encrypt(data);
+        socket.emit("message", encryptedData);
+        uploadFileDialogRef.value.hide();
+    }
 };
 
 const closeFriendDialogRef = () => {
@@ -658,6 +743,26 @@ defineExpose({
         </CustomDialog>
 
         <CustomDialog
+            ref="showImageDialogRef"
+            :is-acknowledgement="false"
+            cancel-name="Close"
+            confirm-name="Download"
+            @cancel="showImageDialogRef.hide()"
+            @confirm="donwloadImage(getImg(actualIMG?.text))"
+        >
+            <template #title>
+                Image
+            </template>
+            <template #content>
+                <div class="object-cover max-w-[600px] flex flex-box justify-center">
+                    <img ref="showImageRef" :src="getImg(actualIMG?.text)" class="" />
+                </div>
+            </template>
+        </CustomDialog>
+
+
+
+        <CustomDialog
             ref="showUserProfileDialogRef"
             :is-acknowledgement="true"
             confirm-name="Close"
@@ -705,6 +810,23 @@ defineExpose({
                 <button @click="addSomeone" class="btn btn-primary">Add</button>
             </template>
         </CustomDialog>
+
+        <CustomDialog
+            ref="uploadFileDialogRef"
+            confirm-name="Upload"
+            cancel-name="Cancel"
+            @confirm="uploadFile()"
+            @cancel="uploadFileDialogRef.hide()"
+        >
+
+            <template #title>
+                Upload file
+            </template>
+            <template #content>
+            {{ console.log(getImg(actualIMG?.text? actualIMG.text : "bruh")) }}
+                <input ref="uploadFileInputRef" type="file" :src="getImg(actualIMG?.text)" class="file-input file-input-bordered w-full max-w-x"/>
+            </template>
+        </CustomDialog>
     </Teleport>
 
     <div v-if="loading">
@@ -714,7 +836,7 @@ defineExpose({
         </p>
     </div>
 
-    <div v-else class="flex-1 flex justify-between flex flex-col w-[32px]">
+    <div v-else class="flex-1 flex justify-between flex flex-col w-[32px] min-h-[9rem] max-h-[55rem]" @drop.prevent="openDragFile" @dragenter="checkDrag" @dragover="checkDrag">
         <div class="flex gap-2 sm:items-center justify-between py-3 border-b-2 border-gray-200 px-4">
             <div class="relative flex flex-1">
                 <AvatarCircle
@@ -785,6 +907,7 @@ defineExpose({
                     @showUser="showUserProfile(message)"
                     @showMessageOptions="showMessageOptions(message)"
                     @mouseover="showDeleteMessage(message)"
+                    @showImage="showImageDialog(message)"
                     :text="message.text"
                     :isOwnMessage="isSameThanActualUser(message)"
                     :isLast="!isSameThanNext(message, index)"
@@ -793,12 +916,13 @@ defineExpose({
                     :isFirst="isFirst(message, index)"
                     :createdAt="new Date(message.createdAt).toLocaleString()"
                     :id="message.id"
+                    :type="message.type"
                     :avatar="message.User.avatar ? message.User.avatar : message.userID"
                 />
             </div>
         </ul>
 
-        <div ref="someoneIsTyping" class="chat-header flex"></div>
+        <div ref="someoneIsTyping" class="chat-header flex flex-box opacity-80 max-h-8"></div>
 
         <div class="flex flex-col">
             <div class="relative">
@@ -808,11 +932,11 @@ defineExpose({
                     ref="messageInput"
                     type="text"
                     placeholder="Write your message!"
-                    class="input input-bordered w-full max-w-[97rem]"
+                    class="input input-bordered w-full max-w-[calc(100%-90px)] max-h-20 overflow-y-auto "
                 />
                 <div class="absolute right-0 items-center inset-y-0 hidden sm:flex">
-                    <button type="button" class="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out text-gray-500">
-                        <i class="bi bi-emoji-smile-fill"></i>
+                    <button @click="showUploadFile()" type="button" class="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out">
+                        <i class="bi bi-file-earmark-arrow-up"></i>
                     </button>
                     <button @click="sendNewMessage" type="button" class="btn btn-outline">
                         <span class="font-bold">Send</span>

@@ -116,10 +116,29 @@ const serverApp = async (app) => {
             }
             io.to(data.channelID).emit("avatar", data);
         });
-        socket._onclose = async (data) => {
-            console.log(data);
 
-        }
+        // ############## PONG
+        socket.on("pong:join", async (data) => {
+            socket.join("pong");
+            io.to("pong").emit("pong:join", data);
+            const tt = await io.in("pong").fetchSockets();
+
+            let playersID = [];
+
+            tt.forEach((obj) => {
+                playersID.push(obj.id);
+            })
+            io.to("pong").emit("pong:players", playersID);
+
+            //console.log(io.in("pong").fetchSockets());
+        
+            console.log(data);
+        });
+
+        socket.on("pong:move", async (data) => {
+            data.id = socket.id;
+            io.to("pong").emit("pong:move", data);
+        });
         
     });
 

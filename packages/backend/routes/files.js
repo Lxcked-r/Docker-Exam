@@ -3,18 +3,44 @@
  */
 
 import express from 'express';
-import { createFile, getFileById, getFilesByChannelId } from '../controllers/files.mjs';
+import { createFile, getFileById, getFilesByChannelId, getFileName} from '../controllers/files.mjs';
 import { authenticate } from '../middleware/auth.mjs';
 
-const router = express.Router();
-router.use(express.json());
+import fs from 'fs';
 
-router.post('/', authenticate(), async (req, res) => {
+import multer from 'multer';
+import logger from '../utils/logger.mjs';
+
+const upload = multer();
+
+const router = express.Router();
+router.use(express.urlencoded({ extended: true }));
+router.use(express.json());
+router.use(express.static('../files'));
+
+router.post('/', upload.any(), authenticate(), async (req, res) => {
     const options = req.body;
+    const fileName = req.files[0].originalname;
+    const fileNameWithoutExtension = fileName.split('.')[0];
+
+    options.file = req.files[0];
+
+    options.size = options.size || req.files[0].size;
+    options.name = options.name || fileNameWithoutExtension;
     if (!options.channelID || !options.name || !options.type) {
         res.status(400).json({ success: false, message: "Missing required fields" });
         return;
     }
+
+    const fileOnDisk = req.files[0];
+
+
+    const randomUUDI = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const randomedFileName = `${randomUUDI}-${fileOnDisk.originalname}`;
+
+    const path = `./files/${randomedFileName}`;
+    fs.writeFileSync(path, fileOnDisk.buffer);
+    options.path = path;
 
     const file = await createFile(options);
     if (!file) {
@@ -24,13 +50,14 @@ router.post('/', authenticate(), async (req, res) => {
     res.send(file);
 });
 
-router.get('/:id', authenticate(), async (req, res) => {
+router.get('/:id',/* authenticate(), */async (req, res) => {
+
     const file = await getFileById(req.params.id);
     if (!file) {
         res.status(404).json({ success: false, message: "File not found" });
         return;
     }
-    res.send(file);
+    res.sendFile(file.path, { root: '.' });
 });
 
 router.get('/', authenticate(), async (req, res) => {
@@ -40,6 +67,19 @@ router.get('/', authenticate(), async (req, res) => {
         return;
     }
     res.send(files);
+});
+
+router.get('/name/:id',  async (req, res) => {
+    const file = await getFileName(req.params.id);
+    if (!file) {
+        res.status(404).json({ success: false, message: "File not found" });
+        return;
+    }
+    const data = {
+        name: file.name,
+        size: file.size,
+    };
+    res.send(data);
 });
 
 export default router;

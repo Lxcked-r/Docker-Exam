@@ -207,6 +207,10 @@ socket.on("notification", async (notif) => {
 				console.error(e);
 			}
 
+			if(notif.type !== "text" && notif.type !== "friend" && (notif.message.type === "jpg" || notif.message.type === "png" || notif.message.type === "webp" || notif.message.type === "gif")) {
+				notif.message.text = "sent File";
+			}
+
 			newNotif(await notif.user.username, url, notif.message.text);
 			lastNotif.value = notif;
 		}
@@ -435,6 +439,15 @@ onMounted(async () => {
 							<li>
 								<a>
 									Friends list
+								</a>
+							</li>
+						</RouterLink>
+						<RouterLink
+							to="/dashboard/pong"
+							>
+							<li>
+								<a>
+									Pong
 								</a>
 							</li>
 						</RouterLink>

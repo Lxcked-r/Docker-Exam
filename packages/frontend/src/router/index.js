@@ -62,6 +62,12 @@ const router = createRouter({
 
 					component: () => import("../views/settings/SettingsView.vue"),
 				},
+				{
+					path: "pong",
+					name: "pong",
+
+					component: () => import("../views/PongView.vue"),
+				}
 			]
 		},
 	],

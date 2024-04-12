@@ -11,6 +11,7 @@ const callerName = "FileController";
 /**
  * Create a new file.
  * @param {Object} options - The file's information.
+ * @param {object} options.file - The file.
  * @param {string} options.name - The file's name.
  * @param {string} options.path - The file's path.
  * @param {number} options.size - The file's size.
@@ -21,10 +22,12 @@ const callerName = "FileController";
  */
 const createFile = async (options) => {
     // Validate the options
-    if (!options.name || !options.path || !options.size || !options.type || !options.userID || !options.channelID) {
+    if (!options.file || !options.name || !options.path || !options.size || !options.type || !options.userID || !options.channelID) {
         logger.error("Missing required field", { caller: callerName });
         return null;
     }
+
+    console.log(options.file);
 
     const transaction = await db.transaction();
 
@@ -105,8 +108,32 @@ const getFilesByChannelId = async (channelID) => {
     }
 }
 
+const getFileName = async (id) => {
+    // Validate the options
+    if (!id) {
+        logger.error("Missing required field", { caller: callerName });
+        return null;
+    }
+
+    try {
+        const file = await File.findByPk(id);
+
+        if (!file) {
+            logger.error("File not found", { caller: callerName });
+            return null;
+        }
+
+        return file;
+    } catch (error) {
+        logger.error(error, { caller: callerName });
+        return null;
+    }
+}
+
 export {
+
     createFile,
     getFileById,
-    getFilesByChannelId
+    getFilesByChannelId,
+    getFileName
 };
