@@ -258,6 +258,14 @@ const isFriend = (userID) => {
     return false;
 };
 
+const getFriendShipID = (userID) => {
+    if (friendsStore.friends.find((x) => x.user.id === userID)) {
+        return friendsStore.friends.find((x) => x.user.id === userID).id;
+    } else if (friendsStore.friends.find((x) => x.otherUser.id === userID)) {
+        return friendsStore.friends.find((x) => x.otherUser.id === userID).id;
+    }
+};
+
 const isFirst = (message, key) => {
     if (message.userID !== props.channelMessages[key-1]?.userID || new Date(message.createdAt) > new Date(props.channelMessages[key-1].createdAt).getTime() + 600000){
         return true;
@@ -297,6 +305,10 @@ const getImg = (tryer) => {
     return `https://172.21.22.153:2025/api/v1/files/${tryer}`;
 
 }
+
+const openFriendChat = (friendShipID) => {
+    router.push("/dashboard/chats/" + friendShipID);
+};
 
 socket.on("message", async (event) => {
     if(event.channelID !== props.channelID) {
@@ -596,6 +608,13 @@ const convertFriends = (data) => {
     return data;
 };
 
+const isFriendPending = (userID) => {
+    if (friendsStore.friends.find((x) => x.friendID === userID && x.pending)) {
+        return true;
+    }
+    return false;
+};
+
 const getImage = async (id) => {
     const res = await API.fireServer("/api/v1/files/" + id, {
         method: "GET",
@@ -788,6 +807,13 @@ defineExpose({
                     <i class="bi bi-person-plus-fill"></i>
                     Send friend request
                 </button>
+                <button v-else-if="isFriendPending(actualUser.User.id)" class="btn btn-outline" disabled>
+                    <i class="bi bi-person-check-fill"></i>
+                    Friend request sent
+                </button>
+                <button v-else-if="actualUser.userID !== localUserStore.user.id || !actualUser.User" class="btn btn-outline" @click="openFriendChat(getFriendShipID(actualUser.userID))">
+                    Open Chat
+                </button>
             </template>
         </CustomDialog>
 
@@ -823,7 +849,6 @@ defineExpose({
                 Upload file
             </template>
             <template #content>
-            {{ console.log(getImg(actualIMG?.text? actualIMG.text : "bruh")) }}
                 <input ref="uploadFileInputRef" type="file" :src="getImg(actualIMG?.text)" class="file-input file-input-bordered w-full max-w-x"/>
             </template>
         </CustomDialog>

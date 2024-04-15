@@ -36,10 +36,6 @@ const bytes = (data, to) => {
 
     const const_term = 1024;
     if(data < const_term) return data + "B";
-
-
-
-
     if (to === "KB") { 
         return ~~(data / const_term).toFixed(3) + "KB"; 
       } else if (to === "MB") { 
