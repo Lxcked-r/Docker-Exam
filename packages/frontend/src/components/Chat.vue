@@ -15,6 +15,8 @@ import CustomDialog from "@/components/CustomDialog.vue";
 import Message from "@/components/Message.vue";
 import AvatarCircle from "./AvatarCircle.vue";
 
+import DragNDropUI from "./DragNDropUI.vue";
+
 import API from "@/utils/apiWrapper";
 
 import config from "@/../config.json";
@@ -98,6 +100,8 @@ const uploadFileDialogRef = ref(null);
 
 const uploadFileInputRef = ref(null);
 
+const dragNDropUI = ref(null);
+
 const showUser = ref(false);
 
 const channelUsers = ref([]);
@@ -166,7 +170,6 @@ const props = defineProps({
 });
 
 watch(() => props.channelUsers, async (newVal, oldVal) => {
-    console.log('channelUsers changed');
     loading.value = true;
     page.value = 2;
     lastLoadedMessages.value = [];
@@ -184,7 +187,6 @@ watch(() => props.channelUsers, async (newVal, oldVal) => {
 });
 
 watch(() => props.channelMessages, async (newVal, oldVal) => {
-    console.log('channelMessages changed');
     loading.value = true;
     messages.value = newVal;
     let tmp;
@@ -209,6 +211,9 @@ watch(() => props.channelMessages, async (newVal, oldVal) => {
 const checkDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if(e.dataTransfer.types.includes("Files")) {
+        dragNDropUI.value.show();
+    }
 };
 
 const openDragFile = (e) => {
@@ -222,6 +227,7 @@ const openDragFile = (e) => {
         uploadFileInputRef.value.files = files;
         uploadFileDialogRef.value.show();
     }
+    dragNDropUI.value.hide();
 };
 
 const getAvatarFromUsers = (channel) => {
@@ -852,6 +858,7 @@ defineExpose({
                 <input ref="uploadFileInputRef" type="file" :src="getImg(actualIMG?.text)" class="file-input file-input-bordered w-full max-w-x"/>
             </template>
         </CustomDialog>
+        
     </Teleport>
 
     <div v-if="loading">
@@ -862,6 +869,7 @@ defineExpose({
     </div>
 
     <div v-else class="flex-1 flex justify-between flex flex-col w-[32px] min-h-[9rem] max-h-[55rem]" @drop.prevent="openDragFile" @dragenter="checkDrag" @dragover="checkDrag">
+        
         <div class="flex gap-2 sm:items-center justify-between py-3 border-b-2 border-gray-200 px-4">
             <div class="relative flex flex-1">
                 <AvatarCircle
@@ -926,7 +934,9 @@ defineExpose({
             </div>
         </div>
 
+        <DragNDropUI ref="dragNDropUI"></DragNDropUI>
         <ul role="list" ref="messagesRef" id="messages" class="inline-flex flex-1 flex-col space-y-4 p-3 max-h-[calc(100vh-195px)] overflow-y-auto overflow-x-hidden">
+            
             <div v-for="(message, index) in messages">
                 <Message
                     @showUser="showUserProfile(message)"
