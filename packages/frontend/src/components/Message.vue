@@ -28,7 +28,8 @@ const downloadFile = async (id) => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = fileTitle.value + '.' + props.type;
+    a.download = fileTitle.value;
+    console.log(a);
     a.click();
 }
 
