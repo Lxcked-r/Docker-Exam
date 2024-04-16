@@ -645,6 +645,7 @@ const donwloadImage = async (url) => {
  * Upload File to conversation
  */
 const uploadFile = async () => {
+    console.log(uploadFileInputRef.value.files[0]);
     const file = uploadFileInputRef.value.files[0];
     const formData = new FormData();
     formData.append("file", file);
@@ -695,6 +696,7 @@ onMounted(async () => {
     let tmp;
     for (let usr of props.channelUsers) {
     }
+
     messages.value = props.channelMessages;
 
     for (let message of messages.value) {
@@ -710,8 +712,16 @@ onMounted(async () => {
     
     loading.value = false;
     await nextTick(() => {
-        scrollToBottom();
         messagesRef.value.addEventListener("scroll", checkScroll);
+        scrollToBottom();
+    });   
+    messageInput.value.addEventListener('paste', (e) => {
+        if (e.clipboardData.files.length > 0) {
+            e.preventDefault();
+            uploadFileInputRef.value.files = e.clipboardData.files;
+            uploadFileDialogRef.value.show();
+            console.log(uploadFileInputRef.value.files[0]);
+        }
     });
 });
 

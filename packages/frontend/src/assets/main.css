@@ -23,3 +23,7 @@ p {
     word-wrap: break-word;
     overflow-wrap: break-all;
 }    
+
+#loader {
+    z-index: 9999;
+}

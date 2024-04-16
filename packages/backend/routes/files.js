@@ -21,12 +21,11 @@ router.use(express.static('../files'));
 router.post('/', upload.any(), authenticate(), async (req, res) => {
     const options = req.body;
     const fileName = req.files[0].originalname;
-    const fileNameWithoutExtension = fileName.split('.')[0];
 
     options.file = req.files[0];
 
     options.size = options.size || req.files[0].size;
-    options.name = options.name || fileNameWithoutExtension;
+    options.name = options.name || fileName;
     if (!options.channelID || !options.name || !options.type) {
         res.status(400).json({ success: false, message: "Missing required fields" });
         return;
