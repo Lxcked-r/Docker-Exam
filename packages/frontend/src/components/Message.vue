@@ -27,7 +27,6 @@ const downloadFile = async (id) => {
     const response = await API.fireServer('/api/v1/files/' + id, {
         method: "GET",
     });
-    console.log(response);
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -85,7 +84,6 @@ const getImg = (tryer) => {
 
 onBeforeMount(async () => {
     loading.value = false;
-    console.log(props.type);
 });
 
 onMounted(async () => {
