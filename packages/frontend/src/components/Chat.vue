@@ -25,6 +25,8 @@ import router from "@/router";
 
 import crypter from "@/utils/crypter";
 
+const fileFromClipboard = ref(null);
+
 const channelAvatarRef = ref(null);
 const channelPrivateAvatarRef = ref(null);
 
@@ -487,7 +489,12 @@ const tryAvatar = async (id) => {
 
 
 const getTwentyNewMessages = async () => {
-	if(lastLoadedMessages.value.length<=0 && page.value!==2) {
+
+    //avoid opaque responses
+    
+
+
+	if(lastLoadedMessages.value.length<=0 && page.value!==2 || lastLoadedMessages.value.length>0 && lastLoadedMessages.value.length<20 && page.value!==2) {
 		return false;
 	}
     const res = await API.fireServer("/api/v1/messages?channelID="+props.channelID+"&page="+page.value, {
@@ -645,8 +652,13 @@ const donwloadImage = async (url) => {
  * Upload File to conversation
  */
 const uploadFile = async () => {
-    console.log(uploadFileInputRef.value.files[0]);
-    const file = uploadFileInputRef.value.files[0];
+    let file;
+    console.log(uploadFileInputRef.value.files.length);
+    if(uploadFileInputRef.value.files.length === 0) {
+        file = fileFromClipboard.value;
+    } else {
+        file = uploadFileInputRef.value.files[0];
+    }
     const formData = new FormData();
     formData.append("file", file);
     formData.append("type", file.name.substring(file.name.lastIndexOf('.')+1, file.name.length) || file.name);
@@ -664,6 +676,7 @@ const uploadFile = async () => {
 
         data.text = data.id;
         data.User = localUserStore.user;
+        console.log(data);
 
         const encryptedData = await crypter.encrypt(data);
         socket.emit("message", encryptedData);
@@ -718,9 +731,12 @@ onMounted(async () => {
     messageInput.value.addEventListener('paste', (e) => {
         if (e.clipboardData.files.length > 0) {
             e.preventDefault();
+            const dataTransfer = e.clipboardData.files || navigator.clipboard.read();
+
+            fileFromClipboard.value = dataTransfer[0];
+        
             uploadFileInputRef.value.files = e.clipboardData.files;
-            uploadFileDialogRef.value.show();
-            console.log(uploadFileInputRef.value.files[0]);
+            uploadFileDialogRef.value.show("www");
         }
     });
 });

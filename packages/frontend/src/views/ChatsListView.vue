@@ -188,7 +188,7 @@ socket.on("newChan", async (data) => {
 </script>
 
 <template>
-	<div class="flex flex-1">
+	<div class="flex flex-1 overflow-y-hidden">
 
 		<div class="flex flex-col gap-4 min-w-60 p-2 bg-base-200">
 

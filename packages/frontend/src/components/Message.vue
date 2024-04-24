@@ -1,7 +1,7 @@
 <script setup>
 import API from '@/utils/apiWrapper';
 import AvatarCircle from './AvatarCircle.vue';
-import { onBeforeMount, onMounted, ref } from 'vue';
+import { onBeforeMount, onMounted, ref, watch } from 'vue';
 
 const imgRef = ref(null);
 
@@ -10,6 +10,7 @@ const fileTitle = ref('');
 const fileSize = ref('');
 
 const loading = ref(false);
+
 
 const getFile = async (id) => {
     const response = await API.fireServer('/api/v1/files/name/' + id, {
@@ -66,6 +67,14 @@ const props = defineProps({
     id: String,
 });
 
+watch(() => props.type, async (newValue) => {
+    if (newValue !== 'text' && newValue !== 'jpg' && newValue !== 'png' && newValue !== 'webp' && newValue !== 'gif') {
+        const data = await getFile(props.text);
+        fileTitle.value = data.name;
+        fileSize.value = data.size;
+    }
+});
+
 const getImg = (tryer) => {
     return `https://172.21.22.153:2025/api/v1/files/${tryer}`;
 
@@ -73,6 +82,7 @@ const getImg = (tryer) => {
 
 onBeforeMount(async () => {
     loading.value = false;
+    console.log(props.type);
 });
 
 onMounted(async () => {

@@ -26,8 +26,7 @@ const createFile = async (options) => {
         logger.error("Missing required field", { caller: callerName });
         return null;
     }
-
-    console.log(options.file);
+    
 
     const transaction = await db.transaction();
 
@@ -74,7 +73,6 @@ const getFileById = async (id) => {
             logger.error("File not found", { caller: callerName });
             return null;
         }
-
         return file;
     } catch (error) {
         logger.error(error, { caller: callerName });

@@ -56,6 +56,13 @@ router.get('/:id',/* authenticate(), */async (req, res) => {
         res.status(404).json({ success: false, message: "File not found" });
         return;
     }
+    const fileSelected = fs.readFileSync(file.path, { root: '.' });
+    try {
+        fileSelected.toString();
+    } catch (error) {
+        file.type = 'octet/stream';
+    }
+    
     res.sendFile(file.path, { root: '.' });
 });
 
