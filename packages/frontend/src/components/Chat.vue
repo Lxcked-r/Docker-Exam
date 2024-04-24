@@ -19,11 +19,12 @@ import DragNDropUI from "./DragNDropUI.vue";
 
 import API from "@/utils/apiWrapper";
 
-import config from "@/../config.json";
 
 import router from "@/router";
 
 import crypter from "@/utils/crypter";
+
+import config from "@/../config";
 
 const fileFromClipboard = ref(null);
 
@@ -310,7 +311,7 @@ const internalNotif = (title, content) => {
 
 
 const getImg = (tryer) => {
-    return `https://172.21.22.153:2025/api/v1/files/${tryer}`;
+    return `${baseUrl}/api/v1/files/${tryer}`;
 
 }
 

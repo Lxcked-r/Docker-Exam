@@ -2,6 +2,9 @@
 import API from '@/utils/apiWrapper';
 import AvatarCircle from './AvatarCircle.vue';
 import { onBeforeMount, onMounted, ref, watch } from 'vue';
+import config from "@/../config";
+
+const baseUrl = config.use_current_origin ? window.location.origin : config.base_url;
 
 const imgRef = ref(null);
 
@@ -76,7 +79,7 @@ watch(() => props.type, async (newValue) => {
 });
 
 const getImg = (tryer) => {
-    return `https://172.21.22.153:2025/api/v1/files/${tryer}`;
+    return `${baseUrl}/api/v1/files/${tryer}`;
 
 }
 
