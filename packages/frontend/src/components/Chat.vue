@@ -55,7 +55,7 @@ const friendsStore = useFriendsStore();
 const actualIMG = ref(null);
 
 const actualChars = ref(0);
-const maxChars = 2000;
+const maxChars = 300;
 
 const msg = ref({});
 
@@ -172,6 +172,7 @@ const props = defineProps({
     },
 });
 
+
 watch(() => props.channelUsers, async (newVal, oldVal) => {
     loading.value = true;
     page.value = 2;
@@ -282,6 +283,10 @@ const isFirst = (message, key) => {
         return false;
     }
 }
+
+const calc = (max, actual) => {
+    return max / actual;
+};
 
 const isSameThanNext = (message, key) => {
     if (message.userID === props.channelMessages[key+1]?.userID) {
@@ -400,14 +405,13 @@ const checkScroll = async (event) => {
 };
 
 const showError = (message) => {
-    let newMSG = {title: "Error", body: message};
+    let newMSG = {title: "Error", body: message, level: "error"};
     notify(newMSG);
 };
 
 const sendFriendRequest = async (userID) => {
     const data = {userID: localUserStore.user.id, friendID: userID};
     const res = await API.fireServer("/api/v1/friends", {
-        method: "POST",
         body: JSON.stringify(data),
     });
 
@@ -422,10 +426,11 @@ const sendNewMessage = async () => {
     if(messageInput.value.value === "") {
         return;
     }
-    /*if(messageInput.value.value.length > 300 || messageInput.value.value.length < 1) {
+    if(messageInput.value.value.length > 300 || messageInput.value.value.length < 1) {
+        
         showError("The message must be between 1 and 300 characters long");
         return;
-    }*/
+    }
     setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName, localUserStore.user.avatar);
 
     messageInput.value.value = ""; // clear the input
@@ -443,6 +448,7 @@ const scrollToBottom = async () => {
 };
 
 const typing = async (event) => {
+    actualChars.value = messageInput.value.value.length;
     const data = {channelID: props.channelID, userID: props.userID, userName: props.userName};
     const encrypted = encryptData(data);
     socket.emit("typing", encrypted);
@@ -659,6 +665,11 @@ const uploadFile = async () => {
         file = fileFromClipboard.value;
     } else {
         file = uploadFileInputRef.value.files[0];
+    }
+
+    if(file.size > 10000000) {
+        showError("The file is too big. The maximum size is 10MB");
+        return;
     }
     const formData = new FormData();
     formData.append("file", file);
@@ -985,7 +996,6 @@ defineExpose({
         </ul>
 
         <div ref="someoneIsTyping" class="chat-header flex flex-box opacity-80 max-h-8"></div>
-
         <div class="flex flex-col">
             <div class="relative">
                 <input
@@ -997,6 +1007,9 @@ defineExpose({
                     class="input input-bordered w-full max-w-[calc(100%-90px)] max-h-20 overflow-y-auto "
                 />
                 <div class="absolute right-0 items-center inset-y-0 hidden sm:flex">
+                    <div>
+                        <span class="-z-1 text-gray-500">{{ actualChars }}/{{ maxChars }}</span>
+                    </div>
                     <button @click="showUploadFile()" type="button" class="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out">
                         <i class="bi bi-file-earmark-arrow-up"></i>
                     </button>
