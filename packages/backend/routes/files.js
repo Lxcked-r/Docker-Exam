@@ -11,7 +11,11 @@ import fs from 'fs';
 import multer from 'multer';
 import logger from '../utils/logger.mjs';
 
-const upload = multer();
+const upload = multer({
+    limits: {
+        fileSize: 10 * 1024 * 1024,
+    },
+});
 
 const router = express.Router();
 router.use(express.urlencoded({ extended: true }));
@@ -19,6 +23,7 @@ router.use(express.json());
 router.use(express.static('../files'));
 
 router.post('/', upload.any(), authenticate(), async (req, res) => {
+    
     const options = req.body;
     const fileName = req.files[0].originalname;
 

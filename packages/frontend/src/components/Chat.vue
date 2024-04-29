@@ -423,6 +423,7 @@ const sendFriendRequest = async (userID) => {
 };
 
 const sendNewMessage = async () => {
+    console.log(messageInput.value.value);
     if(messageInput.value.value === "") {
         return;
     }
@@ -434,6 +435,7 @@ const sendNewMessage = async () => {
     setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName, localUserStore.user.avatar);
 
     messageInput.value.value = ""; // clear the input
+    actualChars.value = 0;
 };
 
 const updateLastMessage = (message) => {
@@ -462,6 +464,7 @@ const typing = async (event) => {
         }
         setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName, localUserStore.user.avatar);
         messageInput.value.value = ""; // clear the input
+        actualChars.value = 0;
     }
 };
 
@@ -666,11 +669,11 @@ const uploadFile = async () => {
     } else {
         file = uploadFileInputRef.value.files[0];
     }
-
+/*
     if(file.size > 10000000) {
         showError("The file is too big. The maximum size is 10MB");
         return;
-    }
+    }*/
     const formData = new FormData();
     formData.append("file", file);
     formData.append("type", file.name.substring(file.name.lastIndexOf('.')+1, file.name.length) || file.name);

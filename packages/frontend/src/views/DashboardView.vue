@@ -207,7 +207,7 @@ socket.on("notification", async (notif) => {
 				console.error(e);
 			}
 
-			if(notif.type !== "text" && notif.type !== "friend" && (notif.message.type === "jpg" || notif.message.type === "png" || notif.message.type === "webp" || notif.message.type === "gif")) {
+			if(notif.type !== "text" && notif.type !== "friend" ) {
 				notif.message.text = "sent File";
 			}
 
