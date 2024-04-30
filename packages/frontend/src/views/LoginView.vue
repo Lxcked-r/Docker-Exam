@@ -1,9 +1,13 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import API from "@/utils/apiWrapper";
 import { useRouter } from "vue-router";
 
 import CustomDialog from "@/components/CustomDialog.vue";
+
+import config from "@/../config";
+
+const app_name = config.app_name;
 
 const router = useRouter();
 
@@ -56,6 +60,10 @@ const login = async () => {
 		isLoading.value = false;
 	}
 };
+
+onMounted(() => {
+	document.title = `Login - ${app_name} `;
+});
 
 </script>
 
