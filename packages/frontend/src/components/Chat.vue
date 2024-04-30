@@ -184,7 +184,19 @@ watch(() => props.channelUsers, async (newVal, oldVal) => {
     channelUsers.value = newUsers;
     loading.value = false;
     
-	document.title = props.channelName + " - " + appName;
+    if(props.channelType === "public") {
+        document.title = props.channelName + " - " + appName;
+    } else {
+        for (const friend of friends.value) {
+            if (friend.id === props.channelID) {
+                if(friend.user.id === localUserStore.user.id) {
+                    document.title = friend.otherUser.username + " - " + appName;
+                } else {
+                    document.title = friend.user.username + " - " + appName;
+                }
+            }
+        }
+    }
 
     await nextTick(() => {
         scrollToBottom();
@@ -209,7 +221,6 @@ watch(() => props.channelMessages, async (newVal, oldVal) => {
 
     }
     
-	document.title = props.channelName + " - " + appName;
     loading.value = false;
     await nextTick(() => {
         scrollToBottom();
@@ -743,8 +754,22 @@ onMounted(async () => {
 
         }
     }
+
+    friends.value = friendsStore.friends;
     
-	document.title = props.channelName + " - " + appName;
+    if(props.channelType === "public") {
+        document.title = props.channelName + " - " + appName;
+    } else {
+        for (const friend of friends.value) {
+            if (friend.id === props.channelID) {
+                if(friend.user.id === localUserStore.user.id) {
+                    document.title = friend.otherUser.username + " - " + appName;
+                } else {
+                    document.title = friend.user.username + " - " + appName;
+                }
+            }
+        }
+    }
     
     loading.value = false;
     await nextTick(() => {
