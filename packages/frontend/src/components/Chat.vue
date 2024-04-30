@@ -26,6 +26,8 @@ import crypter from "@/utils/crypter";
 
 import config from "@/../config";
 
+const appName = config.app_name;
+
 const fileFromClipboard = ref(null);
 
 const channelAvatarRef = ref(null);
@@ -181,6 +183,8 @@ watch(() => props.channelUsers, async (newVal, oldVal) => {
     let newUsers = newVal;
     channelUsers.value = newUsers;
     loading.value = false;
+    
+	document.title = props.channelName + " - " + appName;
 
     await nextTick(() => {
         scrollToBottom();
@@ -204,6 +208,8 @@ watch(() => props.channelMessages, async (newVal, oldVal) => {
     } catch {
 
     }
+    
+	document.title = props.channelName + " - " + appName;
     loading.value = false;
     await nextTick(() => {
         scrollToBottom();
@@ -737,6 +743,8 @@ onMounted(async () => {
 
         }
     }
+    
+	document.title = props.channelName + " - " + appName;
     
     loading.value = false;
     await nextTick(() => {

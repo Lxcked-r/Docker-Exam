@@ -25,6 +25,7 @@ const sessionStateStore = useSessionStateStore();
 const friendsStore = useFriendsStore();
 
 const baseUrl = config.use_current_origin ? window.location.origin : config.base_url;
+const app_name = config.app_name;
 
 const signOutFailDialog = ref(null);
 const notifications = ref([]);
@@ -47,8 +48,21 @@ const lastNotif = ref(null);
 const news = ref({});
 
 const friends = ref([]);
+
+
 const onDefaultRoute = computed(() => {
+	if(router.currentRoute.value.path === "/dashboard") {
+		changeTitle(onTitleRoute.value);
+	}
 	return router.currentRoute.value.path === "/dashboard";
+});
+
+const onTitleRoute = computed(() => {
+	if(router.currentRoute.value.path === "/dashboard") {
+		return `Home - ${app_name}`;
+	} else {
+		return;
+	}
 });
 
 const headerText = computed(() => {
@@ -314,6 +328,10 @@ const getPendingFriendsRequestsFromSpecificFriendID = (id) => {
 	}
 }
 
+const changeTitle = (title) => {
+	document.title = title;
+};
+
 onMounted(async () => {
 
 	// Check if the user is logged in, and redirect them to the dashboard if they are.
@@ -348,6 +366,7 @@ onMounted(async () => {
 	for ( const friend of friends.value) {
 		getPendingFriendsRequestsFromSpecificFriendID(friend.id);
 	}
+	changeTitle(`Home - ${app_name}`);
 
 	isLoaded.value = true;
 

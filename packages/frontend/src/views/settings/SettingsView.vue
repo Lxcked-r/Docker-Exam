@@ -1,8 +1,19 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import API from "@/utils/apiWrapper";
 import { useLocalUserStore } from "@/stores/localUser";
 import AvatarCircle from "@/components/AvatarCircle.vue";
+import config from "@/../config";
+
+const app_name = config.app_name;
+
+
+const onSettingsRoute = computed(() => {
+	if(router.currentRoute.value.path === "/dashboard") {
+		changeTitle(onTitleRoute.value);
+	}
+	return router.currentRoute.value.path === "/dashboard";
+});
 
 const localUserStore = useLocalUserStore();
 
@@ -103,8 +114,11 @@ const removeAvatar = async () => {
 	}
 };
 
-onMounted(async () => {
+onMounted(async () => {	
 	await localUserStore.init();
+
+	document.title = 'Settings - ' + app_name;
+
 });
 
 </script>
@@ -119,7 +133,7 @@ onMounted(async () => {
 
 		<h2 class="text-xl font-bold">Notifications</h2>
 
-		<div class="flex flex-col gap-4 mt-4">
+		<div class="flex flex-col gap-4 mb-4 mt-2">
 			<div class="flex flex-box items-center">
 				<h3>Enable Notifications &nbsp;</h3>
 				<input type="checkbox" class="toggle" checked />
