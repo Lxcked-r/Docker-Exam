@@ -25,6 +25,8 @@ const serverApp = async (app) => {
     // Socket.io
     io.on('connection', async socket => {
 
+        console.log("New connection : " + socket.id);
+
         
         socket.on("newFriend" , async (data) => {
             data = await decryptData(data);
@@ -140,6 +142,10 @@ const serverApp = async (app) => {
             io.to("pong").emit("pong:move", data);
         });
         
+    });
+
+    io.on('disconnect', async socket => {
+        console.log("Disconnected : " + socket.id);
     });
 
     const start = () => {

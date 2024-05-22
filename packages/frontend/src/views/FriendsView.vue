@@ -117,6 +117,7 @@ const createChannel = async (friend, friendRelationID) => {
 const openChatFromFriend = async (friend, friendRelationID) => {
     await checkChannel(friendRelationID).then(async (data) => {
         if (data.length > 0) {
+            console.log(data);
             router.push("/dashboard/chats/" + friendRelationID);
         } else {
             await createChannel(friend, friendRelationID).then(async (data) => {
@@ -154,18 +155,18 @@ const openContextMenu = (friend, e) => {
     items: [
       { 
         label: "Open Chat", 
-        onClick: () => {
+        onClick: async () => {
           if(friend.pending)
           {
             return;
           }
-        openChatFromFriend(friend, friend.id);
+        await openChatFromFriend(friend, friend.id);
         }
       },
       { 
         label: "More", 
         children: [
-          { label: "Delete Friend", onClick: () => deleteFriend(friend)}
+          { label: "Delete Friend", onClick: async () => await deleteFriend(friend)}
         ]
       },
     ]
@@ -197,7 +198,7 @@ onMounted(async () => {
 
 <template>
     <div v-if="loading">
-
+        "Loading..."
     </div>
     <div v-else class="container">
     

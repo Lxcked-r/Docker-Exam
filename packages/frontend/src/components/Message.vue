@@ -105,7 +105,7 @@ onMounted(async () => {
                 <p v-if="isFirst" :id="id" class="text-sm font-normal pt-1 mt-0 text-gray-900 dark:text-white max-w-[64rem]" @mouseover="$emit('showMessageOptions')">{{ text }}</p>
                 <p v-else :id="id" class="text-sm font-normal text-gray-900 -mt-6 dark:text-white ml-[48px] max-w-[64rem]" @mouseover="$emit('showMessageOptions')">{{ text }}</p>
             </div> 
-            <div v-else-if="type=='jpg' || type=='png' ||type=='webp' || type=='gif'">
+            <div v-else-if="type=='jpg' || type=='png' ||type=='webp' || type=='gif'" v-bind:style="{cursor:'pointer'}">
                 <img v-if="isFirst" ref="imgRef" :id="id" class="rounded-lg max-w-[30%]" :src="getImg(text)" @click="$emit('showImage', imgRef)"/>
                 <img v-else :id="id" ref="imgRef" class="rounded-lg max-w-[28%] ml-[48px]" :src="getImg(text)" @click="$emit('showImage', imgRef)"/>
             </div>
