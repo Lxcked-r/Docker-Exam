@@ -19,6 +19,7 @@ router.post("/create", async (req, res) => {
     // Parse the body and validate the options
     const options = req.body;
     if (
+        !options.email ||
         !options.name ||
         !options.username ||
         !options.password ||
@@ -30,6 +31,7 @@ router.post("/create", async (req, res) => {
 
     // Create the user
     const user = await createUser({
+        email: options.email,
         name: options.name,
         username: options.username,
         password: options.password,

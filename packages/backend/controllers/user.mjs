@@ -7,6 +7,14 @@ import { db } from "../utils/database.mjs";
 import logger from "../utils/logger.mjs";
 import bcrypt from "bcrypt";
 
+import { SMTPClient } from "emailjs";
+
+const client = new SMTPClient({
+    host: "smtp.freesmtpservers.com",
+    port: 25,
+    
+});
+
 const callerName = "User";
 
 /**
@@ -50,6 +58,7 @@ const createUser = async (options) => {
     try {
 
         const user = await User.create({
+            email: options.email,
             name: options.name,
             username: options.username,
             password: hashedPassword,
@@ -61,6 +70,19 @@ const createUser = async (options) => {
         logger.info(`Created user ${user.id}`, { caller: callerName });
 
         await transaction.commit();
+
+        client.send({
+            text: "Welcome to Bowy!",
+            from: "you <username@your-email.com>",
+            to: `someone ${options.email}`,
+            subject: "Welcome!",
+        }, (err, message) => {
+            if (err) {
+                console.log(err);
+            } else {
+                console.log(message);
+            }
+        })
         return user;
     } catch (err) {
         await transaction.rollback();
