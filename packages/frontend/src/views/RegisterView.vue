@@ -118,10 +118,13 @@ const register = async () => {
 	<div class="h-screen w-screen flex flex-col justify-center items-center">
 		<div class="p-2 bg-primary-300 flex flex-col gap-4">
 		<h1 class="text-2xl font-bold">Register</h1>
-        <input class="input input-bordered" type="text" placeholder="email" v-model="email" />
-		<input class="input input-bordered w-full max-w-xs" type="text" placeholder="Username" v-model="username" />
-		<input ref="" class="input input-bordered w-full max-w-xs" type="password" placeholder="Password" v-model="password" />
-        <input class="input input-bordered w-full max-w-xs" type="password" placeholder="Confirm Password" v-model="confirmPassword" />
+        <input class="input input-bordered w-full " type="text" placeholder="email" v-model="email" />
+		<input class="input input-bordered w-full " type="text" placeholder="Username" v-model="username" />
+		<input ref="" class="input input-bordered w-full " type="password" placeholder="Password" v-model="password" />
+        <input class="input input-bordered w-full" type="password" placeholder="Confirm Password" v-model="confirmPassword" />
+        <span>
+            By registering, you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.
+        </span>
 		<button
 			:class="isLoading ? 'btn btn-disabled btn-sm' : 'btn btn-primary btn-sm'"
 			@click="register"
@@ -133,6 +136,12 @@ const register = async () => {
 			</span>
 			Register
 		</button>
+        <span>
+            if you are an operator, please contact an admin to get your account set up.
+        </span>
+        <span>
+            Already have an account? <router-link to="/login">Login</router-link>
+        </span>
 		</div>
 	</div>
 </template>
