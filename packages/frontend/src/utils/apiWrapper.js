@@ -47,6 +47,10 @@ API.fireServer = async function(endpoint, inputJson) {
 	const allowedMethods = ["GET", "POST", "PATCH", "PUT", "DELETE", "HEAD"];
 
 	// validation
+	if(endpoint.endsWith("undefined")) {
+		return null;
+	}
+
 	if (!inputJson) {
 		console.error("[api/fireServer] Refusing to process a function call without a request body.");
 		return null;

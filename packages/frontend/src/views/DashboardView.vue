@@ -82,6 +82,11 @@ const headerText = computed(() => {
 	}
 });
 
+/**
+ * Delete New (admin only)
+ * @param {number} id
+ * @returns {Promise<void>}
+ */
 const deleteNew = async (id) => {
 	const res = await API.fireServer("/api/v1/news", {
 		method: "DELETE",
@@ -94,10 +99,17 @@ const deleteNew = async (id) => {
 	return data;
 };
 
+/**
+ * Open New Dialog (admin only)
+ */
 const openNewDialog = () => {
 	createNewDialog.value.show();
 };
 
+/**
+ * Create New from New Input (admin only)
+ * @returns {Promise<void>}
+ */
 const createNew = async () => {
 	const res = await API.fireServer("/api/v1/news", {
 		method: "POST",
@@ -116,6 +128,10 @@ const createNew = async () => {
 	return data;
 };
 
+/**
+ * Get News and put it in the news.value
+ * @returns {Promise<void>}
+ */
 const getNews = async () => {
 	const res = await API.fireServer("/api/v1/news", {
 		method: "GET",
@@ -127,6 +143,10 @@ const getNews = async () => {
 	return null;
 };
 
+/**
+ * Get Friends and put it in the friends.value
+ * @returns {Promise<void>}
+ */
 const getFriends = async () => {
     const res = await API.fireServer("/api/v1/friends/" + localUserStore.user.id, {
         method: "GET",
@@ -135,6 +155,10 @@ const getFriends = async () => {
     friends.value = data;
 };
 
+/**
+ * Sign Out
+ * @returns {Promise<void>}
+ */
 const signOut = async () => {
 	try {
 		const res = await API.fireServer("/api/v1/session/end", {
@@ -154,18 +178,25 @@ const signOut = async () => {
 	}
 };
 
-
-
+/**
+ * Clear Local Data
+ */
 const clearLocalData = () => {
 	sessionStateStore.setSignedInState(false);
 	localStorage.clear();
 };
 
+/**
+ * Reload Page
+ */
 const reloadPage = () => {
 	window.location.reload();
 };
 
-
+/**
+ * Get Channels and put it in the channels.value
+ * @returns {Promise<void>}
+ */
 const getChannels = async () => {
 	const response = await API.fireServer("/api/v1/channelsrelations?userID="+localUserStore.user.id, {
 		method: "GET",
@@ -176,8 +207,11 @@ const getChannels = async () => {
 	}
 };
 
-
-
+/**
+ * Try Avatar
+ * @param {number} id
+ * @returns {Promise<boolean>}
+ */
 const tryAvatar = async (id) => {
 	let response;
 	response = await fetch(`${baseUrl}/api/v1/avatars/${id}`);
@@ -190,8 +224,35 @@ const tryAvatar = async (id) => {
 	return false;
 };
 
+
 // ############################################################################################################
 // sockets 
+
+// on offline, set the friend with the id of friendID to offline
+socket.on("offline", async (friendID) => {
+	// in friends.value put the friend with the id of friendID and set the online to false
+	if(friends.value.length > 0) {
+		//find the friend in the friends.value array by the friendID
+		const friend = friends.value.find(friend => friend.id === friendID.id);
+		if(friend) {
+			friend.online = false;
+		}
+	}
+});
+
+// on online, set the friend with the id of friendID to online
+socket.on("online", async (friendID) => {
+	// in friends.value put the friend with the id of friendID and set the online to true
+	if(friends.value.length > 0) {
+		//find the friend in the friends.value array by the friendID
+		const friend = friends.value.find(friend => friend.id === friendID.id);
+		if(friend) {
+			friend.online = true;
+		}
+	}
+});
+
+// on notification, add the notification to the notifications array
 socket.on("notification", async (notif) => {
 	if(notif.message.userID === localUserStore.user.id) {
 		return;
@@ -231,6 +292,7 @@ socket.on("notification", async (notif) => {
 	}
 });
 
+// on newFriend, add the notification to the notifications array
 socket.on("newFriend", async (friend) => {
 	if(friend.id === localUserStore.user.id) {
 		return;
@@ -239,27 +301,25 @@ socket.on("newFriend", async (friend) => {
 	}
 });
 
-const emitJoinChannels = () => {
-	for (const channel of channels.value) {
-		let data = {
-			channelID: channel.channelID,
-			userID: localUserStore.user.id,
-		};
-		data = crypter.encrypt(data);
-		socket.emit("channel", data);
-	}
-};
-
 
 // ############################################################################################################
 // NOTIFS 
 
+/**
+ * Add Notification to the notifications array and increment the notifs value
+ * @param {object} notif
+ */
 const addNotif = (notif) => {
 	notifications.value.push(notif);
 	notifs.value ++;
 };
 
-
+/**
+ * New Notification to os notification from the browser
+ * @param {string} title
+ * @param {string} img
+ * @param {string} value
+ */
 const newNotif = async (title, img, value) => {
 
 	if(!tryNotif()) {
@@ -274,6 +334,10 @@ const newNotif = async (title, img, value) => {
 
 }
 
+/**
+ * Try Notification to check if the browser supports notifications and if the user has given permission
+ * @returns {boolean}
+ */
 const tryNotif = () => {
 	if (!("Notification" in window)) {
 		return false;
@@ -285,15 +349,22 @@ const tryNotif = () => {
 	return false;
 
     };
-  }
+};
 
-  const getNotifs = async () => {
+/**
+ * Get Notifications and put it in the notifications.value
+ * @returns {Promise<void>}
+ */
+const getNotifs = async () => {
 	const res = await API.fireServer("/api/v1/notifications?userID="+ localUserStore.user.id, {
 		method: "GET",
 	});
 	return res;
 };
 
+/**
+ * Clear Notifications and set the notifs value to 0
+ */
 const clearNotifs = () => {
     notifs.value = 0;
 	notifications.value = [];
@@ -302,7 +373,26 @@ const clearNotifs = () => {
 
 // ############################################################################################################
 
+/**
+ * for each channel in the channels array, emit a channel event to the socket
+ */
+const emitJoinChannels = () => {
+	for (const channel of channels.value) {
+		let data = {
+			channelID: channel.channelID,
+			userID: localUserStore.user.id,
+		};
+		data = crypter.encrypt(data);
+		socket.emit("channel", data);
+	}
+};
 
+/**
+ * Open Chat and remove the notification from the notifications array
+ * @param {number} channelID
+ * @param {object} notif notification to remove from the notifications array - (not required)
+ * @param {number} key
+ */
 const openChat = (channelID, notif, key) => {
 	if(notif) {
 		notifications.value.splice(key, 1);
@@ -311,10 +401,18 @@ const openChat = (channelID, notif, key) => {
 	router.push('/dashboard/chats/'+channelID);
 };
 
+/**
+ * Open Friends List
+ * @param {object} notif
+ */
 const openFriendsList = (notif) => {
 	router.push('/dashboard/friends');
 };
 
+/**
+ * Get Pending Friends Requests From Specific Friend ID
+ * @param {number} id
+ */
 const getPendingFriendsRequestsFromSpecificFriendID = (id) => {
 	if(friends.value.length > 0) {
 		if(friends.value.find(friend => friend.id === id).pending && friends.value.find(friend => friend.user.id !== localUserStore.user.id) !== undefined) {
@@ -328,8 +426,20 @@ const getPendingFriendsRequestsFromSpecificFriendID = (id) => {
 	}
 }
 
+/**
+ * Change Title
+ * @param {string} title
+ */
 const changeTitle = (title) => {
 	document.title = title;
+};
+
+/**
+ * Check Online Friends
+ */
+const checkOnlineFriends = async () => {
+	const data = {friends: friends.value, userID: localUserStore.user.id};
+	socket.emit("checkOnline", data);
 };
 
 onMounted(async () => {
@@ -353,6 +463,9 @@ onMounted(async () => {
 		console.error(e);
 	}
 
+	friends.value = friendsStore.friends;
+	await checkOnlineFriends();
+
 	news.value = await getNews();
 
 	await getNotifs().then(async (res) => {
@@ -367,6 +480,7 @@ onMounted(async () => {
 		getPendingFriendsRequestsFromSpecificFriendID(friend.id);
 	}
 	changeTitle(`Home - ${app_name}`);
+
 
 	isLoaded.value = true;
 
@@ -581,6 +695,13 @@ onMounted(async () => {
 							:styles="localUserStore.user.operator ? 'half-v' : ''"
 						/>
 					</div>
+				</div>
+				<div class="flex">
+					<HomeSquare class="w-[400px]"
+						to="/dashboard/memory"
+						icon="bi-joystick"
+						text="Memory">
+					</HomeSquare>
 				</div>
 			</div>
 		<RouterView v-show="!onDefaultRoute && isLoaded" />

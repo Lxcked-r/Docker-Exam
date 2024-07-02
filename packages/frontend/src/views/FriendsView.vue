@@ -29,11 +29,18 @@ const addFriendDialogRef = ref(null);
 
 const notify = inject("notify");
 
+/**
+ * Copy user ID
+ */
 const copyUserID = () => {
     navigator.clipboard.writeText(localUserStore.user.id);
     notify({title: "Copied", body: "Your user ID has been copied to the clipboard.", level: "success"});
 };
 
+/**
+ * Get friends
+ * @returns {Promise<void>}
+ */
 const getFriends = async () => {
     const res = await API.fireServer("/api/v1/friends/" + localUserStore.user.id, {
         method: "GET",
@@ -42,10 +49,18 @@ const getFriends = async () => {
     friends.value = data;
 };
 
+/**
+ * Show add friend dialog
+ */
 const showAddFriend = () => {
     addFriendDialogRef.value.show();
 };
 
+/**
+ * Convert friends
+ * @param {Object} data friends object
+ * @returns {Object} converted friends object
+ */
 const convertFriends = (data) => {
     for (let key in data) {
         if (data[key].user.id === localUserStore.user.id) {
@@ -55,10 +70,20 @@ const convertFriends = (data) => {
     return data;
 };
 
+/**
+ * Check if user is friend
+ * @param {String} userID user ID
+ * @returns {Object} friend object
+ */
 const friendCheck = (userID) => {
     return friends.value.find((x) => x.id === userID);
 };
 
+/**
+ * Accept friend
+ * @param {Object} friend friend object
+ * @returns {Promise<void>}
+ */
 const acceptFriend = async (friend) => {
     const res = await API.fireServer("/api/v1/friends/" + friend.id, {
         method: "PUT",
@@ -72,6 +97,11 @@ const acceptFriend = async (friend) => {
     }
 }
 
+/**
+ * Deny friend
+ * @param {Object} friend friend object
+ * @returns {Promise<void>}
+ */
 const denyFriend = async (friend) => {
     const res = await API.fireServer("/api/v1/friends/" + friend.id, {
         method: "DELETE",
@@ -82,6 +112,12 @@ const denyFriend = async (friend) => {
     }
 }
 
+/**
+ * Create channel relation
+ * @param {String} userID user ID
+ * @param {String} channelID channel ID
+ * @returns {Promise<void>}
+ */
 const createChannelRelation = async (userID, channelID) => {
     const res = await API.fireServer("/api/v1/channelsrelations", {
         method: "POST",
@@ -93,7 +129,11 @@ const createChannelRelation = async (userID, channelID) => {
     return await res.json();
 };
 
-
+/**
+ * Check channel
+ * @param {String} friendRelationID friend relation ID
+ * @returns {Promise<void>}
+ */
 const checkChannel = async (friendRelationID) => {
     const res = await API.fireServer("/api/v1/channelsrelations?channelID=" + friendRelationID, {
         method: "GET",
@@ -101,6 +141,12 @@ const checkChannel = async (friendRelationID) => {
     return await res.json();
 };
 
+/**
+ * Create channel
+ * @param {Object} friend friend object
+ * @param {String} friendRelationID friend relation ID
+ * @returns {Promise<void>}
+ */
 const createChannel = async (friend, friendRelationID) => {
     const res = await API.fireServer("/api/v1/channels", {
         method: "POST",
@@ -114,6 +160,12 @@ const createChannel = async (friend, friendRelationID) => {
     return await res.json();
 };
 
+/**
+ * Open chat from friend
+ * @param {Object} friend friend object
+ * @param {String} friendRelationID friend relation ID
+ * @returns {Promise<void>}
+ */
 const openChatFromFriend = async (friend, friendRelationID) => {
     await checkChannel(friendRelationID).then(async (data) => {
         if (data.length > 0) {
@@ -134,6 +186,11 @@ const changeIsFriendID = () => {
     isShowedFriendID.value = !isShowedFriendID.value;
 };
 
+/**
+ * Delete friend
+ * @param {Object} friend friend object
+ * @returns {Promise<void>}
+ */
 const deleteFriend = async (friend) => {
     const res = await API.fireServer("/api/v1/friends/" + friend.id, {
         method: "DELETE",
@@ -145,6 +202,11 @@ const deleteFriend = async (friend) => {
     }
 };
 
+/**
+ * Open context menu
+ * @param {Object} friend friend object
+ * @param {Event} e 
+ */
 const openContextMenu = (friend, e) => {
     actualFriend.value = friend;
 
@@ -191,8 +253,6 @@ onMounted(async () => {
 
     loading.value = false;
 });
-
-
 
 </script>
 

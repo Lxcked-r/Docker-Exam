@@ -7,6 +7,7 @@ export const useFriendsStore = defineStore("friends", () => {
     const kind = ref(null);	// local, api, or null
     const initialized = ref(false);
 
+
     /**
      * Initializes the store for use in the app.
      * @returns {Promise<void>}
@@ -27,6 +28,11 @@ export const useFriendsStore = defineStore("friends", () => {
             });
 
             response.data = await response.json();
+
+            // for each friends in data set online to null
+            response.data.forEach((friend) => {
+                friend.online = null;
+            });
 
             // make sure the values in the response are sane
             if (!response.ok) {

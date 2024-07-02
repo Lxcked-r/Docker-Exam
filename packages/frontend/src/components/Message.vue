@@ -1,8 +1,11 @@
 <script setup>
 import API from '@/utils/apiWrapper';
 import AvatarCircle from './AvatarCircle.vue';
-import { onBeforeMount, onMounted, ref, watch } from 'vue';
+import { onBeforeMount, onMounted, ref, watch, inject } from 'vue';
 import config from "@/../config";
+import { useFriendsStore } from '@/stores/friends';
+
+const socket = inject('socket');
 
 const baseUrl = config.use_current_origin ? window.location.origin : config.base_url;
 
@@ -14,6 +17,7 @@ const fileSize = ref('');
 
 const loading = ref(false);
 
+const friends = ref([]);
 
 const getFile = async (id) => {
     const response = await API.fireServer('/api/v1/files/name/' + id, {
@@ -21,6 +25,16 @@ const getFile = async (id) => {
 	});
     const jsonRes = await response.json();
     return jsonRes;
+}
+
+const validURL = (str) => {
+  const pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+    '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+    '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+    '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+    '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+    '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+  return !!pattern.test(str);
 }
 
 const downloadFile = async (id) => {
@@ -37,6 +51,8 @@ const downloadFile = async (id) => {
 }
 
 const bytes = (data, to) => {
+
+    console.log("ABROUUFNOIEWF");
 
     const const_term = 1024;
     if(data < const_term) return data + "B";
@@ -61,6 +77,7 @@ const props = defineProps({
     isFirst: Boolean,
     url: String,
     avatar: String,
+    isOnline: Boolean,
     type: {
         type: String,
         default: 'text',
@@ -87,6 +104,7 @@ onBeforeMount(async () => {
 });
 
 onMounted(async () => {
+
     if (props.type !== 'text' && props.type !== 'jpg' && props.type !== 'png' && props.type !== 'webp' && props.type !== 'gif') {
         const data = await getFile(props.text);
         fileTitle.value = data.name;
@@ -94,13 +112,15 @@ onMounted(async () => {
     }
 });
 
+
 </script>
 
 <template>
-    <div class="flex items-start gap-2.5]">
-        <AvatarCircle v-if="isFirst" :id="userID" :force-fallback="true" :name="userName":avatar="avatar" @click="$emit('showUser')"/>
+    <div class="flex items-start gap-2.5] ">
+        <AvatarCircle v-if="isFirst" :id="userID" :force-fallback="true" :name="userName":avatar="avatar" @click="$emit('showUser')" :is-online="isOnline"/>
+        
         <li class="group/item flex flex-col leading-1.5 mb-2 ml-2">
-                <span v-if="isFirst" class="text-sm font-semibold text-gray-900 dark:text-white">{{ userName + ' ' }}<span v-if="isFirst" class="text-sm font-normal text-gray-500 dark:text-gray-400">{{ createdAt }}</span></span>
+            <span v-if="isFirst" class="text-sm font-semibold text-gray-900 dark:text-white">{{ userName + ' ' }}<span v-if="isFirst" class="text-sm font-normal text-gray-500 dark:text-gray-400">{{ createdAt }}</span></span>
             <div v-if="type=='text'">
                 <p v-if="isFirst" :id="id" class="text-sm font-normal pt-1 mt-0 text-gray-900 dark:text-white max-w-[64rem]" @mouseover="$emit('showMessageOptions')">{{ text }}</p>
                 <p v-else :id="id" class="text-sm font-normal text-gray-900 -mt-6 dark:text-white ml-[48px] max-w-[64rem]" @mouseover="$emit('showMessageOptions')">{{ text }}</p>

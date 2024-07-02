@@ -60,8 +60,16 @@ const serverApp = async (app) => {
         // sync user to channel (socket.io room)
         socket.on('channel', async (data) => {
             data = await decryptData(data);
+
             socket.join(data.channelID);
+            console.log("User " + data.userID + " joined channel " + data.channelID);
             socket.join(data.userID);
+
+            console.log("#################################################");
+
+            console.log(data.userID);
+            console.log(io.sockets.adapter.rooms.get(data.userID));
+
         });
 
         // send message in db and to all users in a channel (socket.io room)
@@ -117,6 +125,24 @@ const serverApp = async (app) => {
                 return;
             }
             io.to(data.channelID).emit("avatar", data);
+        });
+
+        // check online
+        socket.on("checkOnline", async (data) => {
+            const friends = data.friends;
+            const userID = data.userID;
+            socket.join(userID);
+            for (const friend of Object.entries(friends)) {
+
+                
+                console.log("################");
+                if(io.sockets.adapter.rooms.get(friend[1].otherUser.id) === undefined) {
+                    console.log(friend[1].otherUser.id + " is offline");
+                    io.to(userID).emit("offline", friend[1]);
+                } else {
+                    io.to(userID).emit("online", friend[1]);
+                }
+            }
         });
 
         // ############## PONG

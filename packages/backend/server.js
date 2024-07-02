@@ -78,6 +78,9 @@ app.use("/api/v1/friends", friendsRouter);
 
 import newsRouter from "./routes/news.js";
 app.use("/api/v1/news", newsRouter);
+
+import memoriesRouter from "./routes/memories.js";
+app.use("/api/v1/memories", memoriesRouter);
   
 // Default route
 app.get("/", (req, res) => {

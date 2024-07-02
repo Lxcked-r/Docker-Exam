@@ -123,7 +123,7 @@ const register = async () => {
 		<input ref="" class="input input-bordered w-full " type="password" placeholder="Password" v-model="password" />
         <input class="input input-bordered w-full" type="password" placeholder="Confirm Password" v-model="confirmPassword" />
         <span>
-            By registering, you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.
+            By registering, you agree to our <a href="/terms">Terms of Service</a> and <a href="/terms">Privacy Policy</a>.
         </span>
 		<button
 			:class="isLoading ? 'btn btn-disabled btn-sm' : 'btn btn-primary btn-sm'"
