@@ -75,6 +75,8 @@ const serverApp = async (app) => {
         // send message in db and to all users in a channel (socket.io room)
         socket.on('message', async (data) => {
             data = await decryptData(data);
+            
+
             if(data === null) {
                 logger.error("Failed to decrypt message", { caller: caller });
                 return;

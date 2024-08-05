@@ -119,6 +119,12 @@ const page = ref(2);
 
 const lastLoadedMessages = ref([]);
 
+const enterKeyDialogRef = ref(null);
+
+const key = ref(null);
+
+const isMessagesDecrypted = ref(false);
+
 /**
  * Show the user profile dialog
  * @param {Object} user - The user object to show the profile of.
@@ -950,6 +956,22 @@ const findUserFromFriendList = (id) => {
     return user;
 }
 
+const decryptMessagesFromKey = async (key) => {
+    for (let message of messages.value) {
+        try {
+            let newText = await crypter.decrypt(message.text, key);
+            if(newText !== null) {
+                message.text = newText;
+            } else {
+                //message.text = null;
+            }
+        } catch {
+            showError("Error decrypting messages");
+        }
+    }
+    isMessagesDecrypted.value = true;
+};
+
 /**
  * Check if the user is online
  * @param {String} id - The ID to check if the user is online from.
@@ -1003,8 +1025,12 @@ onMounted(async () => {
     checkOnlineFriends();
     
     if(props.channelType === "public") {
+        isMessagesDecrypted.value = true;
         document.title = props.channelName + " - " + appName;
     } else {
+        //enterKeyDialogRef.value.show();
+        decryptMessagesFromKey(props.key);
+
         for (const friend of friends.value) {
             if (friend.id === props.channelID) {
                 if(friend.user.id === localUserStore.user.id) {
@@ -1124,6 +1150,7 @@ defineExpose({
                 {{ actualUser?.User.username }}
             </template>
             <template #content>
+            <div class="justify-center">
                 <button
                     @click="sendFriendRequest(actualUser?.userID)"
                     v-if="!actualUser?.isFriend"
@@ -1136,9 +1163,10 @@ defineExpose({
                     <i class="bi bi-person-check-fill"></i>
                     Friend request sent
                 </button>
-                <button v-else-if="actualUser.userID !== localUserStore.user.id || !actualUser.User" class="btn btn-outline" @click="openFriendChat(getFriendShipID(actualUser.userID))">
+                <button v-else-if="actualUser.userID !== localUserStore.user.id || !actualUser.User" class="btn btn-outline justify-center" @click="openFriendChat(getFriendShipID(actualUser.userID))">
                     Open Chat
                 </button>
+            </div>
             </template>
         </CustomDialog>
 
@@ -1175,6 +1203,25 @@ defineExpose({
             </template>
             <template #content>
                 <input ref="uploadFileInputRef" type="file" :src="getImg(actualIMG?.text)" class="file-input file-input-bordered w-full max-w-x"/>
+            </template>
+        </CustomDialog>
+
+        <CustomDialog
+            ref="enterKeyDialogRef"
+            :is-acknowledgement="true"
+            confirm-name="save"
+            @confirm="decryptMessagesFromKey(key)"
+        >
+            <template #title>
+                Enter key
+            </template>
+            <template #content>
+                <input
+                    type="text"
+                    placeholder="Key"
+                    class="input input-bordered w-full max-w-xs"
+                    v-model="key"
+                />
             </template>
         </CustomDialog>
         
@@ -1257,7 +1304,7 @@ defineExpose({
         <DragNDropUI ref="dragNDropUI"></DragNDropUI>
         <ul role="list" ref="messagesRef" id="messages" class="inline-flex flex-1 flex-col space-y-4 p-3 max-h-[calc(100vh-195px)] overflow-y-auto overflow-x-hidden">
             
-            <div v-for="(message, index) in messages" class="hover:bg-gray-900">
+            <div v-if="isMessagesDecrypted" v-for="(message, index) in messages" class="">
                 <Message 
                     @showUser="showUserProfile(message)"
                     @showMessageOptions="showMessageOptions(message)"

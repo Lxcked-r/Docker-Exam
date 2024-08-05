@@ -6,7 +6,25 @@ import AvatarCircle from "@/components/AvatarCircle.vue";
 import config from "@/../config";
 
 const app_name = config.app_name;
+const notifPermCheckboxInput = ref(null);
 
+const tryNotificationPermission = async () => {
+	if (!("Notification" in window)) {
+		console.error("This browser does not support desktop notification");
+		return;
+	}
+
+	if (Notification.permission === "granted") {
+		return;
+	}
+
+	if (Notification.permission !== "denied") {
+		const permission = await Notification.requestPermission();
+		if (permission === "granted") {
+			return;
+		}
+	}
+};
 
 const onSettingsRoute = computed(() => {
 	if(router.currentRoute.value.path === "/dashboard") {
@@ -117,6 +135,8 @@ const removeAvatar = async () => {
 onMounted(async () => {	
 	await localUserStore.init();
 
+	notifPermCheckboxInput.value.checked = Notification.permission === "granted";
+
 	document.title = 'Settings - ' + app_name;
 
 });
@@ -136,7 +156,7 @@ onMounted(async () => {
 		<div class="flex flex-col gap-4 mb-4 mt-2">
 			<div class="flex flex-box items-center">
 				<h3>Enable Notifications &nbsp;</h3>
-				<input type="checkbox" class="toggle" checked />
+				<input ref="notifPermCheckboxInput" type="checkbox" class="toggle" checked @change="tryNotificationPermission" />
 			</div>
 		</div>
 

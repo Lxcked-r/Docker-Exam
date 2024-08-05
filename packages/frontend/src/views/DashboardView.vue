@@ -283,7 +283,7 @@ socket.on("notification", async (notif) => {
 			}
 
 			if(notif.type !== "text" && notif.type !== "friend" ) {
-				notif.message.text = "sent File";
+				notif.message.text = "new Message";
 			}
 
 			newNotif(await notif.user.username, url, notif.message.text);
