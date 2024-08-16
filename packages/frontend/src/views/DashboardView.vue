@@ -584,6 +584,24 @@ onMounted(async () => {
 								</a>
 							</li>
 						</RouterLink>
+						<RouterLink
+							to="/dashboard/memory"
+							>
+							<li>
+								<a>
+									Memory
+								</a>
+							</li>
+						</RouterLink>
+						<RouterLink
+							to="/dashboard/meteo"
+							>
+							<li>
+								<a>
+									Meteo
+								</a>
+							</li>
+						</RouterLink>
 					</ul>
 			</div>
 
@@ -696,11 +714,19 @@ onMounted(async () => {
 						/>
 					</div>
 				</div>
-				<div class="flex">
-					<HomeSquare class="w-[400px]"
+				
+				<div class="flex gap-4">
+					<HomeSquare class=""
 						to="/dashboard/memory"
 						icon="bi-joystick"
-						text="Memory">
+						text="Memory"
+						styles="half-v">
+					</HomeSquare>
+					<HomeSquare
+						to="/dashboard/meteo"
+						icon="bi-cloud-sun"
+						text="Meteo"
+					>
 					</HomeSquare>
 				</div>
 			</div>

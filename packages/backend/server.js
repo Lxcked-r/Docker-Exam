@@ -81,6 +81,9 @@ app.use("/api/v1/news", newsRouter);
 
 import memoriesRouter from "./routes/memories.js";
 app.use("/api/v1/memories", memoriesRouter);
+
+import meteoSwissRouter from "./routes/meteoSwiss.js";
+app.use("/api/v1/meteoswiss", meteoSwissRouter);
   
 // Default route
 app.get("/", (req, res) => {

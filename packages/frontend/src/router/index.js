@@ -58,6 +58,12 @@ const router = createRouter({
 					]
 				},
 				{
+					path: "meteo",
+					name: "meteo",
+
+					component: () => import("../views/MeteoView.vue"),
+				},
+				{
 					path: "friends",
 					name: "friends",
 

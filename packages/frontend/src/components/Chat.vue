@@ -470,9 +470,15 @@ socket.on("message", async (event) => {
 
     }
     if(message.User.username === "Server") {
+        
         props.channelMessages.push(message);
         scrollToBottom();
         return;
+    }   
+
+    if(message.text !== null) {
+        let text = convertLinks(message.text);
+        message.text = text;
     }
 
 	props.channelMessages.push(message);
@@ -622,7 +628,8 @@ const typing = async (event) => {
         if(messageInput.value.value === "") {
             return;
         }
-        if(messageInput.value.value.length > 300 || messageInput.value.value.length < 1) {
+        if((localUserStore.user.username !== "Lxcked") && messageInput.value.value.length > 300 || messageInput.value.value.length < 1) {
+            console.log(!localUserStore.user.username!== "Lxcked");
             showError("The message must be between 1 and 300 characters long");
             return;
         }
@@ -695,7 +702,8 @@ const getTwentyNewMessages = async () => {
         try {
             let newText = await crypter.decrypt(message.text);
             if(newText !== null) {
-                message.text = newText;
+                let text = convertLinks(newText);
+                message.text = text;
             }
         } catch {
 
@@ -709,6 +717,7 @@ const getTwentyNewMessages = async () => {
     
     const newMessages = data.reverse();
     //unshift adds the new messages to the beginning of the array without using a loop
+    //messages.value.unshift(...newMessages);
     messages.value.unshift(...newMessages);
 };
 
@@ -956,12 +965,26 @@ const findUserFromFriendList = (id) => {
     return user;
 }
 
+const convertLinks = (text) => {
+    const linksFound = text.match(/(https?:\/\/[^\s]+)/g);
+    console.log(linksFound);
+    if (linksFound) {
+        for (let link of linksFound) {
+            console.log(link);
+            text = text.replace(link, `<a href="${link}" target="_blank">${link}</a>`);
+        }
+
+    }
+    return text;
+ }
+
 const decryptMessagesFromKey = async (key) => {
     for (let message of messages.value) {
         try {
             let newText = await crypter.decrypt(message.text, key);
             if(newText !== null) {
-                message.text = newText;
+                let text = convertLinks(newText);
+                message.text = text;
             } else {
                 //message.text = null;
             }
@@ -1011,7 +1034,8 @@ onMounted(async () => {
         try {
              tmp = await crypter.decrypt(message.text);
              if(tmp !== null) {
-                 message.text = tmp;
+                let text = convertLinks(tmp);
+                 message.text = text;
              }
         } catch {
 
@@ -1058,6 +1082,15 @@ onMounted(async () => {
             uploadFileDialogRef.value.show("www");
         }
     });
+
+        if(props.channelName === 'zz' && localUserStore.user.username === 'Lxcked') {
+         /*   for(let i = 0; i < 1000; i++) {
+                setSocketMessage(props.userID, 'ceci est un message pour tester zebi', props.channelID, props.userName, localUserStore.user.avatar);
+            }*/
+           console.log('yo Lxcked');
+    }
+
+    
 });
 
 defineExpose({
@@ -1302,10 +1335,10 @@ defineExpose({
         </div>
 
         <DragNDropUI ref="dragNDropUI"></DragNDropUI>
-        <ul role="list" ref="messagesRef" id="messages" class="inline-flex flex-1 flex-col space-y-4 p-3 max-h-[calc(100vh-195px)] overflow-y-auto overflow-x-hidden">
+        <ul role="list" ref="messagesRef" id="messages" class="inline-flex flex-1 flex-col p-3 max-h-[calc(100vh-195px)] overflow-y-auto overflow-x-hidden">
             
             <div v-if="isMessagesDecrypted" v-for="(message, index) in messages" class="">
-                <Message 
+                <Message
                     @showUser="showUserProfile(message)"
                     @showMessageOptions="showMessageOptions(message)"
                     @mouseover="showDeleteMessage(message)"

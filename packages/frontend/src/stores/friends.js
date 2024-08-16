@@ -23,6 +23,9 @@ export const useFriendsStore = defineStore("friends", () => {
         kind.value = "api";	// default to
         // try the api first
         try {
+            if(!userID) {
+                return;
+            }
             const response = await API.fireServer("/api/v1/friends/" + userID, {
                 method: "GET",
             });

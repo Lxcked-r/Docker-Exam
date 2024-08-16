@@ -7,13 +7,15 @@ import { onMounted, ref } from 'vue';
 import API from "@/utils/apiWrapper";
 import CustomDialog from '@/components/CustomDialog.vue';
 
+import config from "@/../config";
+
 // ################################
 // VARIABLES
 // ################################
 const lostGameCustomDialog = ref(null);
 const winGameCustomDialog = ref(null);
 
-const title = 'Memory by MR';
+const title = 'Memory';
 
 const winnerNameElem = ref(null);
 
@@ -38,6 +40,8 @@ const memorycards = ref([]);
 
 const time = ref(0);
 
+const allMemoryButtons = ref([]);
+
 //TMP BEST PLAYERS
 bestPlayers.value = [
     { difficulty: 'Easy', name: 'MR', time: 60 },
@@ -60,6 +64,8 @@ const selectLevel = (level) => {
     changeDiff.value = false;
 };
 
+
+
 // ################################
 // METHODS
 // ################################
@@ -71,9 +77,9 @@ setInterval(() => {
             // time is still running
         } else {
             //lost the game
-            lostGame();
+            //lostGame();
         }
-        time.value++;
+        //time.value++;
     }
 }, 1000);
 
@@ -167,6 +173,8 @@ const flipCard = async (card) => {
         return;
     }
 
+    allMemoryButtons.value = document.getElementsByClassName('memorycard');
+
 
     /*
     if(!isLastMatched.value) {
@@ -195,17 +203,25 @@ const flipCard = async (card) => {
             cardElement.value.innerHTML = card.value;
             lastCardElement.value = document.getElementById(lastCard.value.id);
             lastCardElement.value.innerHTML = lastCard.value.value;
+
         } else {
+
             // card not matched
             for (let i = 0; i < memorycards.value.length; i++) {
                 // make cards unclickable
                 memorycards.value[i].style.pointerEvents = 'none';
             }
+
             isLastMatched.value = false;
             cardElement.value = document.getElementById(card.id);
             cardElement.value.innerHTML = card.value;
             lastCardElement.value = document.getElementById(lastCard.value.id);
             isTimerRunning.value = true;
+
+            // grey design for cooldown 
+            for (let i = 0; i < memorycards.value.length; i++) {
+                memorycards.value[i].style.backgroundColor = 'grey';
+            }
 
             // cooldown
             await new Promise(r => setTimeout(r, 500));
@@ -213,12 +229,18 @@ const flipCard = async (card) => {
             // make cards clickable again
             for (let i = 0; i < memorycards.value.length; i++) {
                 memorycards.value[i].style.pointerEvents = 'auto';
+
             }
 
             // hide cards value
             isTimerRunning.value = false;
             cardElement.value.innerHTML = '';
             lastCardElement.value.innerHTML = '';
+
+            // reset card colors
+            for (let i = 0; i < memorycards.value.length; i++) {
+                memorycards.value[i].style.backgroundColor = '';
+            }
         }
         
         if(matchedCards.value.length === shuffledCards.value.length) {
@@ -251,6 +273,8 @@ const generateCards = (pairs) => {
 };
 
 onMounted(() => {
+    // Change the title of the page
+    document.title = `Memory - ${config.app_name}`;
 });
 
 
