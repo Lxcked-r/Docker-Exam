@@ -13,6 +13,7 @@ import UserDisp from "@/components/UserDisp.vue";
 import router from "@/router";
 
 import API from "@/utils/apiWrapper";
+import crypter from "@/utils/crypter";
 import AvatarCircle from "@/components/AvatarCircle.vue";
 import CustomDialog from "@/components/CustomDialog.vue";
 
@@ -21,6 +22,8 @@ const friends = ref([]);
 const contextMenuDialogRef = ref(null);
 const actualFriend = ref(null);
 
+const friendIDInput = ref(null);
+
 const friendsListType = ref("all");
 
 const isShowedFriendID = ref(false);
@@ -28,6 +31,7 @@ const isShowedFriendID = ref(false);
 const addFriendDialogRef = ref(null);
 
 const notify = inject("notify");
+const socket = inject("socket");
 
 /**
  * Copy user ID
@@ -35,6 +39,27 @@ const notify = inject("notify");
 const copyUserID = () => {
     navigator.clipboard.writeText(localUserStore.user.id);
     notify({title: "Copied", body: "Your user ID has been copied to the clipboard.", level: "success"});
+};
+
+/**
+ * Send a friend request
+ * @param {String} userID - The user ID to send the friend request from.
+ */
+ const sendFriendRequest = async (userID) => {
+    console.log(userID);
+    const data = {userID: localUserStore.user.id, friendID: userID};
+    const res = await API.fireServer("/api/v1/friends", {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+
+    if(res.status === 200) {
+        friendsStore.friends.push({user: {id: userID}});
+        socket.emit("newFriend", await crypter.encrypt({userID: localUserStore.user.id, friendID: userID}));
+    }
+    if(res.status === 400) {
+        notify({title: "Error", body: "User not found or already in friends list", level: "error"});
+    }
 };
 
 /**
@@ -266,7 +291,7 @@ onMounted(async () => {
             <ul class="menu menu-horizontal bg-base-200 m-2 center">
                 <li><a @click="friendsListType='all'">all friends</a></li>
                 <li><a @click="friendsListType='online'">online friends</a></li>
-                <li><a @click="friendsListType='pending'">peding</a></li>
+                <li><a @click="friendsListType='pending'">pending</a></li>
                 <li><a @click="friendsListType='blocked'">blocked</a></li>
                 <li><a @click="showAddFriend()"><i class="bi bi-person-add"></i>Add Friend</a></li>
             </ul>
@@ -293,20 +318,18 @@ onMounted(async () => {
                 :user="friendCheck(friend.user.id)" 
                 :username="friend.user.username"
                 :avatar="friend.user.avatar"
-                :pending="friend.pending" >
+                :pending="friend.pending" 
+                :isSpecial="friend.pending&&friend.userID === localUserStore.user.id && friendsListType === 'all' || (friendsListType === 'online' && friend.user.online) || (friendsListType === 'pending' && friend.pending) || (friendsListType === 'blocked' && friend.blocked)"
+                >    
                 </UserDisp>
                 <div v-if="(friend.pending && friend.userID !== localUserStore.user.id )" class="inline-flex">
-                        <button @click="acceptFriend(friend)" class="btn btn-outline btn-success" style="margin-top: 14px; margin-left: 15px;">
-                            <i class="bi bi-check" style="font-size: 25px;"></i>
-                        </button>
-                        <button @click="denyFriend(friend)" class="btn btn-outline btn-error" style="margin-top: 14px; margin-left: 15px;">
-                            <i class="bi bi-x-lg" style="font-size: 20px;"></i>
-                        </button>
-                    </div>
-                    <div v-if="friend.pending&&friend.userID === localUserStore.user.id && friendsListType === 'all' || (friendsListType === 'online' && friend.user.online) || (friendsListType === 'pending' && friend.pending) || (friendsListType === 'blocked' && friend.blocked)">
-                        Pending
-                    </div>
-                
+                    <button @click="acceptFriend(friend)" class="btn btn-outline btn-success" style="margin-top: 14px; margin-left: 15px;">
+                        <i class="bi bi-check" style="font-size: 25px;"></i>
+                    </button>
+                    <button @click="denyFriend(friend)" class="btn btn-outline btn-error" style="margin-top: 14px; margin-left: 15px;">
+                        <i class="bi bi-x-lg" style="font-size: 20px;"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -346,8 +369,8 @@ onMounted(async () => {
 
             <template #content>
                 <div class="flex flex-col gap-2">
-                    <input type="text" class="input input-primary" placeholder="User friend ID"/>
-                    <button class="btn btn-primary">Add</button>
+                    <input type="text" class="input input-primary" placeholder="User friend ID" ref="friendIDInput"/>
+                    <button @click="sendFriendRequest(friendIDInput.value)" class="btn btn-primary">Add</button>
                 </div>
             </template>
         </CustomDialog>

@@ -294,9 +294,12 @@ socket.on("notification", async (notif) => {
 
 // on newFriend, add the notification to the notifications array
 socket.on("newFriend", async (friend) => {
-	if(friend.id === localUserStore.user.id) {
+	await getFriends();
+	if(friend.id === localUserStore.user.id || friend === "New friend request") {
 		return;
 	} else {
+		console.log("//////////////////////////");
+		console.log(friend);
 		getPendingFriendsRequestsFromSpecificFriendID(friend.id);
 	}
 });
@@ -409,15 +412,20 @@ const openFriendsList = (notif) => {
 	router.push('/dashboard/friends');
 };
 
+const refreshFriendsList = async () => {
+	await getFriends();
+};
+
 /**
  * Get Pending Friends Requests From Specific Friend ID
  * @param {number} id
  */
-const getPendingFriendsRequestsFromSpecificFriendID = (id) => {
+const getPendingFriendsRequestsFromSpecificFriendID = async (id) => {
+	await refreshFriendsList();
 	if(friends.value.length > 0) {
-		if(friends.value.find(friend => friend.id === id).pending && friends.value.find(friend => friend.user.id !== localUserStore.user.id) !== undefined) {
+		if(friends.value.find(friend => friend.id === id).pending && await friends.value.find(friend => friend.user.id !== localUserStore.user.id) !== undefined) {
 			if(friends.value.find(friend => friend.id === id).userID !== localUserStore.user.id) {
-			addNotif({message: {text: "UwU", userID: id}, user: {username: "UwU"}, type: "friend"});
+			addNotif({message: {text: "new friend request", userID: id}, user: {username: "..."}, type: "friend"});
 			}
 		
 			//notifications.value.push({message: {text: "UwU", userID: id}, user: {username: "UwU"}});
@@ -477,6 +485,7 @@ onMounted(async () => {
 	await getFriends();
 
 	for ( const friend of friends.value) {
+		console.log(friend);
 		getPendingFriendsRequestsFromSpecificFriendID(friend.id);
 	}
 	changeTitle(`Home - ${app_name}`);

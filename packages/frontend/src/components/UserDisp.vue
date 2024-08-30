@@ -8,6 +8,7 @@ const props = defineProps({
 	operator: { type: Boolean, required: false },
 	avatar: { type: String, required: false },
 	pending: { type: Boolean, default: false },
+	isSpecial: { type: Boolean, default: false },
 });
 
 defineEmits(["checked"]);
@@ -20,9 +21,12 @@ defineEmits(["checked"]);
 			<div class="title">
 				<p class="text-lg font-bold flex-1">
 					{{ props.username }} <span class="font-normal text-gray-500">({{ props.username }})</span>
-				</p>
+				</p>        
 			</div>
-		</div>
+		</div>            
+				<div v-if="isSpecial">
+                    Pending
+                </div>
     </div>
 </template>
 

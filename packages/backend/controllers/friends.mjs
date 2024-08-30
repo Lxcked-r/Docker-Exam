@@ -25,6 +25,20 @@ const createFriend = async (options) => {
 
     const transaction = await db.transaction();
 
+    //check if friend request already exists
+    const friendExists = await Friend.findOne({
+        where: {
+            userID: options.userID,
+            friendID: options.friendID
+        }
+    });
+
+    if (friendExists) {
+        logger.error("Friend request already exists", { caller: callerName });
+        //return error message
+        return null;
+    }
+
     try {
         const friend = await Friend.create({
             userID: options.userID,
