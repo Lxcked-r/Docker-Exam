@@ -20,6 +20,11 @@ const loading = ref(false);
 const friends = ref([]);
 
 const getFile = async (id) => {
+    if(id === 'undefined') return;
+    if(id === 'null') return;
+    if(id === null) return;
+    if(id === undefined) return;
+    if(id === '') return;
     const response = await API.fireServer('/api/v1/files/name/' + id, {
 		method: "GET",
 	});
@@ -46,14 +51,10 @@ const downloadFile = async (id) => {
     const a = document.createElement('a');
     a.href = url;
     a.download = fileTitle.value;
-    console.log(a);
     a.click();
 }
 
 const bytes = (data, to) => {
-
-    console.log("ABROUUFNOIEWF");
-
     const const_term = 1024;
     if(data < const_term) return data + "B";
     if (to === "KB") { 
@@ -99,6 +100,21 @@ const getImg = (tryer) => {
 
 }
 
+const containsLinkBalise = (text) => {
+    return text.includes('<a href=');
+}
+
+const getLinkBalise = (text) => {
+
+    // text is like this <a href="https://youtube.com" target="_blank">https://youtube.com</a>
+    const link = text.match(/<a href="([^"]+)" target="_blank">([^<]+)<\/a>/);
+    return link[1];
+}
+
+const removeLinkBalise = (text) => {
+    return text.replace(/<a href="([^"]+)" target="_blank">([^<]+)<\/a>/, '');
+}
+
 onBeforeMount(async () => {
     loading.value = false;
 });
@@ -122,12 +138,12 @@ onMounted(async () => {
         <li class="group/item flex flex-col leading-1.5 mb-2 ml-2">
             <span v-if="isFirst" class="text-sm font-semibold text-gray-900 dark:text-white">{{ userName + ' ' }}<span v-if="isFirst" class="text-sm font-normal text-gray-500 dark:text-gray-400">{{ createdAt }}</span></span>
             <div v-if="type=='text'" class="">
-                <p v-if="isFirst" :id="id" class="text-sm font-normal pt-1 mt-0 text-gray-900 dark:text-white max-w-[64rem]" @mouseover="$emit('showMessageOptions')">{{ text }}</p>
-                <p v-else :id="id" class="text-sm font-normal text-gray-900 dark:text-white ml-[48px] max-w-[64rem]" @mouseover="$emit('showMessageOptions')">{{ text }}</p>
+                <p v-if="isFirst" :id="id" class="text-sm font-normal pt-1 mt-0 text-gray-900 dark:text-white max-w-[64rem]" @mouseover="$emit('showMessageOptions')"><a class="link link-primary" v-if="containsLinkBalise(text)" :href="getLinkBalise(text)" target="_blank">{{ getLinkBalise(text) }}</a>&nbsp;{{ removeLinkBalise(text)}}</p>
+                <p v-else :id="id" class="text-sm font-normal text-gray-900 dark:text-white ml-[48px] max-w-[64rem]" @mouseover="$emit('showMessageOptions')"><a class="link link-primary" v-if="containsLinkBalise(text)" :href="getLinkBalise(text)" target="_blank">{{ getLinkBalise(text) }}</a>&nbsp;{{ removeLinkBalise(text) }}</p>
             </div> 
-            <div v-else-if="type=='jpg' || type=='png' ||type=='webp' || type=='gif'" v-bind:style="{cursor:'pointer'}">
-                <img v-if="isFirst" ref="imgRef" :id="id" class="rounded-lg max-w-[30%]" :src="getImg(text)" @click="$emit('showImage', imgRef)"/>
-                <img v-else :id="id" ref="imgRef" class="rounded-lg max-w-[28%] ml-[48px]" :src="getImg(text)" @click="$emit('showImage', imgRef)"/>
+            <div v-else-if="type=='jpg' || type=='png' ||type=='webp' || type=='gif'">
+                <img v-bind:style="{cursor:'pointer'}" v-if="isFirst" ref="imgRef" :id="id" class="rounded-lg max-w-[30%]" :src="getImg(text)" @click="$emit('showImage', imgRef)"/>
+                <img v-bind:style="{cursor:'pointer'}" v-else :id="id" ref="imgRef" class="rounded-lg max-w-[28%] ml-[48px]" :src="getImg(text)" @click="$emit('showImage', imgRef)"/>
             </div>
             <div v-else> 
                 <div v-if="isFirst" class="flex items-start bg-gray-50 dark:bg-gray-600 rounded-xl p-2">

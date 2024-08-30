@@ -11,6 +11,8 @@ import NotificationManager from '@/components/NotificationManager.vue';
 
 import cities from '@/assets/cities.json';
 
+const minifyedCities = ref();
+
 const citiesDataList = ref();
 
 const notify = inject("notify");
@@ -29,6 +31,13 @@ const actualTemp = ref(null);
 const symbol = ref(null);
 const version = ref(null);
 
+const removeDoublesInObjectsArray = (array) => {
+    return array.filter((value, index, self) => 
+        index === self.findIndex((t) => (
+            t.PLZ === value.PLZ
+        ))
+    );
+}
 
 const getWeather = async (postalCode) => {
 
@@ -97,11 +106,15 @@ const lookDL = () => {
 
 onBeforeMount(() => {
     document.title = `Meteo - ${config.app_name}`;
+
+    minifyedCities.value = removeDoublesInObjectsArray(cities);
 });
 
 onMounted(async () => {
     let tempData = await meteoSwissAPI.getVersion();
     version.value = await tempData.text();
+
+
 
     //const data = await meteoSwissAPI.getWeather('8000');
 
@@ -119,7 +132,7 @@ onMounted(async () => {
             <label for="postalCode">Postal Code:</label>
             <input type="text" id="postalCode" ref="postalCodeInputRef" class="input input-bordered" placeholder="Enter a postal code" list="cities"/>
             <datalist ref="citiesDataList" id="cities">
-                <option v-for="city in cities" :value="city.PLZ" :key="city.PLZ">{{ city.PLZ }} : {{ city.Ortschaftsname }}</option>
+                <option v-for="city in minifyedCities" :value="city.PLZ" :key="city.PLZ">{{ city.PLZ }} : {{ city.Ortschaftsname }}</option>
             </datalist>
             <button v-if="!isLoadingWeather" @click="getWeather(postalCodeInputRef.value)" class="btn btn-outline">Get Weather</button>
             <button v-else class="btn btn-outline" disabled>

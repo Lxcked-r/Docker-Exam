@@ -7,8 +7,12 @@ import { onMounted, ref } from 'vue';
 import API from "@/utils/apiWrapper";
 import CustomDialog from '@/components/CustomDialog.vue';
 
+import { useLocalUserStore } from '@/stores/localUser';
+
 import config from "@/../config";
 
+
+const localUserStore = useLocalUserStore();
 // ################################
 // VARIABLES
 // ################################
@@ -75,11 +79,19 @@ setInterval(() => {
     if(isPlaying.value) {
         if(time.value < selectedLevel.value.time) {
             // time is still running
+            console.log(localUserStore);
         } else {
             //lost the game
-            //lostGame();
+
+            if(localUserStore.user.operator) {
+                return;
+            }
+            lostGame();
         }
-        //time.value++;
+        if(localUserStore.user.operator) {
+            return;
+        }
+        time.value++;
     }
 }, 1000);
 
@@ -275,6 +287,7 @@ const generateCards = (pairs) => {
 onMounted(() => {
     // Change the title of the page
     document.title = `Memory - ${config.app_name}`;
+
 });
 
 

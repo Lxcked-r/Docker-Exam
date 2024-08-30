@@ -235,7 +235,8 @@ watch(() => props.channelMessages, async (newVal, oldVal) => {
         for (let message of messages.value) {
             tmp = await crypter.decrypt(message.text);
             if(tmp !== null) {
-                message.text = tmp;
+                let text = convertLinks(tmp);
+                message.text = text;
             }
         }
     } catch {
@@ -446,6 +447,10 @@ const internalNotif = (title, content) => {
  * @returns {String} - The image URL.
  */
 const getImg = (tryer) => {
+    console.log(tryer);
+    if(tryer === null || tryer === undefined) {
+        return;
+    }
     return `${baseUrl}/api/v1/files/${tryer}`;
 }
 
@@ -629,7 +634,6 @@ const typing = async (event) => {
             return;
         }
         if((localUserStore.user.username !== "Lxcked") && messageInput.value.value.length > 300 || messageInput.value.value.length < 1) {
-            console.log(!localUserStore.user.username!== "Lxcked");
             showError("The message must be between 1 and 300 characters long");
             return;
         }
@@ -885,6 +889,9 @@ const getImage = async (id) => {
  * @param {String} url - The URL to download the image from.
  */
 const donwloadImage = async (url) => {
+    if(!url || url.endsWith("null") || url.endsWith("undefined")) {
+        return;
+    }
     const res = await fetch(url);
     const blob = await res.blob();
     const a = document.createElement("a");
@@ -900,7 +907,6 @@ const donwloadImage = async (url) => {
  */
 const uploadFile = async () => {
     let file;
-    console.log(uploadFileInputRef.value.files.length);
     if(uploadFileInputRef.value.files.length === 0) {
         file = fileFromClipboard.value;
     } else {
@@ -967,10 +973,8 @@ const findUserFromFriendList = (id) => {
 
 const convertLinks = (text) => {
     const linksFound = text.match(/(https?:\/\/[^\s]+)/g);
-    console.log(linksFound);
     if (linksFound) {
         for (let link of linksFound) {
-            console.log(link);
             text = text.replace(link, `<a href="${link}" target="_blank">${link}</a>`);
         }
 
@@ -1077,13 +1081,12 @@ onMounted(async () => {
             const dataTransfer = e.clipboardData.files || navigator.clipboard.read();
 
             fileFromClipboard.value = dataTransfer[0];
-        
             uploadFileInputRef.value.files = e.clipboardData.files;
             uploadFileDialogRef.value.show("www");
         }
     });
 
-        if(props.channelName === 'zz' && localUserStore.user.username === 'Lxcked') {
+    if(props.channelName === 'zz' && localUserStore.user.username === 'Lxcked') {
          /*   for(let i = 0; i < 1000; i++) {
                 setSocketMessage(props.userID, 'ceci est un message pour tester zebi', props.channelID, props.userName, localUserStore.user.avatar);
             }*/
