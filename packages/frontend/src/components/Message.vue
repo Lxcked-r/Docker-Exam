@@ -132,11 +132,12 @@ onMounted(async () => {
 </script>
 
 <template>
-    <div class="flex items-start hover:bg-blue-900 ">
+    <div class="flex items-start group relative">
         <AvatarCircle v-if="isFirst" :id="userID" :force-fallback="true" :name="userName":avatar="avatar" @click="$emit('showUser')" :is-online="isOnline"/>
         
         <li class="group/item flex flex-col leading-1.5 mb-2 ml-2">
             <span v-if="isFirst" class="text-sm font-semibold text-gray-900 dark:text-white">{{ userName + ' ' }}<span v-if="isFirst" class="text-sm font-normal text-gray-500 dark:text-gray-400">{{ createdAt }}</span></span>
+            
             <div v-if="type=='text'" class="">
                 <p v-if="isFirst" :id="id" class="text-sm font-normal pt-1 mt-0 text-gray-900 dark:text-white max-w-[64rem]" @mouseover="$emit('showMessageOptions')"><a class="link link-primary" v-if="containsLinkBalise(text)" :href="getLinkBalise(text)" target="_blank">{{ getLinkBalise(text) }}</a>&nbsp;{{ removeLinkBalise(text)}}</p>
                 <p v-else :id="id" class="text-sm font-normal text-gray-900 dark:text-white ml-[48px] max-w-[64rem]" @mouseover="$emit('showMessageOptions')"><a class="link link-primary" v-if="containsLinkBalise(text)" :href="getLinkBalise(text)" target="_blank">{{ getLinkBalise(text) }}</a>&nbsp;{{ removeLinkBalise(text) }}</p>
@@ -186,5 +187,6 @@ onMounted(async () => {
                 </div>
             </div>
         </li>
+        <button class="hidden group-hover:block absolute top-0 right-5"><i class="bi bi-trash"></i></button>
     </div>
 </template>

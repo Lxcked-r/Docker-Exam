@@ -1093,6 +1093,10 @@ onMounted(async () => {
            console.log('yo Lxcked');
     }
 
+    // wait 2 seconds to avoid the scroll to bottom
+    setTimeout(() => {
+        scrollToBottom();
+    }, 190);
     
 });
 
@@ -1272,7 +1276,7 @@ defineExpose({
 
     <div v-else class="flex-1 flex justify-between flex flex-col w-[32px] min-h-[9rem] max-h-[55rem]" @drop.prevent="openDragFile" @dragenter="checkDrag" @dragover="checkDrag">
         
-        <div class="flex gap-2 sm:items-center justify-between py-3 border-b-2 border-gray-200 px-4">
+        <div class="flex gap-2 sm:items-center justify-between py-3 border-b-2 border-gray-200 px-4 ">
             <div class="relative flex flex-1">
                 <AvatarCircle
                     v-if="channelType === 'public'"
@@ -1340,7 +1344,7 @@ defineExpose({
         <DragNDropUI ref="dragNDropUI"></DragNDropUI>
         <ul role="list" ref="messagesRef" id="messages" class="inline-flex flex-1 flex-col p-3 max-h-[calc(100vh-195px)] overflow-y-auto overflow-x-hidden">
             
-            <div v-if="isMessagesDecrypted" v-for="(message, index) in messages" class="">
+            <div v-if="isMessagesDecrypted" v-for="(message, index) in messages" class=" hover:bg-gray-900 hover:rounded-lg">
                 <Message
                     @showUser="showUserProfile(message)"
                     @showMessageOptions="showMessageOptions(message)"

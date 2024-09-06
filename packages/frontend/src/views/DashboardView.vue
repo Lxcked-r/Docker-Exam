@@ -485,7 +485,6 @@ onMounted(async () => {
 	await getFriends();
 
 	for ( const friend of friends.value) {
-		console.log(friend);
 		getPendingFriendsRequestsFromSpecificFriendID(friend.id);
 	}
 	changeTitle(`Home - ${app_name}`);
