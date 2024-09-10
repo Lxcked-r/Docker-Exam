@@ -19,11 +19,16 @@ import DragNDropUI from "./DragNDropUI.vue";
 
 import API from "@/utils/apiWrapper";
 
-import config from "@/../config.json";
 
 import router from "@/router";
 
 import crypter from "@/utils/crypter";
+
+import config from "@/../config";
+
+const appName = config.app_name;
+
+const fileFromClipboard = ref(null);
 
 const channelAvatarRef = ref(null);
 const channelPrivateAvatarRef = ref(null);
@@ -52,7 +57,7 @@ const friendsStore = useFriendsStore();
 const actualIMG = ref(null);
 
 const actualChars = ref(0);
-const maxChars = 2000;
+const maxChars = 300;
 
 const msg = ref({});
 
@@ -114,6 +119,16 @@ const page = ref(2);
 
 const lastLoadedMessages = ref([]);
 
+const enterKeyDialogRef = ref(null);
+
+const key = ref(null);
+
+const isMessagesDecrypted = ref(false);
+
+/**
+ * Show the user profile dialog
+ * @param {Object} user - The user object to show the profile of.
+ */
 const showUserProfile = (user) => {
     actualUser.value = user;
 
@@ -126,18 +141,29 @@ const showUserProfile = (user) => {
     }
 };
 
+/**
+ * Connect to the chat
+ */
 const handleConnect = () => {
 	if (userName.value.length > 0) {
 		connect.value = true;
 	}
 }
 
-
+/**
+ * Encrypt the data
+ * @param {Object} data - The data to encrypt.
+ * @returns {String} - The encrypted data.
+ */
 const encryptData = (data) => {
     const encrypted = crypter.encrypt(data, secret);
     return encrypted;
 };
 
+/**
+ * Show the delete message dialog
+ * @param {String} message - The message to show.
+ */
 const showDeleteMessage = (message) => {
     showDeleteMessageVar.value = message;
 };
@@ -169,6 +195,7 @@ const props = defineProps({
     },
 });
 
+
 watch(() => props.channelUsers, async (newVal, oldVal) => {
     loading.value = true;
     page.value = 2;
@@ -177,6 +204,20 @@ watch(() => props.channelUsers, async (newVal, oldVal) => {
     let newUsers = newVal;
     channelUsers.value = newUsers;
     loading.value = false;
+    
+    if(props.channelType === "public") {
+        document.title = props.channelName + " - " + appName;
+    } else {
+        for (const friend of friends.value) {
+            if (friend.id === props.channelID) {
+                if(friend.user.id === localUserStore.user.id) {
+                    document.title = friend.otherUser.username + " - " + appName;
+                } else {
+                    document.title = friend.user.username + " - " + appName;
+                }
+            }
+        }
+    }
 
     await nextTick(() => {
         scrollToBottom();
@@ -194,12 +235,14 @@ watch(() => props.channelMessages, async (newVal, oldVal) => {
         for (let message of messages.value) {
             tmp = await crypter.decrypt(message.text);
             if(tmp !== null) {
-                message.text = tmp;
+                let text = convertLinks(tmp);
+                message.text = text;
             }
         }
     } catch {
 
     }
+    
     loading.value = false;
     await nextTick(() => {
         scrollToBottom();
@@ -208,6 +251,10 @@ watch(() => props.channelMessages, async (newVal, oldVal) => {
     });
 });
 
+/**
+ * Check if the user is dragging a file
+ * @param {Event} e - The event to check.
+ */
 const checkDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -216,6 +263,10 @@ const checkDrag = (e) => {
     }
 };
 
+/**
+ * Open the file from the drag and drop
+ * @param {Event} e - The event to open the file from.
+ */
 const openDragFile = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -230,6 +281,11 @@ const openDragFile = (e) => {
     dragNDropUI.value.hide();
 };
 
+/**
+ * Get the avatar from the users
+ * @param {Object} channel - The channel to get the avatar from.
+ * @returns {String} - The avatar of the user.
+ */
 const getAvatarFromUsers = (channel) => {
 	if (channel.Channel.type === 'public') {
 		return channel.Channel.avatar;
@@ -246,17 +302,65 @@ const getAvatarFromUsers = (channel) => {
 }
 };
 
+socket.on("deleteMessage", async (event) => {
+    const message = event;
+    const index = messages.value.findIndex((x) => x.id === message.id);
+    if (index !== -1) {
+        messages.value.splice(index, 1);
+    }
+    if(messages.value.length < 25) {
+        await getTwentyNewMessages(page.value);
+        page.value++;
+    }
+});
+
+// add the user to the channel
 socket.on("newUser", (event) => {
     channelUsers.value = event;
 });
 
+// on offline set the user offline
+socket.on("offline", async (friendID) => {
+	// in friends.value put the friend with the id of friendID and set the online to false
+	if(friends.value.length > 0) {
+		//find the friend in the friends.value array by the friendID
+		const friend = friends.value.find(friend => friend.id === friendID.id);
+		if(friend) {
+			friend.online = false;
+		}
+	}
+});
+
+// on online set the user online
+socket.on("online", async (friendID) => {
+	// in friends.value put the friend with the id of friendID and set the online to true
+	if(friends.value.length > 0) {
+		//find the friend in the friends.value array by the friendID
+		const friend = friends.value.find(friend => friend.id === friendID.id);
+		if(friend) {
+			friend.online = true;
+		}
+	}
+});
+
+// to avoid before load problems set user to smth.
 user.value.id = props.userID;
 user.value.name = "John Doe";
 
+/**
+ * Check if the user is the same as the actual user
+ * @param {Object} message - The message to check.
+ * @returns {Boolean} - If the user is the same as the actual user.
+ */
 const isSameThanActualUser = (message) => {
     return message.userID === props.userID;
 };
 
+/**
+ * Check if the user is a friend
+ * @param {String} userID - The user ID to check.
+ * @returns {Boolean} - If the user is a friend.
+ */
 const isFriend = (userID) => {
     if (friendsStore.friends.find((x) => x.user.id === userID) || friendsStore.friends.find((x) => x.otherUser.id === userID) || userID == localUserStore.user.id) {
         return true;
@@ -264,6 +368,11 @@ const isFriend = (userID) => {
     return false;
 };
 
+/**
+ * Get the friendship ID
+ * @param {String} userID - The user ID to get the friendship ID from.
+ * @returns {String} - The friendship ID.
+ */
 const getFriendShipID = (userID) => {
     if (friendsStore.friends.find((x) => x.user.id === userID)) {
         return friendsStore.friends.find((x) => x.user.id === userID).id;
@@ -272,6 +381,12 @@ const getFriendShipID = (userID) => {
     }
 };
 
+/**
+ * Check if the message is the first 
+ * @param {Object} message - The message to check.
+ * @param {Number} key - The key to check.
+ * @returns {Boolean} - If the message is the first.
+ */
 const isFirst = (message, key) => {
     if (message.userID !== props.channelMessages[key-1]?.userID || new Date(message.createdAt) > new Date(props.channelMessages[key-1].createdAt).getTime() + 600000){
         return true;
@@ -280,17 +395,44 @@ const isFirst = (message, key) => {
     }
 }
 
+/**
+ * Calculate the max
+ * @param {Number} max - The max to calculate.
+ * @param {Number} actual - The actual to calculate.
+ * @returns {Number} - The calculated value.
+ */
+const calc = (max, actual) => {
+    return max / actual;
+};
+
+/**
+ * Check if the message user is the same as the next
+ * @param {Object} message - The message to check.
+ * @param {Number} key - The key to check.
+ * @returns {Boolean} - If the message is the same as the next.
+ */
 const isSameThanNext = (message, key) => {
     if (message.userID === props.channelMessages[key+1]?.userID) {
         return true;
     }
 };
 
+/**
+ * Clear the notifications
+ */
 const clearNotifs = () => {
     notifs.value = 0;
     socket.emit("clearNotifs", {userID: props.userID});
 };
 
+/**
+ * Set the socket message
+ * @param {String} userID - The user ID to set the message from.
+ * @param {String} text - The text to set the message from.
+ * @param {String} channelID - The channel ID to set the message from.
+ * @param {String} userName - The user name to set the message from.
+ * @param {String} avatar - The avatar to set the message from.
+ */
 const setSocketMessage = (userID, text, channelID, userName, avatar) => {
     if (text === "") {
         return;
@@ -301,21 +443,37 @@ const setSocketMessage = (userID, text, channelID, userName, avatar) => {
     socket.emit("message", encrypted);
 }
 
+/**
+ * Internal notification
+ * @param {String} title - The title to set the notification from.
+ * @param {String} content - The content to set the notification from.
+ */
 const internalNotif = (title, content) => {
     msg.value = {title: title, body: content};
     notify(msg.value);
 };
 
-
+/**
+ * Get the image/file URL from an ID
+ * @param {String} tryer - The tryer to get the image from.
+ * @returns {String} - The image URL.
+ */
 const getImg = (tryer) => {
-    return `https://172.21.22.153:2025/api/v1/files/${tryer}`;
-
+    if(tryer === null || tryer === undefined) {
+        return;
+    }
+    return `${baseUrl}/api/v1/files/${tryer}`;
 }
 
+/**
+ * Open the friend chat
+ * @param {String} friendShipID - The friend ship ID to open the chat from.
+ */
 const openFriendChat = (friendShipID) => {
     router.push("/dashboard/chats/" + friendShipID);
 };
 
+// on message from socket, decrypt the message and add it to the messages array
 socket.on("message", async (event) => {
     if(event.channelID !== props.channelID) {
         return;
@@ -328,9 +486,15 @@ socket.on("message", async (event) => {
 
     }
     if(message.User.username === "Server") {
+        
         props.channelMessages.push(message);
         scrollToBottom();
         return;
+    }   
+
+    if(message.text !== null) {
+        let text = convertLinks(message.text);
+        message.text = text;
     }
 
 	props.channelMessages.push(message);
@@ -349,7 +513,7 @@ socket.on("message", async (event) => {
     
 });
 
-
+// on typing from socket, show the user is typing
 socket.on("typing", async (event) => {
     if (event.userID === props.userID || event.channelID !== props.channelID) {
         return;
@@ -377,10 +541,20 @@ socket.on("typing", async (event) => {
     }
 }); 
 
+/**
+ * Back to the chats list, push the router to the chats list
+ */
 const backToChatsList = () => {
     router.push("/dashboard/chats");
 };
+
+
 let t = 0;
+
+/**
+ * Check the scroll and get the new messages
+ * @param {Event} event - The event to check the scroll from.
+ */
 const checkScroll = async (event) => {
     if(new Date().getTime() - t < 1000 || messagesRef.value.scrollTop >= 1) {
         return;
@@ -391,16 +565,22 @@ const checkScroll = async (event) => {
     if (messagesRef.value.scrollTop <= 1) {
         await getTwentyNewMessages(page.value);
         page.value++;
-        
     }
-
 };
 
+/**
+ * Show error message as a notification
+ * @param {String} message - The message to show the error from.
+ */
 const showError = (message) => {
-    let newMSG = {title: "Error", body: message};
+    let newMSG = {title: "Error", body: message, level: "error"};
     notify(newMSG);
 };
 
+/**
+ * Send a friend request
+ * @param {String} userID - The user ID to send the friend request from.
+ */
 const sendFriendRequest = async (userID) => {
     const data = {userID: localUserStore.user.id, friendID: userID};
     const res = await API.fireServer("/api/v1/friends", {
@@ -415,23 +595,35 @@ const sendFriendRequest = async (userID) => {
     }
 };
 
+/**
+ * Send a new message to the chat from the text input
+ */
 const sendNewMessage = async () => {
     if(messageInput.value.value === "") {
         return;
     }
-    /*if(messageInput.value.value.length > 300 || messageInput.value.value.length < 1) {
+    if(messageInput.value.value.length > 300 || messageInput.value.value.length < 1) {
+        
         showError("The message must be between 1 and 300 characters long");
         return;
-    }*/
+    }
     setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName, localUserStore.user.avatar);
 
     messageInput.value.value = ""; // clear the input
+    actualChars.value = 0;
 };
 
+/**
+ * Update the last message
+ * @param {String} message - The message to update the last message from.
+ */
 const updateLastMessage = (message) => {
     lastMessage.value = message;
 };
 
+/**
+ * Scroll to the bottom of the messages
+ */
 const scrollToBottom = async () => {
     if(!messagesRef.value) {
         return;
@@ -439,7 +631,12 @@ const scrollToBottom = async () => {
     messagesRef.value.scrollTop = messagesRef.value.scrollHeight;
 };
 
+/**
+ * Typing event and send the 'typing' event to the server
+ * @param {Event} event - The event to check the typing from. 
+ */
 const typing = async (event) => {
+    actualChars.value = messageInput.value.value.length;
     const data = {channelID: props.channelID, userID: props.userID, userName: props.userName};
     const encrypted = encryptData(data);
     socket.emit("typing", encrypted);
@@ -447,23 +644,36 @@ const typing = async (event) => {
         if(messageInput.value.value === "") {
             return;
         }
-        if(messageInput.value.value.length > 300 || messageInput.value.value.length < 1) {
+        if((localUserStore.user.username !== "Lxcked") && messageInput.value.value.length > 300 || messageInput.value.value.length < 1) {
             showError("The message must be between 1 and 300 characters long");
             return;
         }
         setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName, localUserStore.user.avatar);
         messageInput.value.value = ""; // clear the input
+        actualChars.value = 0;
     }
 };
 
+/**
+ * Open the channel edit dialog
+ * @param {String} channelID - The channel ID to open the channel edit from.
+ */
 const openChannelEdit = (channelID) => {
     editChannelDialogRef.value.show();
 };
 
+/**
+ * Show the users list
+ */
 const showUsersList = () => {
     showUser.value = !showUser.value;
 };
 
+/**
+ * Try to get the avatar
+ * @param {String} id - The ID to try to get the avatar from.
+ * @returns {Boolean} - If the avatar is found.
+ */
 const tryAvatar = async (id) => {
 	let response;
 
@@ -485,9 +695,14 @@ const tryAvatar = async (id) => {
 	return false;
 };
 
-
+/**
+ * Get the twenty new messages from the server and add them to the messages array
+ */
 const getTwentyNewMessages = async () => {
-	if(lastLoadedMessages.value.length<=0 && page.value!==2) {
+
+    //avoid opaque responses
+
+	if(lastLoadedMessages.value.length<=0 && page.value!==2 || lastLoadedMessages.value.length>0 && lastLoadedMessages.value.length<20 && page.value!==2) {
 		return false;
 	}
     const res = await API.fireServer("/api/v1/messages?channelID="+props.channelID+"&page="+page.value, {
@@ -502,7 +717,8 @@ const getTwentyNewMessages = async () => {
         try {
             let newText = await crypter.decrypt(message.text);
             if(newText !== null) {
-                message.text = newText;
+                let text = convertLinks(newText);
+                message.text = text;
             }
         } catch {
 
@@ -516,16 +732,23 @@ const getTwentyNewMessages = async () => {
     
     const newMessages = data.reverse();
     //unshift adds the new messages to the beginning of the array without using a loop
+    //messages.value.unshift(...newMessages);
     messages.value.unshift(...newMessages);
 };
 
-
+/**
+ * Check if the user is an OP or owner
+ */
 const getIsOp = () => {
     if(props.isOP || props.isOwner) {
         return true;
     }
 };
 
+/**
+ * Remove the user from the channel
+ * @param {String} userID - The user ID to remove from the channel.
+ */
 const removeFromChannel = async (userID) => {
     const data = {userID: userID, channelID: props.channelID};
     await API.fireServer("/api/v1/channelsrelations", {
@@ -535,6 +758,9 @@ const removeFromChannel = async (userID) => {
 
 };
 
+/**
+ * Reload the chat
+ */
 const reload = async () => {
 
     let data = {channelID: props.channelID, userID: localUserStore.user.id, userName: localUserStore.user.userName};
@@ -548,19 +774,32 @@ const reload = async () => {
     await refreshAvatarImage();
 };
 
+/**
+ * Show the add person dialog
+ */
 const showAddPerson = () => {
     showAddPersonDialogRef.value.show();
 }
 
+/**
+ * Show the upload file dialog
+ */
 const showUploadFile = () => {
     uploadFileDialogRef.value.show();
 };
 
+/**
+ * Show the image dialog
+ * @param {String} message - The message to show the image dialog from.
+ */
 const showImageDialog = (message) => {
     actualIMG.value = message;
     showImageDialogRef.value.show();
 };
 
+/**
+ * Refresh the avatar image
+ */
 const refreshAvatarImage = async () => {
     const htmlImage = document.getElementById(props.channelID);
     if(!htmlImage) {
@@ -569,6 +808,10 @@ const refreshAvatarImage = async () => {
     htmlImage.src = htmlImage.src + "?t=" + new Date().getTime();
 }
 
+/**
+ * Get the avatar
+ * @returns {String} - The avatar.
+ */
 const getAvatar = async () => {
     if (props.channelAvatar) {
         return props.channelAvatar;
@@ -576,6 +819,9 @@ const getAvatar = async () => {
     return null;
 };
 
+/**
+ * Add someone to the channel
+ */
 const addSomeone = async () => {
     if(addSomeoneInputRef.value.value === "") {
         return;
@@ -600,6 +846,15 @@ const addSomeone = async () => {
     }
 
 };
+
+/**
+ * Check the online friends
+ */
+const checkOnlineFriends = async () => {
+	const data = {friends: friends.value, userID: localUserStore.user.id};
+	socket.emit("checkOnline", data);
+};
+
 /**
  * Converts the friends data by replacing the current user with the other user.
  * @param {Object} data - The friends data to be converted.
@@ -607,13 +862,18 @@ const addSomeone = async () => {
  */
 const convertFriends = (data) => {
     for (let key in data) {
-        if (data[key].User.id === localUserStore.user.id) {
-            data[key].User = data[key].otherUser;
+        if (data[key].user.id === localUserStore.user.id) {
+            data[key].user = data[key].otherUser;
         }
     }
     return data;
 };
 
+/**
+ * Check if the user is a friend and is pending
+ * @param {String} userID - The user ID to check.
+ * @returns {Boolean} - If the user is a friend and is pending.
+ */
 const isFriendPending = (userID) => {
     if (friendsStore.friends.find((x) => x.friendID === userID && x.pending)) {
         return true;
@@ -621,6 +881,11 @@ const isFriendPending = (userID) => {
     return false;
 };
 
+/**
+ * Get the image
+ * @param {String} id - The ID to get the image from.
+ * @returns {String} - The image.
+ */
 const getImage = async (id) => {
     const res = await API.fireServer("/api/v1/files/" + id, {
         method: "GET",
@@ -630,7 +895,14 @@ const getImage = async (id) => {
     return url;
 };
 
+/**
+ * Download the image
+ * @param {String} url - The URL to download the image from.
+ */
 const donwloadImage = async (url) => {
+    if(!url || url.endsWith("null") || url.endsWith("undefined")) {
+        return;
+    }
     const res = await fetch(url);
     const blob = await res.blob();
     const a = document.createElement("a");
@@ -645,7 +917,17 @@ const donwloadImage = async (url) => {
  * Upload File to conversation
  */
 const uploadFile = async () => {
-    const file = uploadFileInputRef.value.files[0];
+    let file;
+    if(uploadFileInputRef.value.files.length === 0) {
+        file = fileFromClipboard.value;
+    } else {
+        file = uploadFileInputRef.value.files[0];
+    }
+/*
+    if(file.size > 10000000) {
+        showError("The file is too big. The maximum size is 10MB");
+        return;
+    }*/
     const formData = new FormData();
     formData.append("file", file);
     formData.append("type", file.name.substring(file.name.lastIndexOf('.')+1, file.name.length) || file.name);
@@ -670,10 +952,76 @@ const uploadFile = async () => {
     }
 };
 
+/**
+ * Close the friend dialog
+ */
 const closeFriendDialogRef = () => {
     editChannelDialogRef.value.hide();
     actualUser.value = null;
 };
+
+/**
+ * Check if the user is the owner
+ * @param {String} id - The ID to check if the user is the owner from.
+ * @returns {Boolean} - If the user is the owner.
+ */
+const checkIfOwnUser = (id) => {
+    if (id === localUserStore.user.id) {
+        return true;
+    }
+    return false;
+};
+
+/**
+ * Find the user from the friend list
+ * @param {String} id - The ID to find the user from.
+ * @returns {Object} - The user.
+ */
+const findUserFromFriendList = (id) => {
+    const user = friends.value.find((friend) => friend.otherUser.id === id);
+    return user;
+}
+
+const convertLinks = (text) => {
+    const linksFound = text.match(/(https?:\/\/[^\s]+)/g);
+    if (linksFound) {
+        for (let link of linksFound) {
+            text = text.replace(link, `<a href="${link}" target="_blank">${link}</a>`);
+        }
+
+    }
+    return text;
+ }
+
+const decryptMessagesFromKey = async (key) => {
+    for (let message of messages.value) {
+        try {
+            let newText = await crypter.decrypt(message.text, key);
+            if(newText !== null) {
+                let text = convertLinks(newText);
+                message.text = text;
+            } else {
+                //message.text = null;
+            }
+        } catch {
+            showError("Error decrypting messages");
+        }
+    }
+    isMessagesDecrypted.value = true;
+};
+
+/**
+ * Check if the user is online
+ * @param {String} id - The ID to check if the user is online from.
+ * @returns {Boolean} - If the user is online.
+ */
+const checkUserOnline = (id) => {
+    const user = findUserFromFriendList(id);
+    if (user) {
+        return user.online;
+    }
+    return false;
+}
 
 onBeforeMount(async () => {
 
@@ -690,29 +1038,77 @@ onBeforeMount(async () => {
 const showMessageOptions = (message, e) => {
 };
 
-
 onMounted(async () => {
     let tmp;
     for (let usr of props.channelUsers) {
     }
+
     messages.value = props.channelMessages;
 
     for (let message of messages.value) {
         try {
              tmp = await crypter.decrypt(message.text);
              if(tmp !== null) {
-                 message.text = tmp;
+                let text = convertLinks(tmp);
+                 message.text = text;
              }
         } catch {
 
         }
     }
+
+    friends.value = friendsStore.friends;
+
+    friends.value = convertFriends(friends.value);
+
+    checkOnlineFriends();
+    
+    if(props.channelType === "public") {
+        isMessagesDecrypted.value = true;
+        document.title = props.channelName + " - " + appName;
+    } else {
+        //enterKeyDialogRef.value.show();
+        decryptMessagesFromKey(props.key);
+
+        for (const friend of friends.value) {
+            if (friend.id === props.channelID) {
+                if(friend.user.id === localUserStore.user.id) {
+                    document.title = friend.otherUser.username + " - " + appName;
+                } else {
+                    document.title = friend.user.username + " - " + appName;
+                }
+            }
+        }
+    }
     
     loading.value = false;
     await nextTick(() => {
-        scrollToBottom();
         messagesRef.value.addEventListener("scroll", checkScroll);
+        scrollToBottom();
+    });   
+    messageInput.value.addEventListener('paste', (e) => {
+        if (e.clipboardData.files.length > 0) {
+            e.preventDefault();
+            const dataTransfer = e.clipboardData.files || navigator.clipboard.read();
+
+            fileFromClipboard.value = dataTransfer[0];
+            uploadFileInputRef.value.files = e.clipboardData.files;
+            uploadFileDialogRef.value.show("www");
+        }
     });
+
+    if(props.channelName === 'zz' && localUserStore.user.username === 'Lxcked') {
+         /*   for(let i = 0; i < 1000; i++) {
+                setSocketMessage(props.userID, 'ceci est un message pour tester zebi', props.channelID, props.userName, localUserStore.user.avatar);
+            }*/
+           console.log('yo Lxcked');
+    }
+
+    // wait 2 seconds to avoid the scroll to bottom
+    setTimeout(() => {
+        scrollToBottom();
+    }, 190);
+    
 });
 
 defineExpose({
@@ -805,6 +1201,7 @@ defineExpose({
                 {{ actualUser?.User.username }}
             </template>
             <template #content>
+            <div class="justify-center">
                 <button
                     @click="sendFriendRequest(actualUser?.userID)"
                     v-if="!actualUser?.isFriend"
@@ -817,9 +1214,10 @@ defineExpose({
                     <i class="bi bi-person-check-fill"></i>
                     Friend request sent
                 </button>
-                <button v-else-if="actualUser.userID !== localUserStore.user.id || !actualUser.User" class="btn btn-outline" @click="openFriendChat(getFriendShipID(actualUser.userID))">
+                <button v-else-if="actualUser.userID !== localUserStore.user.id || !actualUser.User" class="btn btn-outline justify-center" @click="openFriendChat(getFriendShipID(actualUser.userID))">
                     Open Chat
                 </button>
+            </div>
             </template>
         </CustomDialog>
 
@@ -858,6 +1256,25 @@ defineExpose({
                 <input ref="uploadFileInputRef" type="file" :src="getImg(actualIMG?.text)" class="file-input file-input-bordered w-full max-w-x"/>
             </template>
         </CustomDialog>
+
+        <CustomDialog
+            ref="enterKeyDialogRef"
+            :is-acknowledgement="true"
+            confirm-name="save"
+            @confirm="decryptMessagesFromKey(key)"
+        >
+            <template #title>
+                Enter key
+            </template>
+            <template #content>
+                <input
+                    type="text"
+                    placeholder="Key"
+                    class="input input-bordered w-full max-w-xs"
+                    v-model="key"
+                />
+            </template>
+        </CustomDialog>
         
     </Teleport>
 
@@ -870,7 +1287,7 @@ defineExpose({
 
     <div v-else class="flex-1 flex justify-between flex flex-col w-[32px] min-h-[9rem] max-h-[55rem]" @drop.prevent="openDragFile" @dragenter="checkDrag" @dragover="checkDrag">
         
-        <div class="flex gap-2 sm:items-center justify-between py-3 border-b-2 border-gray-200 px-4">
+        <div class="flex gap-2 sm:items-center justify-between py-3 border-b-2 border-gray-200 px-4 ">
             <div class="relative flex flex-1">
                 <AvatarCircle
                     v-if="channelType === 'public'"
@@ -888,14 +1305,15 @@ defineExpose({
                     :is-chan="true"
                     ref="channelPrivateAvatarRef"
                 />
-
+                
                 <div class="flex flex-col leading-tight">
                     <div class="text-2xl mt-1 flex items-center">
+                        
                         <span v-if="channelType === 'public'" class="text-gray-700 mr-3 dark:text-gray-300">
-                            {{ channelName }}
+                           &nbsp; {{ channelName }}
                         </span>
                         <span v-if="channelType === 'private' && channelUsers.length > 0" class="text-gray-700 mr-3 dark:text-gray-300">
-                            {{ channelUsers.find((x) => x.userID !== user.id).User.username }}
+                           &nbsp; {{ channelUsers.find((x) => x.userID !== user.id).User.username }}
                         </span>
                     </div>
                 </div>
@@ -935,9 +1353,9 @@ defineExpose({
         </div>
 
         <DragNDropUI ref="dragNDropUI"></DragNDropUI>
-        <ul role="list" ref="messagesRef" id="messages" class="inline-flex flex-1 flex-col space-y-4 p-3 max-h-[calc(100vh-195px)] overflow-y-auto overflow-x-hidden">
+        <ul role="list" ref="messagesRef" id="messages" class="inline-flex flex-1 flex-col p-3 max-h-[calc(100vh-195px)] overflow-y-auto overflow-x-hidden">
             
-            <div v-for="(message, index) in messages">
+            <div v-if="isMessagesDecrypted" v-for="(message, index) in messages" class=" hover:bg-gray-900 hover:rounded-lg">
                 <Message
                     @showUser="showUserProfile(message)"
                     @showMessageOptions="showMessageOptions(message)"
@@ -953,12 +1371,12 @@ defineExpose({
                     :id="message.id"
                     :type="message.type"
                     :avatar="message.User.avatar ? message.User.avatar : message.userID"
+                    :is-online="!checkIfOwnUser(message.userID)?checkUserOnline(message.userID):null"
                 />
             </div>
         </ul>
 
         <div ref="someoneIsTyping" class="chat-header flex flex-box opacity-80 max-h-8"></div>
-
         <div class="flex flex-col">
             <div class="relative">
                 <input
@@ -970,6 +1388,9 @@ defineExpose({
                     class="input input-bordered w-full max-w-[calc(100%-90px)] max-h-20 overflow-y-auto "
                 />
                 <div class="absolute right-0 items-center inset-y-0 hidden sm:flex">
+                    <div>
+                        <span class="-z-1 text-gray-500">{{ actualChars }}/{{ maxChars }}</span>
+                    </div>
                     <button @click="showUploadFile()" type="button" class="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out">
                         <i class="bi bi-file-earmark-arrow-up"></i>
                     </button>

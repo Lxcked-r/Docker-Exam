@@ -175,6 +175,7 @@ const moveBall = (x,y,dx,dy) => {
 <template>
 
     <div>
+        <a target="_blank" href="https://www.youtube.com/watch?v=riBHS3ctsx0">Check This Out !</a>
         <h1>Pong</h1>
         <div>
             <div>

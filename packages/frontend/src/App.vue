@@ -18,8 +18,10 @@ onMounted(() => {
 </script>
 
 <template>
-	<NotificationManager ref="nm" />
-	<RouterView />
+	<div>
+		<NotificationManager ref="nm" />
+		<RouterView />
+	</div>
 </template>
 
 <style scoped>

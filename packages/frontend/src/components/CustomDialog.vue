@@ -1,6 +1,8 @@
 <script setup>
 import { ref } from "vue";
 
+const confirmButton = ref(null);
+
 const props = defineProps({
 	easyCancel: { type: Boolean, default: true },
 	confirmName: { type: String },
@@ -12,9 +14,13 @@ const props = defineProps({
 const emit = defineEmits(["confirm", "cancel"]);
 
 // Shows the dialog.
-const show = async () => {
+const show = async (focus = undefined) => {
 	hostRef.value.classList.add("shown");
 	dialogRef.value.classList.add("shown");
+
+	if(focus) {
+		confirmButton.value.focus();
+	}
 };
 
 // Hides the dialog.
@@ -67,7 +73,7 @@ defineExpose({
 				<slot name="content"></slot>
 			</div>
 			<div class="flex flex-row gap-2 justify-center">
-				<button :class="confirmLocked ? 'btn btn-primary btn-disabled' : 'btn btn-primary'"
+				<button ref="confirmButton" :class="confirmLocked ? 'btn btn-primary btn-disabled' : 'btn btn-primary'"
 					@click="emit('confirm');"
 				>
 					<span class="loading loading-spinner" v-if="confirmLocked"></span>

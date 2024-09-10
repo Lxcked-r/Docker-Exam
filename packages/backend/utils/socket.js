@@ -1,9 +1,11 @@
 import { createServer } from "http";
 import { Server } from "socket.io";
 
-import { createMessage, getMessageByID } from "../controllers/messages.mjs";
+import { createMessage, getMessageByID, deleteMessage } from "../controllers/messages.mjs";
 
 import { getChannelsRelations, getChannelsRelationsByChannel } from "../controllers/channelsrelations.mjs";
+
+import { getUserByUUID } from "../controllers/user.mjs";
 
 import CryptoJS from "crypto-js";
 import { getChannelById } from "../controllers/channels.mjs";
@@ -24,6 +26,8 @@ const serverApp = async (app) => {
 
     // Socket.io
     io.on('connection', async socket => {
+
+        console.log("New connection : " + socket.id);
 
         
         socket.on("newFriend" , async (data) => {
@@ -58,13 +62,23 @@ const serverApp = async (app) => {
         // sync user to channel (socket.io room)
         socket.on('channel', async (data) => {
             data = await decryptData(data);
+
             socket.join(data.channelID);
+            console.log("User " + data.userID + " joined channel " + data.channelID);
             socket.join(data.userID);
+
+            console.log("#################################################");
+
+            console.log(data.userID);
+            console.log(io.sockets.adapter.rooms.get(data.userID));
+
         });
 
         // send message in db and to all users in a channel (socket.io room)
         socket.on('message', async (data) => {
             data = await decryptData(data);
+            
+
             if(data === null) {
                 logger.error("Failed to decrypt message", { caller: caller });
                 return;
@@ -86,7 +100,7 @@ const serverApp = async (app) => {
             const tempChannel = await getChannelById(data.channelID);
             message.user = tempMessage.User;
             io.to(data.channelID).emit("notification", {message: message, user: tempMessage.User, channel: tempChannel});
-            io.to(data.channelID).emit("message", data);
+            io.to(data.channelID).emit("message", tempMessage);
         });
 
         // send typing notification to all users in a channel (socket.io room)
@@ -117,6 +131,24 @@ const serverApp = async (app) => {
             io.to(data.channelID).emit("avatar", data);
         });
 
+        // check online
+        socket.on("checkOnline", async (data) => {
+            const friends = data.friends;
+            const userID = data.userID;
+            socket.join(userID);
+            for (const friend of Object.entries(friends)) {
+
+                
+                console.log("################");
+                if(io.sockets.adapter.rooms.get(friend[1].otherUser.id) === undefined) {
+                    console.log(friend[1].otherUser.id + " is offline");
+                    io.to(userID).emit("offline", friend[1]);
+                } else {
+                    io.to(userID).emit("online", friend[1]);
+                }
+            }
+        });
+
         // ############## PONG
         socket.on("pong:join", async (data) => {
             socket.join("pong");
@@ -139,7 +171,28 @@ const serverApp = async (app) => {
             data.id = socket.id;
             io.to("pong").emit("pong:move", data);
         });
+
+        socket.on("deleteMessage", async (data) => {
+            try {
+                const message = await getMessageByID(data.id);
+                const user = getUserByUUID(data.user);
+
+                if(message.User.id === user.id || user.operator === true) {
+                    await deleteMessage(data.id);
+                    io.to(message.channelID).emit("deleteMessage", data);
+                }
+            } catch (err) {
+                console.error(err);
+                return;
+            }
+
+            
+        });
         
+    });
+
+    io.on('disconnect', async socket => {
+        console.log("Disconnected : " + socket.id);
     });
 
     const start = () => {

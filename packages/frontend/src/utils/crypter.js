@@ -15,8 +15,7 @@ crypter.encrypt = (data) => {
 }
 
 // Decryption
-crypter.decrypt = (data) => {
-  const secret = "abcde";
+crypter.decrypt = (data, secret="abcde") => {
   try {
   return JSON.parse(CryptoJS.enc.Utf8.stringify(CryptoJS.AES.decrypt(data,  secret, 
   {

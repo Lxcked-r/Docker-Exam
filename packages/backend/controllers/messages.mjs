@@ -131,8 +131,42 @@ const getMessageByID = async (messageID) => {
     }
 }
 
+/**
+ * Delete a message.
+ * @param {string} id - The message's id.
+ * @returns {Promise<Object>} The deleted message.
+ */
+const deleteMessage = async (id) => {
+    // Validate the options
+    if (!id) {
+        logger.error("Missing required field", { caller: callerName });
+        return null;
+    }
+
+    const transaction = await db.transaction();
+
+    try {
+        const message = await Message.destroy({
+            where: {
+                id
+            }
+        }, { transaction });
+
+        logger.info(`Deleted message ${id}`, { caller: callerName });
+
+        await transaction.commit();
+
+        return message;
+    } catch (error) {
+        logger.error(error, { caller: callerName });
+        await transaction.rollback();
+        return null;
+    }
+}
+
 export {
     createMessage,
     getMessages,
     getMessageByID,
+    deleteMessage,
 };

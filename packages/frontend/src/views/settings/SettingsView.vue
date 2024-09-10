@@ -1,8 +1,37 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import API from "@/utils/apiWrapper";
 import { useLocalUserStore } from "@/stores/localUser";
 import AvatarCircle from "@/components/AvatarCircle.vue";
+import config from "@/../config";
+
+const app_name = config.app_name;
+const notifPermCheckboxInput = ref(null);
+
+const tryNotificationPermission = async () => {
+	if (!("Notification" in window)) {
+		console.error("This browser does not support desktop notification");
+		return;
+	}
+
+	if (Notification.permission === "granted") {
+		return;
+	}
+
+	if (Notification.permission !== "denied") {
+		const permission = await Notification.requestPermission();
+		if (permission === "granted") {
+			return;
+		}
+	}
+};
+
+const onSettingsRoute = computed(() => {
+	if(router.currentRoute.value.path === "/dashboard") {
+		changeTitle(onTitleRoute.value);
+	}
+	return router.currentRoute.value.path === "/dashboard";
+});
 
 const localUserStore = useLocalUserStore();
 
@@ -103,8 +132,13 @@ const removeAvatar = async () => {
 	}
 };
 
-onMounted(async () => {
+onMounted(async () => {	
 	await localUserStore.init();
+
+	notifPermCheckboxInput.value.checked = Notification.permission === "granted";
+
+	document.title = 'Settings - ' + app_name;
+
 });
 
 </script>
@@ -119,10 +153,10 @@ onMounted(async () => {
 
 		<h2 class="text-xl font-bold">Notifications</h2>
 
-		<div class="flex flex-col gap-4 mt-4">
+		<div class="flex flex-col gap-4 mb-4 mt-2">
 			<div class="flex flex-box items-center">
 				<h3>Enable Notifications &nbsp;</h3>
-				<input type="checkbox" class="toggle" checked />
+				<input ref="notifPermCheckboxInput" type="checkbox" class="toggle" checked @change="tryNotificationPermission" />
 			</div>
 		</div>
 

@@ -31,6 +31,13 @@ const router = createRouter({
 			component: () => import("../views/admin/UsersView.vue"),
 		},
 		{
+
+			path: "/terms",
+			name: "terms",
+
+			component: () => import("../views/TermsView.vue"),
+		},
+		{
 			path: "/dashboard",
 			name: "dashboard",
 
@@ -51,6 +58,12 @@ const router = createRouter({
 					]
 				},
 				{
+					path: "meteo",
+					name: "meteo",
+
+					component: () => import("../views/MeteoView.vue"),
+				},
+				{
 					path: "friends",
 					name: "friends",
 
@@ -67,7 +80,13 @@ const router = createRouter({
 					name: "pong",
 
 					component: () => import("../views/PongView.vue"),
-				}
+				},
+				{
+					path: "memory",
+					name: "memory",
+
+					component: () => import("../views/MemoryView.vue"),
+				},
 			]
 		},
 	],

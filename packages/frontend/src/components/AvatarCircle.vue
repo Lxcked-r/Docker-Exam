@@ -3,7 +3,6 @@ import { useLocalUserStore } from "@/stores/localUser";
 import { useSessionStateStore } from "@/stores/sessionState";
 import { ref, watch, computed, onMounted, onBeforeMount } from "vue";
 import config from "@/../config";
-
 const lastAvatar = ref(null);
 
 const props = defineProps({
@@ -34,7 +33,11 @@ const props = defineProps({
 	debug: {
 		type: String,
 		default: null,
-	}
+	},
+	isOnline: {
+		type: Boolean,
+		default: null,
+	},
 });
 
 const url = ref(null);
@@ -112,16 +115,44 @@ onMounted(async () => {
 
 <template>
 
-<div class="avatar placeholder">
+<div class="avatar placeholder gl">
 	<div
-		:class="showPlaceholderInstead ? 'bg-neutral text-neutral-content rounded-full ' + props.sizeOverride : 'rounded-full ' + props.sizeOverride"
+		:class="'rounded-full ' + props.sizeOverride"
 	>
-		<img
+		<img 
 			v-if="props"
 			:src="hasChangedOnce ? `${url}` : `${url}`"
 			:class="props.id"
 		/>
+		
+	<div class="isOnline">
+		<span v-if="isOnline !== null && isOnline===true">
+			🟢
+		</span>
+		<span v-if="isOnline !== null && isOnline===false">
+			🔴
+		</span>
+	</div>
 	</div>
 </div>
 
+
 </template>
+
+
+<style scoped>
+.gl {
+
+	position: relative;
+}
+
+.isOnline {
+	position: absolute;
+	bottom: 7px;
+	right: 7px;
+	border-radius: 50%;
+	width: 0.4rem;
+	height: 0.4rem;
+}
+
+</style>

@@ -76,6 +76,7 @@ const getUserName = (channel) => {
 	if(channel.Channel.type === 'public') {
 		return null;
 	}
+
 	for (const friend of friends.value) {
 		if (friend.id === channel.Channel.id) {
 			if(friend.user.id === localUserStore.user.id) {
@@ -87,12 +88,12 @@ const getUserName = (channel) => {
 	}
 };
 
-const getAvatar = (channel) => {
-	if (channel.Channel.type === 'public') {
-		return channel.Channel.avatar;
+const getAvatar = (chann) => {
+	if (chann.Channel.type === 'public') {
+		return chann.Channel.avatar;
 	} else{
 		for (const friend of friends.value) {
-			if (friend.id === channel.Channel.id) {
+			if (friend.id === chann.Channel.id) {
 				if(friend.user.id === localUserStore.user.id) {
 					return friend.otherUser.avatar;
 				} else {
@@ -188,7 +189,7 @@ socket.on("newChan", async (data) => {
 </script>
 
 <template>
-	<div class="flex flex-1">
+	<div class="flex flex-1 overflow-y-hidden">
 
 		<div class="flex flex-col gap-4 min-w-60 p-2 bg-base-200">
 
@@ -265,7 +266,8 @@ socket.on("newChan", async (data) => {
 							:userName="getUserName(channel)"
 							:userID="getUserId(channel)"
 							@click="selectedChannel = channel; openChat(channel);"
-						/>
+						>
+						</ChatsDisp>
 						</div>
 					</div>
 				</div>
