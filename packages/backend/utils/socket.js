@@ -99,8 +99,6 @@ const serverApp = async (app) => {
             const tempMessage = await getMessageByID(message.id);
             const tempChannel = await getChannelById(data.channelID);
             message.user = tempMessage.User;
-
-            console.log(tempMessage);
             io.to(data.channelID).emit("notification", {message: message, user: tempMessage.User, channel: tempChannel});
             io.to(data.channelID).emit("message", tempMessage);
         });
