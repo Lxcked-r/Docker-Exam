@@ -99,8 +99,10 @@ const serverApp = async (app) => {
             const tempMessage = await getMessageByID(message.id);
             const tempChannel = await getChannelById(data.channelID);
             message.user = tempMessage.User;
+
+            console.log(tempMessage);
             io.to(data.channelID).emit("notification", {message: message, user: tempMessage.User, channel: tempChannel});
-            io.to(data.channelID).emit("message", data);
+            io.to(data.channelID).emit("message", tempMessage);
         });
 
         // send typing notification to all users in a channel (socket.io room)
@@ -182,7 +184,7 @@ const serverApp = async (app) => {
                     io.to(message.channelID).emit("deleteMessage", data);
                 }
             } catch (err) {
-                console.error(err, { caller: caller });
+                console.error(err);
                 return;
             }
 
