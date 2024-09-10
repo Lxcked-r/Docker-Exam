@@ -100,6 +100,11 @@ const getImg = (tryer) => {
 
 }
 
+const deleteMessage = async () => {
+    
+    socket.emit('deleteMessage', { id: props.id, user: props.userID });
+}
+
 const containsLinkBalise = (text) => {
     return text.includes('<a href=');
 }
@@ -187,6 +192,6 @@ onMounted(async () => {
                 </div>
             </div>
         </li>
-        <button class="hidden group-hover:block absolute top-0 right-5"><i class="bi bi-trash"></i></button>
+        <button @click="deleteMessage" class="hidden group-hover:block absolute top-0 right-5"><i class="bi bi-trash"></i></button>
     </div>
 </template>

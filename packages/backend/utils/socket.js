@@ -1,9 +1,11 @@
 import { createServer } from "http";
 import { Server } from "socket.io";
 
-import { createMessage, getMessageByID } from "../controllers/messages.mjs";
+import { createMessage, getMessageByID, deleteMessage } from "../controllers/messages.mjs";
 
 import { getChannelsRelations, getChannelsRelationsByChannel } from "../controllers/channelsrelations.mjs";
+
+import { getUserByUUID } from "../controllers/user.mjs";
 
 import CryptoJS from "crypto-js";
 import { getChannelById } from "../controllers/channels.mjs";
@@ -168,6 +170,23 @@ const serverApp = async (app) => {
         socket.on("pong:move", async (data) => {
             data.id = socket.id;
             io.to("pong").emit("pong:move", data);
+        });
+
+        socket.on("deleteMessage", async (data) => {
+            try {
+                const message = await getMessageByID(data.id);
+                const user = getUserByUUID(data.user);
+
+                if(message.User.id === user.id || user.operator === true) {
+                    await deleteMessage(data.id);
+                    io.to(message.channelID).emit("deleteMessage", data);
+                }
+            } catch (err) {
+                console.error(err, { caller: caller });
+                return;
+            }
+
+            
         });
         
     });

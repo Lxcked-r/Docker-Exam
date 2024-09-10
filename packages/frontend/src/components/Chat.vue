@@ -302,6 +302,18 @@ const getAvatarFromUsers = (channel) => {
 }
 };
 
+socket.on("deleteMessage", async (event) => {
+    const message = event;
+    const index = messages.value.findIndex((x) => x.id === message.id);
+    if (index !== -1) {
+        messages.value.splice(index, 1);
+    }
+    if(messages.value.length < 25) {
+        await getTwentyNewMessages(page.value);
+        page.value++;
+    }
+});
+
 // add the user to the channel
 socket.on("newUser", (event) => {
     channelUsers.value = event;
@@ -447,7 +459,6 @@ const internalNotif = (title, content) => {
  * @returns {String} - The image URL.
  */
 const getImg = (tryer) => {
-    console.log(tryer);
     if(tryer === null || tryer === undefined) {
         return;
     }
