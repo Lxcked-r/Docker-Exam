@@ -191,12 +191,10 @@ const serverApp = async (app) => {
 
         socket.on("editChannel", async (data) => {
 
-            console.log(data);
 
             const channel =  await getChannelById(data.channelID);
             const user = await getUserByUUID(data.userID);
 
-            console.log(user);
 
             if(channel.owner === user.id || user.operator === true) {
                 try {
