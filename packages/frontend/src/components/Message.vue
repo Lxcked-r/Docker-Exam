@@ -192,6 +192,6 @@ onMounted(async () => {
                 </div>
             </div>
         </li>
-        <button @click="deleteMessage" class="hidden group-hover:block absolute top-0 right-5"><i class="bi bi-trash"></i></button>
+        <button @click="deleteMessage" class="hidden group-hover:block absolute top-0 right-5 btn btn-xs btn-outline hover:btn-error"><i class="bi bi-trash"></i></button>
     </div>
 </template>
