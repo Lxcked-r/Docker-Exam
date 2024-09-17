@@ -339,6 +339,41 @@ const uploadAvatar = async (options) => {
     });
 }
 
+/**
+ * Reset user's password
+ * @param {Object} req - The request.
+ * @param {Object} res - The response.
+ * @returns {Promise<Object>} The updated user.
+ */
+const resetPassword = async (req, res) => {
+    const { email } = req.body;
+
+    const user = await User.findOne({
+        where: {
+            email
+        }
+    });
+
+    if (!user) {
+        res.status(400).json({ success: false, message: "User not found" });
+        return;
+    }
+
+    const newPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await hashPassword(newPassword);
+
+    const t = await db.transaction();
+
+    try {
+        await user.update({ password: hashedPassword }, { transaction: t });
+        await t.commit();
+        res.status(200).json({ success: true, message: "Password reset" });
+    } catch (err) {
+        await t.rollback();
+        res.status(400).json({ success: false, message: "Failed to reset password" });
+    }
+}
+
 export {
     createUser,
     updateUser,
