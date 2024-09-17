@@ -3,3 +3,4 @@ logs
 *.sqlite
 avatars
 files
+config.json
