@@ -8,7 +8,7 @@ import { getChannelsRelations, getChannelsRelationsByChannel } from "../controll
 import { getUserByUUID } from "../controllers/user.mjs";
 
 import CryptoJS from "crypto-js";
-import { getChannelById } from "../controllers/channels.mjs";
+import { getChannelById, editChannel } from "../controllers/channels.mjs";
 import { decryptData, encrypt } from "./crypter.js";
 
 const serverApp = async (app) => {
@@ -188,6 +188,34 @@ const serverApp = async (app) => {
 
             
         });
+
+        socket.on("editChannel", async (data) => {
+
+            console.log(data);
+
+            const channel =  await getChannelById(data.channelID);
+            const user = await getUserByUUID(data.userID);
+
+            console.log(user);
+
+            if(channel.owner === user.id || user.operator === true) {
+                try {
+                    await editChannel({name: data.newName, id: data.channelID});
+
+                    const tempChannel = await getChannelById(data.channelID);
+
+                    io.to(data.channelID).emit("editChannel", tempChannel);
+            
+                } catch (err) {
+                    console.error(err);
+                    return;
+                }
+            }
+
+
+
+        }
+        );
         
     });
 

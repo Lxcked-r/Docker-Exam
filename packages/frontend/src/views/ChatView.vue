@@ -1,6 +1,6 @@
 <script setup>
 import API from "@/utils/apiWrapper";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, inject } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
 import Chat from "@/components/Chat.vue";
@@ -42,6 +42,9 @@ const page = 1;
 
 channelID.value = route.params.id;
 
+const socket = inject("socket");
+
+
 watch(() => route.params.id, async (newVal, oldVal) => {
 	channelID.value = newVal;
 	// Check if the user is logged in, and redirect them to the chat if they are.
@@ -79,6 +82,14 @@ watch(() => route.params.id, async (newVal, oldVal) => {
 			router.push("/login");
 		}
 		
+});
+
+
+socket.on("editChannel", async (data) => {
+	if (data.id === channelID.value) {
+		channelName.value = data.name;
+	}
+
 });
 
 onMounted(async () => {	

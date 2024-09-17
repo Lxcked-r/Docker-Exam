@@ -54,12 +54,11 @@ const createChannel = async (options) => {
  * @param {Object} options- The channel's information.
  * @param {string} options.id - The channel's id.
  * @param {string} options.name - The channel's name.
- * @param {Array<string>} options.users - The users' ids.
  * @returns {Promise<Object>} The edited channel.
  */
 const editChannel = async (options) => {
     // Validate the options
-    if (!options.id || !options.name || !options.users) {
+    if (!options.id || !options.name) {
         logger.error("Missing required field", { caller: callerName });
         return null;
     }
@@ -69,7 +68,6 @@ const editChannel = async (options) => {
     try {
         const channel = await Channel.update({
             name: options.name,
-            users: options.users
         }, {
             where: {
                 id: options.id

@@ -97,6 +97,8 @@ const lastPage = ref(0);
 
 const editChannelDialogRef = ref(null);
 
+const newNameInputRef = ref(null);
+
 const showAddPersonDialogRef = ref(null);
 
 const addSomeoneInputRef = ref(null);
@@ -124,6 +126,8 @@ const enterKeyDialogRef = ref(null);
 const key = ref(null);
 
 const isMessagesDecrypted = ref(false);
+
+const channelNameWithoutProps = ref(null);
 
 /**
  * Show the user profile dialog
@@ -251,6 +255,15 @@ watch(() => props.channelMessages, async (newVal, oldVal) => {
     });
 });
 
+watch(() => props.channelAvatar, async (newVal, oldVal) => {
+    channelAvatarRef.value = newVal;
+});
+
+watch(() => props.channelName, async (newVal, oldVal) => {
+    channelNameWithoutProps.value = newVal;
+});
+
+
 /**
  * Check if the user is dragging a file
  * @param {Event} e - The event to check.
@@ -342,6 +355,14 @@ socket.on("online", async (friendID) => {
 		}
 	}
 });
+
+const editChannel = async () => {
+    const data = {channelID: props.channelID, newName: newNameInputRef.value.value, userID: localUserStore.user.id};
+
+    socket.emit("editChannel", data);
+    editChannelDialogRef.value.hide();
+
+};
 
 // to avoid before load problems set user to smth.
 user.value.id = props.userID;
@@ -1066,6 +1087,7 @@ onMounted(async () => {
     if(props.channelType === "public") {
         isMessagesDecrypted.value = true;
         document.title = props.channelName + " - " + appName;
+        channelNameWithoutProps.value = props.channelName;
     } else {
         //enterKeyDialogRef.value.show();
         decryptMessagesFromKey(props.key);
@@ -1125,7 +1147,7 @@ defineExpose({
             ref="editChannelDialogRef"
             :is-acknowledgement="true"
             confirm-name="Save"
-            @confirm="editChannelDialogRef.hide()"
+            @confirm="editChannel"
         >
             <template #title>
                 Edit channel
@@ -1137,6 +1159,7 @@ defineExpose({
                     placeholder="Channel Name"
                     class="input input-bordered w-full max-w-xs"
                     :value="channelName"
+                    ref="newNameInputRef"
                 />
                 <div class="flex flex-col">
                     <button @click="showUsersList">
@@ -1291,7 +1314,7 @@ defineExpose({
             <div class="relative flex flex-1">
                 <AvatarCircle
                     v-if="channelType === 'public'"
-                    :name="channelName"
+                    :name="channelNameWithoutProps"
                     :id="channelID"
                     :avatar="channelAvatar"
                     :is-chan="true"
@@ -1299,7 +1322,7 @@ defineExpose({
                 />
                 <AvatarCircle
                     v-if="channelType === 'private' && channelUsers.length > 0"
-                    :name="channelName"
+                    :name="channelNameWithoutProps"
                     :id="channelUsers.find((x) => x.userID !== user.id).userID"
                     :avatar="channelUsers.find((x) => x.userID !== user.id).User.avatar"
                     :is-chan="true"
@@ -1310,7 +1333,7 @@ defineExpose({
                     <div class="text-2xl mt-1 flex items-center">
                         
                         <span v-if="channelType === 'public'" class="text-gray-700 mr-3 dark:text-gray-300">
-                           &nbsp; {{ channelName }}
+                           &nbsp; {{ channelNameWithoutProps }}
                         </span>
                         <span v-if="channelType === 'private' && channelUsers.length > 0" class="text-gray-700 mr-3 dark:text-gray-300">
                            &nbsp; {{ channelUsers.find((x) => x.userID !== user.id).User.username }}
