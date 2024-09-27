@@ -4,7 +4,7 @@ import API from '@/utils/apiWrapper';
 import AvatarCircle from './AvatarCircle.vue';
 const props = defineProps({
     message: String,
-    user: Object,
+    user: String,
     channel: Object,
     userID: String,
 });
