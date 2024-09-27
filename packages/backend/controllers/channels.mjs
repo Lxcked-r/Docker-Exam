@@ -110,8 +110,50 @@ const getChannelById = async (id) => {
     }
 }
 
+/**
+ * Upload avatar image
+ * @param {Object} options - The user's information.
+ * @param {string} options.id - The user's UUID.
+ * @param {string} options.files - The user's image.
+ * @returns {Promise<Object>} The updated user.
+ */
+const updateAvatar = async (options) => {
+
+    console.log(options);
+    // Validate the options
+    if (!options.id || !options.files) {
+        logger.error("Missing required field", { caller: callerName });
+        return null;
+    }
+
+    const transaction = await db.transaction();
+
+    try {
+        const channel = await Channel.update({
+            avatar: options.files.avatar.data,
+        }, {
+            where: {
+                id: options.id
+            },
+            returning: true,
+            plain: true
+        }, { transaction });
+
+        logger.info(`Updated channel ${channel.id}`, { caller: callerName });
+
+        await transaction.commit();
+
+        return channel;
+    } catch (error) {
+        logger.error(error, { caller: callerName });
+        await transaction.rollback();
+        return null;
+    }
+}
+
 
 export {    
+    updateAvatar,
     createChannel,
     editChannel,
     getChannelById

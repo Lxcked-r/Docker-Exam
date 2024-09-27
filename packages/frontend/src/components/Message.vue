@@ -4,7 +4,9 @@ import AvatarCircle from './AvatarCircle.vue';
 import { onBeforeMount, onMounted, ref, watch, inject } from 'vue';
 import config from "@/../config";
 import { useFriendsStore } from '@/stores/friends';
+import { useLocalUserStore } from '@/stores/localUser';
 
+const localUserStore = useLocalUserStore();
 const socket = inject('socket');
 
 const baseUrl = config.use_current_origin ? window.location.origin : config.base_url;
@@ -102,7 +104,7 @@ const getImg = (tryer) => {
 
 const deleteMessage = async () => {
     
-    socket.emit('deleteMessage', { id: props.id, user: props.userID });
+    socket.emit('deleteMessage', { id: props.id, user: localUserStore.user.id });
 }
 
 const containsLinkBalise = (text) => {

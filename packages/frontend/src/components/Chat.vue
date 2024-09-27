@@ -33,6 +33,9 @@ const fileFromClipboard = ref(null);
 const channelAvatarRef = ref(null);
 const channelPrivateAvatarRef = ref(null);
 
+const changeChannelImageDialogRef = ref(null);
+const changeChannelImageInputRef = ref(null);
+
 const checkAvatars = ref([]);
 
 const actualUser = ref(null);
@@ -361,8 +364,28 @@ const editChannel = async () => {
 
     socket.emit("editChannel", data);
     editChannelDialogRef.value.hide();
-
 };
+
+const changeChannelImage = async () => {
+    const file = changeChannelImageInputRef.value.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", file.name.substring(file.name.lastIndexOf('.')+1, file.name.length) || file.name);
+    formData.append("channelID", props.channelID);
+    formData.append("userID", localUserStore.user.id);
+    const res = await API.fireServer("/api/v1/channels/avatar", {
+        method: "POST",
+        headers: {
+            "Content-Type": false,
+        },
+        body: formData,
+    });
+    if (res.status === 200) {
+        const data = await res.json();
+        socket.emit("channelImage", data);
+        changeChannelImageDialogRef.value.hide();
+    }
+}
 
 // to avoid before load problems set user to smth.
 user.value.id = props.userID;
@@ -1143,6 +1166,7 @@ defineExpose({
 
 <template>
     <Teleport to="#dash">
+
         <CustomDialog
             ref="editChannelDialogRef"
             :is-acknowledgement="true"
@@ -1154,6 +1178,13 @@ defineExpose({
             </template>
 
             <template #content>
+                <button @click="changeChannelImageDialogRef.show()">
+                    <AvatarCircle
+                        :name="props.userName"
+                        :id="props.userID"
+                        :avatar="props.channelAvatar"
+                    />
+                </button>
                 <input
                     type="text"
                     placeholder="Channel Name"
@@ -1183,6 +1214,23 @@ defineExpose({
                         </div>
                     </div>
                 </div>
+            </template>
+        </CustomDialog>        
+        <CustomDialog
+            ref="changeChannelImageDialogRef"
+            :is-acknowledgement="true"
+            confirm-name="Save"
+            @confirm="changeChannelImage"
+        >
+            <template #title>
+                Change channel image
+            </template>
+            <template #content>
+                <input
+                    ref="changeChannelImageInputRef"
+                    type="file"
+                    class="file-input file-input-bordered w-full max-w-xs"
+                />
             </template>
         </CustomDialog>
 

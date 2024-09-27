@@ -175,11 +175,13 @@ const serverApp = async (app) => {
         socket.on("deleteMessage", async (data) => {
             try {
                 const message = await getMessageByID(data.id);
-                const user = getUserByUUID(data.user);
+                const user = await getUserByUUID(data.user);
 
                 if(message.User.id === user.id || user.operator === true) {
                     await deleteMessage(data.id);
                     io.to(message.channelID).emit("deleteMessage", data);
+                } else {
+                    return;
                 }
             } catch (err) {
                 console.error(err);

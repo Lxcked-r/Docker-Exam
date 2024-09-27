@@ -117,7 +117,7 @@ const getMessageByID = async (messageID) => {
             include: [
                 {
                     model: User,
-                    attributes: ["username", "avatar"],
+                    attributes: ["username", "avatar", "id"],
                 },
             ],
             where: {

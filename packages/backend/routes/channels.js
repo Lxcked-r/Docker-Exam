@@ -3,7 +3,7 @@
 */
 
 import express from 'express';
-import { createChannel, getChannelById } from '../controllers/channels.mjs';
+import { createChannel, getChannelById, updateAvatar } from '../controllers/channels.mjs';
 
 import { authenticate } from "../middleware/auth.mjs";
 
@@ -38,6 +38,22 @@ router.get('/', async (req, res) => {
         return;
     }
     res.send(channel);
+});
+
+router.post('/avatar',  async (req, res) => {
+    console.log(req);
+    try {
+        const options = req.body;
+        options.files = req.files;
+        const channel = await updateAvatar(options);
+        if (!channel) {
+            res.status(400).json({ success: false, message: "Missing required fields" });
+            return;
+        }
+        res.send(channel);
+    } catch (error) {
+        console.log(error);
+    }
 });
 
 export default router;
