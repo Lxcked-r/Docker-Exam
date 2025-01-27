@@ -4,7 +4,7 @@
 */
 import express from "express";
 import logger from "../utils/logger.mjs";
-import { validatePasswordByUsername, validatePasswordByUUID, getUserByUsername } from "../controllers/user.mjs";
+import { validatePasswordByUsername, validatePasswordByUUID, getUserByUsername, forgotPassword} from "../controllers/user.mjs";
 import { createToken, deleteTokenByOpaqueString, deleteAllTokensByUserId } from "../controllers/token.mjs";
 import { authenticate } from "../middleware/auth.mjs";
 
@@ -100,6 +100,18 @@ router.post("/end_all", authenticate(), async (req, res) => {
 router.get("/check", authenticate(), async (req, res) => {
     // If we got here, the user is authenticated
     res.json({ success: true });
+});
+
+router.post("/forgot", async (req, res) => {
+    // password recovery route
+    const body = req.body;
+    if(!body.email || typeof body.email !== "string") {
+        res.status(400).json({ success: false, message: "Missing required fields" });
+        return;
+    }
+    const email = body.email;
+
+    await forgotPassword(req, res);
 });
 
 export default router;

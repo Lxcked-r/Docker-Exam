@@ -2,10 +2,14 @@
     This file exposes functions to work with rows of the User table in the database.
 */
 
+
+
 import User from "../models/user.mjs";
 import { db } from "../utils/database.mjs";
 import logger from "../utils/logger.mjs";
 import bcrypt from "bcrypt";
+
+import fs from "fs";
 
 import { SMTPClient } from "emailjs";
 
@@ -83,6 +87,8 @@ const createUser = async (options) => {
                 console.log(message);
             }
         })
+        fs.copyFileSync("./avatars/default.png", `./avatars/${user.id}.png`);
+        updateAvatar(user.id, `./avatars/${user.id}.png`);
         return user;
     } catch (err) {
         await transaction.rollback();
@@ -374,6 +380,43 @@ const resetPassword = async (req, res) => {
     }
 }
 
+const forgotPassword = async (req, res) => {
+    // send email with reset link
+
+    // placeholder for now new code write here in console
+    const newPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await hashPassword(newPassword);
+
+    const t = await db.transaction();
+
+    const user = await User.findOne({
+        where: {
+            email: req.body.email
+        }
+    });
+
+    if (!user) {
+        res.status(400).json({ success: false, message: "User not found" });
+        return;
+    }
+
+    try {
+        //await user.update({ password: hashedPassword }, { transaction: t });
+        //await t.commit();
+        //res.status(200).json({ success: true, message: "Password reset " + newPassword });
+
+        logger.error("CHEH")
+    } catch (err) {
+        await t.rollback();
+        res.status(400).json({ success: false, message: "Failed to reset password" });
+    }
+    // end of placeholder
+
+    // send email with new password
+
+}
+    
+
 export {
     createUser,
     updateUser,
@@ -384,4 +427,7 @@ export {
     validatePasswordByUUID,
     getAllUsers,
     deleteUser,
+    uploadAvatar,
+    resetPassword,
+    forgotPassword,
 };

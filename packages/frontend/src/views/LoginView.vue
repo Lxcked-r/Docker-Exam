@@ -86,23 +86,26 @@ onMounted(() => {
 
 	<div class="h-screen w-screen flex flex-col justify-center items-center">
 		<div class="p-2 bg-primary-300 flex flex-col gap-4">
-		<h1 class="text-2xl font-bold">Login</h1>
-		<input class="input input-bordered w-full max-w-xs" type="text" placeholder="Username" v-model="username" />
-		<input class="input input-bordered w-full max-w-xs" type="password" placeholder="Password" v-model="password" />
-		<button
-			:class="isLoading ? 'btn btn-disabled btn-sm' : 'btn btn-primary btn-sm'"
-			@click="login"
-		>
-			<span
-				class="loading loading-spinner loading-md"
-				v-if="isLoading"
+			<h1 class="text-2xl font-bold">Login</h1>
+			<input class="input input-bordered w-full max-w-xs" type="text" placeholder="Username" v-model="username" />
+			<input class="input input-bordered w-full max-w-xs" type="password" placeholder="Password" v-model="password" />
+			<button type="submit"
+				:class="isLoading ? 'btn btn-disabled btn-sm' : 'btn btn-primary btn-sm'"
+				@click="login"
 			>
-			</span>
-			Login
-		</button>
+				<span
+					class="loading loading-spinner loading-md"
+					v-if="isLoading"
+				>
+				</span>
+				Login
+			</button>
 		</div>
 		<div>
 			Dont have an account? <router-link to="/register">Register</router-link>
+		</div>
+		<div>
+			<router-link to="/forgot-password">Forgot Password</router-link>
 		</div>
 	</div>
 </template>

@@ -9,6 +9,9 @@ import { authenticate } from '../middleware/auth.mjs';
 import fs from 'fs';
 
 import multer from 'multer';
+
+import uploadHandler from '../middleware/uploadHandler.mjs';
+
 import logger from '../utils/logger.mjs';
 
 const upload = multer({
@@ -22,8 +25,10 @@ router.use(express.urlencoded({ extended: true }));
 router.use(express.json());
 router.use(express.static('../files'));
 
-router.post('/', upload.any(), authenticate(), async (req, res) => {
+router.post('/', authenticate(), upload.any(), async (req, res) => {
     
+
+
     const options = req.body;
     const fileName = req.files[0].originalname;
 
