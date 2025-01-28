@@ -4,7 +4,7 @@
 */
 
 import express from 'express';
-import { createMessage, getMessages } from '../controllers/messages.mjs';
+import { createMessage, getMessages, editMessage } from '../controllers/messages.mjs';
 
 import { authenticate } from "../middleware/auth.mjs";
 
@@ -46,6 +46,29 @@ router.get('/', authenticate(), hasAccessToChannel(), async (req, res) => {
         return res.status(400).send('Missing required field');
     }
     res.send(messages);
+});
+
+/**
+ * Update a message.
+ * @name PUT /api/v1/messages/:messageID
+ * @param {string} text - The message's text.
+ * @param {string} messageID - The message id.
+ * @returns {Object} The updated message.
+ */
+router.put('/:messageID', authenticate(), async (req, res) => {
+    const body = req.body;
+    const messageID = req.params.messageID;
+    if (!body.text) {
+        return res.status(400).send('Missing required field');
+    }
+    const message = await editMessage(messageID, body.text);
+
+    console.log(message);
+
+    if(!message) {
+        return res.status(400).send('Missing required field');
+    }
+    res.send(message);
 });
 
 export default router;

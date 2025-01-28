@@ -318,6 +318,14 @@ const getAvatarFromUsers = (channel) => {
 }
 };
 
+socket.on("editMessage", async (event) => {
+    const message = event;
+    const index = messages.value.findIndex((x) => x.id === message.id);
+    if (index !== -1) {
+        messages.value[index].text = message.text;
+    }
+});
+
 socket.on("deleteMessage", async (event) => {
     const message = event;
     const index = messages.value.findIndex((x) => x.id === message.id);
@@ -1443,6 +1451,7 @@ defineExpose({
                     :type="message.type"
                     :avatar="message.User.avatar ? message.User.avatar : message.userID"
                     :is-online="!checkIfOwnUser(message.userID)?checkUserOnline(message.userID):null"
+                    :is-o-p="getIsOp()"
                 />
             </div>
         </ul>

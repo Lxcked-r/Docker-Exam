@@ -382,7 +382,7 @@ const resetPassword = async (req, res) => {
 
 const forgotPassword = async (req, res) => {
     // send email with reset link
-
+    return res.status(200).json({ success: true, message: "Email sent" });
     // placeholder for now new code write here in console
     const newPassword = Math.random().toString(36).slice(-8);
     const hashedPassword = await hashPassword(newPassword);
@@ -401,17 +401,15 @@ const forgotPassword = async (req, res) => {
     }
 
     try {
-        //await user.update({ password: hashedPassword }, { transaction: t });
-        //await t.commit();
-        //res.status(200).json({ success: true, message: "Password reset " + newPassword });
-
-        logger.error("CHEH")
+        await user.update({ password: hashedPassword }, { transaction: t });
+        await t.commit();
+        res.status(200).json({ success: true, message: "Password reset " + newPassword });
     } catch (err) {
         await t.rollback();
         res.status(400).json({ success: false, message: "Failed to reset password" });
     }
     // end of placeholder
-
+    
     // send email with new password
 
 }

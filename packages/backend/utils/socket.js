@@ -191,6 +191,16 @@ const serverApp = async (app) => {
             
         });
 
+        socket.on("editMessage", async (data) => {
+            const message = await getMessageByID(data.id);
+            const user = await getUserByUUID(data.userID);
+
+            if(message.User.id === user.id) {
+                io.to(message.channelID).emit("editMessage", message);
+            }
+
+        });
+
         socket.on("editChannel", async (data) => {
 
 

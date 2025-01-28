@@ -31,7 +31,13 @@ const Message = db.define("Message", {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
-    }
+    },
+
+    editedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+    },
+
 
 });
 

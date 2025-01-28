@@ -132,6 +132,24 @@ const removeAvatar = async () => {
 	}
 };
 
+
+const saveTheme = () => {
+	const theme = document.getElementById("theme-select").value;
+	localStorage.setItem("theme", theme);
+	refreshTheme();
+};
+
+const refreshTheme = () => {
+	const theme = localStorage.getItem("theme");
+	if (theme === "Dark") {
+		document.body.classList.add("dark");
+	} else {
+		document.body.classList.remove("dark");
+	}
+};
+
+
+
 onMounted(async () => {	
 	await localUserStore.init();
 
@@ -184,6 +202,24 @@ onMounted(async () => {
 				<input ref="filePicker" id="dropzone-file" type="file" class="hidden" accept="image/gif, image/png, image/jpeg" @change="uploadImage()"/>
 			</label>
 		</div>
+
+		<h2 class="text-xl font-bold mt-8">
+			Theme
+		</h2>
+
+		<div class="flex flex-col gap-4">
+			<div class="flex flex-col gap-2">
+				<label for="theme-select" class="text-sm font-semibold">Select theme</label>
+				<select id="theme-select" class="select select-bordered max-w-64">
+					<option>Light</option>
+					<option>Dark</option>
+				</select>
+			</div>
+		</div>
+
+		<button class="btn btn-primary max-w-32 mt-4" @click="saveTheme()">
+			Save
+		</button>
 
 		<h2 class="text-xl font-bold mt-4">
 			Password

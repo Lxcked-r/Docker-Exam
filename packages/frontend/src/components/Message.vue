@@ -21,6 +21,8 @@ const loading = ref(false);
 
 const friends = ref([]);
 
+const mode = ref('view');
+
 const getFile = async (id) => {
     if(id === 'undefined') return;
     if(id === 'null') return;
@@ -81,6 +83,10 @@ const props = defineProps({
     url: String,
     avatar: String,
     isOnline: Boolean,
+    isOP: {
+        type: Boolean,
+        default: false,
+    },
     type: {
         type: String,
         default: 'text',
@@ -122,9 +128,35 @@ const removeLinkBalise = (text) => {
     return text.replace(/<a href="([^"]+)" target="_blank">([^<]+)<\/a>/, '');
 }
 
+const setEditMode = () => {
+    if (mode.value === 'edit') {
+        mode.value = 'view';
+        return;
+    }
+    mode.value = 'edit';
+}
+
+const saveEdit = async () => {
+    const text = document.getElementById(props.id).value;
+    const response = await API.fireServer('/api/v1/messages/' + props.id, {
+        method: "PUT",
+        body: JSON.stringify({ text }),
+    });
+    const jsonRes = await response.json();
+    if (jsonRes.error) {
+        console.error(jsonRes.error);
+        return;
+    }
+
+    socket.emit('editMessage', { id: props.id, userID: localUserStore.user.id, text });
+    mode.value = 'view';
+}
+
 onBeforeMount(async () => {
     loading.value = false;
 });
+
+
 
 onMounted(async () => {
 
@@ -145,10 +177,18 @@ onMounted(async () => {
         <li class="group/item flex flex-col leading-1.5 mb-2 ml-2">
             <span v-if="isFirst" class="text-sm font-semibold text-gray-900 dark:text-white">{{ userName + ' ' }}<span v-if="isFirst" class="text-sm font-normal text-gray-500 dark:text-gray-400">{{ createdAt }}</span></span>
             
-            <div v-if="type=='text'" class="">
+            <div v-if="type==='text' && mode==='edit'" class="">
+                <input :id="id" class="input input-bordered w-full" @mouseover="$emit('showMessageOptions')" :value="props.text"></input>
+                <a @click="setEditMode" class="btn btn-xs btn-outline hover:btn-primary">Cancel</a>
+                <a @click="saveEdit" class="btn btn-xs btn-primary">Save</a>
+            </div> 
+
+            <div v-else-if="type=='text'" class="">
                 <p v-if="isFirst" :id="id" class="text-sm font-normal pt-1 mt-0 text-gray-900 dark:text-white max-w-[64rem]" @mouseover="$emit('showMessageOptions')"><a class="link link-primary" v-if="containsLinkBalise(text)" :href="getLinkBalise(text)" target="_blank">{{ getLinkBalise(text) }}</a>&nbsp;{{ removeLinkBalise(text)}}</p>
                 <p v-else :id="id" class="text-sm font-normal text-gray-900 dark:text-white ml-[48px] max-w-[64rem]" @mouseover="$emit('showMessageOptions')"><a class="link link-primary" v-if="containsLinkBalise(text)" :href="getLinkBalise(text)" target="_blank">{{ getLinkBalise(text) }}</a>&nbsp;{{ removeLinkBalise(text) }}</p>
-            </div> 
+            </div>
+
+
             <div v-else-if="type=='jpg' || type=='png' ||type=='webp' || type=='gif'">
                 <img v-bind:style="{cursor:'pointer'}" v-if="isFirst" ref="imgRef" :id="id" class="rounded-lg max-w-[30%]" :src="getImg(text)" @click="$emit('showImage', imgRef)"/>
                 <img v-bind:style="{cursor:'pointer'}" v-else :id="id" ref="imgRef" class="rounded-lg max-w-[28%] ml-[48px]" :src="getImg(text)" @click="$emit('showImage', imgRef)"/>
@@ -194,6 +234,10 @@ onMounted(async () => {
                 </div>
             </div>
         </li>
-        <button @click="deleteMessage" class="hidden group-hover:block absolute top-0 right-5 btn btn-xs btn-outline hover:btn-error"><i class="bi bi-trash"></i></button>
-    </div>
+        <button v-if="isOwnMessage" @click="deleteMessage" class="hidden group-hover:block absolute top-0 right-5 btn btn-xs btn-outline hover:btn-error"><i class="bi bi-trash"></i></button>
+        <button v-else-if="isOP" @click="deleteMessage" class="hidden group-hover:block absolute top-0 right-5 btn btn-xs btn-outline hover:btn-error"><i class="bi bi-trash"></i></button>
+        
+        <button v-if="isOwnMessage" @click="setEditMode" class="hidden group-hover:block absolute top-0 right-14 btn btn-xs btn-outline hover:btn-primary"><i class="bi bi-pencil"></i></button>
+
+        </div>
 </template>

@@ -164,9 +164,51 @@ const deleteMessage = async (id) => {
     }
 }
 
+
+/**
+ * Edit a message.
+ * @param {string} id - The message's id.
+ * @param {string} text - The message's text.
+ * @returns {Promise<Object>} The edited message.
+ */
+const editMessage = async (id, text) => {
+
+    logger.info(`Editing message ${id}`, { caller: callerName });
+    // Validate the options
+    if (!id || !text) {
+        logger.error("Missing required field on controller", { caller: callerName });
+        return null;
+    }
+
+    const transaction = await db.transaction();
+
+    try {
+        const message = await Message.update({
+            text,
+        }, {
+            where: {
+                id
+            }
+        }, { transaction });
+
+        logger.info(`Edited message ${id}`, { caller: callerName });
+
+        await transaction.commit();
+
+        logger.info(`Edited message ${message}`, { caller: callerName });
+
+        return message;
+    } catch (error) {
+        logger.error(error, { caller: callerName });
+        await transaction.rollback();
+        return null;
+    }
+}
+
 export {
     createMessage,
     getMessages,
     getMessageByID,
     deleteMessage,
+    editMessage,
 };

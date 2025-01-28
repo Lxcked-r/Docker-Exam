@@ -182,7 +182,7 @@ const saveChan = async () => {
 };
 
 socket.on("newChan", async (data) => {
-		await getChannels();
+		
 });
 
 socket.on("editChannel", async (data) => {
