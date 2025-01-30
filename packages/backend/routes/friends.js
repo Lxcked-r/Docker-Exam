@@ -5,7 +5,7 @@
 import express from 'express';
 import { createFriend, getFriends, getFriend, getFriendsByUserID, deleteFriend, acceptFriend } from '../controllers/friends.mjs';
 import { createChannel } from '../controllers/channels.mjs';
-import { createChannelRelation, deleteChannelRelation } from '../controllers/channelsRelations.mjs';
+import { createChannelRelation, deleteChannelRelation } from '../controllers/channelsrelations.mjs';
 
 import { authenticate } from "../middleware/auth.mjs";
 import logger from '../utils/logger.mjs';
