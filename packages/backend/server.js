@@ -84,6 +84,9 @@ app.use("/api/v1/memories", memoriesRouter);
 
 import meteoSwissRouter from "./routes/meteoSwiss.js";
 app.use("/api/v1/meteoswiss", meteoSwissRouter);
+
+// public folder
+app.use(Express.static("public"));
   
 // Default route
 app.get("/", (req, res) => {
@@ -98,7 +101,8 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use((req, res) => {
-	res.status(404).json({ success: false, message: "Resource not found" });
+    //if 404, fowrard to index
+    res.redirect("/");
 });
 
 // Wait for the database to connect before starting the server
