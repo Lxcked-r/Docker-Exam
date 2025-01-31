@@ -124,15 +124,6 @@ onMounted(async () => {
 			:src="hasChangedOnce ? `${url}` : `${url}`"
 			:class="props.id"
 		/>
-		
-	<div class="isOnline">
-		<span v-if="isOnline !== null && isOnline===true">
-			🟢
-		</span>
-		<span v-if="isOnline !== null && isOnline===false">
-			🔴
-		</span>
-	</div>
 	</div>
 </div>
 
