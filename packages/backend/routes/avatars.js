@@ -57,12 +57,12 @@ router.post("/:id", authenticate(), async (req, res) => {
 router.get('/:id',async (req, res) => {
     const userUUID = req.params.id;
     if(userUUID === "null") {
-        res.sendFile('../default.png', { root: __dirname });
+        res.sendFile(path.resolve('../backend/avatars/default.png'));
         return;
     }
     try {
-        const file = await stat(`./avatars/${userUUID}.png`);
-        res.sendFile(`../avatars/${userUUID}.png`, { root: __dirname });
+        const file = await stat(path.resolve(`../backend/avatars/${userUUID}.png`));
+        res.sendFile(path.resolve(`../backend/avatars/${userUUID}.png`));
     } catch (err) {
         res.status(404).json({ success: false, message: "avatar not found" });
     }

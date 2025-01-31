@@ -140,11 +140,11 @@ const saveTheme = () => {
 };
 
 const refreshTheme = () => {
-	const theme = localStorage.getItem("theme");
-	if (theme === "Dark") {
-		document.body.classList.add("dark");
+	const actualTheme = localStorage.getItem("theme");
+	if (actualTheme === "Dark") {
+		document.documentElement.classList.add("dark");
 	} else {
-		document.body.classList.remove("dark");
+		document.documentElement.classList.remove("dark");
 	}
 };
 
@@ -157,6 +157,8 @@ onMounted(async () => {
 
 	document.title = 'Settings - ' + app_name;
 
+	// reload theme
+	refreshTheme();
 });
 
 </script>
@@ -210,9 +212,9 @@ onMounted(async () => {
 		<div class="flex flex-col gap-4">
 			<div class="flex flex-col gap-2">
 				<label for="theme-select" class="text-sm font-semibold">Select theme</label>
-				<select id="theme-select" class="select select-bordered max-w-64">
-					<option>Light</option>
-					<option>Dark</option>
+				<select id="theme-select" class="select select-bordered max-w-64" @change="saveTheme()" v-model="theme">
+					<option value="Light">Light</option>
+					<option value="Dark">Dark</option>
 				</select>
 			</div>
 		</div>
