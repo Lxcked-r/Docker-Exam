@@ -6,6 +6,7 @@ import config from "@/../config";
 import { useFriendsStore } from '@/stores/friends';
 import { useLocalUserStore } from '@/stores/localUser';
 
+
 const localUserStore = useLocalUserStore();
 const socket = inject('socket');
 
@@ -61,15 +62,11 @@ const downloadFile = async (id) => {
 const bytes = (data, to) => {
     const const_term = 1024;
     if(data < const_term) return data + "B";
-    if (to === "KB") { 
-        return ~~(data / const_term).toFixed(3) + "KB"; 
-      } else if (to === "MB") { 
-        return ~~(data / const_term ** 2).toFixed(3) + "MB"; 
-      } else if (to === "GB") { 
-        return ~~(data / const_term ** 3).toFixed(3) + "GB"; 
-      } else if (to === "TB") { 
-        return ~~(data / const_term ** 4).toFixed(3) + "TB"; 
-      }
+    if (data < const_term ** 2) { 
+        return (data / const_term).toFixed(2) + "KB"; 
+    } else { 
+        return (data / const_term ** 2).toFixed(2) + "MB"; 
+    }
 }
 
 const props = defineProps({
@@ -97,6 +94,13 @@ const props = defineProps({
     
     },
     id: String,
+});
+//check if message is edited after load
+watch(() => props.isEdited, async (newValue) => {
+    if (newValue) {
+        const data = await reloadMessage();
+        document.getElementById(props.id).value = data.text;
+    }
 });
 
 watch(() => props.type, async (newValue) => {
@@ -156,6 +160,20 @@ const saveEdit = async () => {
     mode.value = 'view';
 }
 
+const reloadMessage = async () => {
+    const response = await API.fireServer('/api/v1/messages/' + props.id, {
+        method: "GET",
+    });
+    const jsonRes = await response.json();
+    if (jsonRes.error) {
+        console.error(jsonRes.error);
+        return;
+    }
+    return jsonRes;
+}
+
+
+
 onBeforeMount(async () => {
     loading.value = false;
 });
@@ -176,10 +194,10 @@ onMounted(async () => {
 
 <template>
     <div class="flex items-start group relative">
-        <AvatarCircle v-if="isFirst" :id="userID" :force-fallback="true" :name="userName":avatar="avatar" @click="$emit('showUser')" :is-online="isOnline"/>
+        <AvatarCircle v-if="isFirst||isEdited" :id="userID" :force-fallback="true" :name="userName":avatar="avatar" @click="$emit('showUser')" :is-online="isOnline"/>
         
         <li class="group/item flex flex-col leading-1.5 mb-2 ml-2">
-            <span v-if="isFirst" class="text-sm font-semibold text-gray-900 dark:text-white">{{ userName + ' ' }}<span v-if="isFirst" class="text-sm font-normal text-gray-500 dark:text-gray-400">{{ createdAt }} <span v-if="isEdited">(edited)</span></span></span>
+            <span v-if="isFirst||isEdited" class="text-sm font-semibold text-gray-900 dark:text-white">{{ userName + ' ' }}<span v-if="isFirst||isEdited" class="text-sm font-normal text-gray-500 dark:text-gray-400">{{ createdAt }}<span v-if="isEdited">(edited)</span></span></span>
             
             <div v-if="type==='text' && mode==='edit'" class="">
                 <input :id="id" class="input input-bordered w-full" @mouseover="$emit('showMessageOptions')" :value="props.text"></input>
@@ -188,7 +206,7 @@ onMounted(async () => {
             </div> 
 
             <div v-else-if="type=='text'" class="">
-                <p v-if="isFirst" :id="id" class="text-sm font-normal pt-1 mt-0 text-gray-900 dark:text-white max-w-[64rem]" @mouseover="$emit('showMessageOptions')"><a class="link link-primary" v-if="containsLinkBalise(text)" :href="getLinkBalise(text)" target="_blank">{{ getLinkBalise(text) }}</a>&nbsp;{{ removeLinkBalise(text)}}</p>
+                <p v-if="isFirst||isEdited" :id="id" class="text-sm font-normal pt-1 mt-0 text-gray-900 dark:text-white max-w-[64rem]" @mouseover="$emit('showMessageOptions')"><a class="link link-primary" v-if="containsLinkBalise(text)" :href="getLinkBalise(text)" target="_blank">{{ getLinkBalise(text) }}</a>&nbsp;{{ removeLinkBalise(text)}}</p>
                 <p v-else :id="id" class="text-sm font-normal text-gray-900 dark:text-white ml-[48px] max-w-[64rem]" @mouseover="$emit('showMessageOptions')"><a class="link link-primary" v-if="containsLinkBalise(text)" :href="getLinkBalise(text)" target="_blank">{{ getLinkBalise(text) }}</a>&nbsp;{{ removeLinkBalise(text) }}</p>
             </div>
 
@@ -206,7 +224,7 @@ onMounted(async () => {
                             {{ fileTitle }}
                         </span>
                         <span class="flex text-xs font-normal text-gray-500 dark:text-gray-400 gap-2">
-                            {{bytes(fileSize,'MB') }}
+                            {{bytes(fileSize,'KB') }}
                             <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="self-center" width="3" height="4" viewBox="0 0 3 4" fill="none">
                                 <circle cx="1.5" cy="2" r="1.5" fill="#6B7280"/>
                             </svg>
@@ -225,7 +243,7 @@ onMounted(async () => {
                             {{ fileTitle }}
                         </span>
                         <span class="flex text-xs font-normal text-gray-500 dark:text-gray-400 gap-2">
-                            {{bytes(fileSize,'MB') }}
+                            {{bytes(fileSize,'KB') }}
                             <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="self-center" width="3" height="4" viewBox="0 0 3 4" fill="none">
                                 <circle cx="1.5" cy="2" r="1.5" fill="#6B7280"/>
                             </svg>

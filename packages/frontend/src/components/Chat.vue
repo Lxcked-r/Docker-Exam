@@ -323,6 +323,7 @@ socket.on("editMessage", async (event) => {
     const index = messages.value.findIndex((x) => x.id === message.id);
     if (index !== -1) {
         messages.value[index].text = message.text;
+        messages.value[index].updatedAt = message.updatedAt;
     }
 });
 
