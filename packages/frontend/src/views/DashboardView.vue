@@ -49,6 +49,17 @@ const news = ref({});
 
 const friends = ref([]);
 
+// ############################################################################################################
+
+// dark mode toggle in local storage edited in settings.vue
+
+const onDarkMode = computed(() => {
+	return localStorage.getItem("darkMode") === "true";
+});
+
+const onDarkModeChange = (value) => {
+	localStorage.setItem("them", value);
+};
 
 const onDefaultRoute = computed(() => {
 	if(router.currentRoute.value.path === "/dashboard") {
