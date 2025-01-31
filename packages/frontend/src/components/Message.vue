@@ -83,6 +83,10 @@ const props = defineProps({
     url: String,
     avatar: String,
     isOnline: Boolean,
+    isEdited: {
+        type: Boolean,
+        default: false,
+    },
     isOP: {
         type: Boolean,
         default: false,
@@ -175,7 +179,7 @@ onMounted(async () => {
         <AvatarCircle v-if="isFirst" :id="userID" :force-fallback="true" :name="userName":avatar="avatar" @click="$emit('showUser')" :is-online="isOnline"/>
         
         <li class="group/item flex flex-col leading-1.5 mb-2 ml-2">
-            <span v-if="isFirst" class="text-sm font-semibold text-gray-900 dark:text-white">{{ userName + ' ' }}<span v-if="isFirst" class="text-sm font-normal text-gray-500 dark:text-gray-400">{{ createdAt }}</span></span>
+            <span v-if="isFirst" class="text-sm font-semibold text-gray-900 dark:text-white">{{ userName + ' ' }}<span v-if="isFirst" class="text-sm font-normal text-gray-500 dark:text-gray-400">{{ createdAt }} <span v-if="isEdited">(edited)</span></span></span>
             
             <div v-if="type==='text' && mode==='edit'" class="">
                 <input :id="id" class="input input-bordered w-full" @mouseover="$emit('showMessageOptions')" :value="props.text"></input>
