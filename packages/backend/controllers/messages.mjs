@@ -42,6 +42,8 @@ const createMessage = async (options) => {
         return null;
     }
     
+    const createdAt = new Date();
+    const updatedAt = createdAt;
 
     const transaction = await db.transaction();
 
@@ -193,9 +195,11 @@ const editMessage = async (id, text) => {
 
         logger.info(`Edited message ${id}`, { caller: callerName });
 
-        await transaction.commit();
+        
 
-        logger.info(`Edited message ${message}`, { caller: callerName });
+
+
+        await transaction.commit();
 
         return message;
     } catch (error) {

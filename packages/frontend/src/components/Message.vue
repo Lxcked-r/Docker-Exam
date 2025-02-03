@@ -6,6 +6,12 @@ import config from "@/../config";
 import { useFriendsStore } from '@/stores/friends';
 import { useLocalUserStore } from '@/stores/localUser';
 
+import crypter from '@/utils/crypter.js';
+
+
+
+const encryptData = () => crypter.encrypt();
+
 
 const localUserStore = useLocalUserStore();
 const socket = inject('socket');
@@ -146,6 +152,9 @@ const setEditMode = () => {
 
 const saveEdit = async () => {
     const text = document.getElementById(props.id).value;
+
+    const encryptedMessage = encryptData(text);
+
     const response = await API.fireServer('/api/v1/messages/' + props.id, {
         method: "PUT",
         body: JSON.stringify({ text }),
@@ -155,6 +164,7 @@ const saveEdit = async () => {
         console.error(jsonRes.error);
         return;
     }
+
 
     socket.emit('editMessage', { id: props.id, userID: localUserStore.user.id, text });
     mode.value = 'view';
