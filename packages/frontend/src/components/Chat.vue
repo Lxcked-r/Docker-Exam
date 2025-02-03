@@ -1453,8 +1453,9 @@ defineExpose({
                     :avatar="message.User.avatar ? message.User.avatar : message.userID"
                     :is-online="!checkIfOwnUser(message.userID)?checkUserOnline(message.userID):null"
                     :is-o-p="getIsOp()"
-                    :is-edited="message.updatedAt !== message.createdAt"
+                    :is-edited="message.editedAt"
                 />
+                {{ console.log(message) }}
             </div>
         </ul>
 

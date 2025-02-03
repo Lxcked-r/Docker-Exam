@@ -182,11 +182,14 @@ const editMessage = async (id, text) => {
         return null;
     }
 
+    const editedAt = new Date();
+
     const transaction = await db.transaction();
 
     try {
         const message = await Message.update({
             text,
+            editedAt
         }, {
             where: {
                 id
@@ -195,7 +198,7 @@ const editMessage = async (id, text) => {
 
         logger.info(`Edited message ${id}`, { caller: callerName });
 
-        
+
 
 
 
