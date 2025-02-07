@@ -225,6 +225,14 @@ onMounted(async () => {
                 <img v-bind:style="{cursor:'pointer'}" v-if="isFirst" ref="imgRef" :id="id" class="rounded-lg max-w-[30%]" :src="getImg(text)" @click="$emit('showImage', imgRef)"/>
                 <img v-bind:style="{cursor:'pointer'}" v-else :id="id" ref="imgRef" class="rounded-lg max-w-[28%] ml-[48px]" :src="getImg(text)" @click="$emit('showImage', imgRef)"/>
             </div>
+
+            <div v-else-if="type=='mp4' || type=='webm' || type=='mov'">
+                <video v-if="isFirst" :id="id" class="rounded-lg max-w-[30%]" controls>
+                    <source :src="getImg(text)" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+
+            </div>
             <div v-else> 
                 <div v-if="isFirst" class="flex items-start bg-gray-50 dark:bg-gray-600 rounded-xl p-2">
                     <div class="me-2">
