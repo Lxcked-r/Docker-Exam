@@ -14,6 +14,8 @@ import crypter from "@/utils/crypter";
 
 import config from "@/../config";
 
+import {t} from 'i18next';
+
 import AvatarCircle from "@/components/AvatarCircle.vue";
 import HomeSquare from "@/components/HomeSquare.vue";
 import CustomDialog from "@/components/CustomDialog.vue";
@@ -49,6 +51,7 @@ const news = ref({});
 
 const friends = ref([]);
 
+
 // ############################################################################################################
 
 // dark mode toggle in local storage edited in settings.vue
@@ -70,7 +73,7 @@ const onDefaultRoute = computed(() => {
 
 const onTitleRoute = computed(() => {
 	if(router.currentRoute.value.path === "/dashboard") {
-		return `Home - ${app_name}`;
+		return `${t('dashboard.home')} - ${app_name}`;
 	} else {
 		return;
 	}
@@ -79,15 +82,15 @@ const onTitleRoute = computed(() => {
 const headerText = computed(() => {
 	switch (router.currentRoute.value.path) {
 	case "/dashboard":
-		return "Home";
+		return t("dashboard.home");
 	case "/dashboard/chats":
 		return "Chats";
 	case "/dashboard/templates":
-		return "Templates";
+		return t("dashboard.templates");
 	case "/dashboard/users":
-		return "Users";
+		return t("dashboard.users");
 	case "/dashboard/settings":
-		return "Settings";
+		return t("dashboard.settings.title");
 	default:
 		return "Home";
 	}
@@ -294,7 +297,7 @@ socket.on("notification", async (notif) => {
 			}
 
 			if(notif.type !== "text" && notif.type !== "friend" ) {
-				notif.message.text = "new Message";
+				notif.message.text = t("dashboard.notifications." + notif.type);
 			}
 
 			newNotif(await notif.user.username, url, notif.message.text);
@@ -514,22 +517,20 @@ onMounted(async () => {
 	</div>
 	<CustomDialog
 		ref="signOutFailDialog"
-		confirm-name="Yes"
-		cancel-name="No"
+		:confirm-name="t('dashboard.user.yes')"
+		:cancel-name="t('dashboard.user.no')"
 		@cancel="signOutFailDialog.hide()"
 		@confirm="clearLocalData(); reloadPage();"
 	>
 		<template #title>
-			Sign out failure
+			{{ $t("dashboard.user.signout") }}
 		</template>
 		<template #content>
 			<p>
-				We couldn't sign you out because the server is not responding properly. <br>
-				This usually means you've already been signed out while the app was offline, or the data in <br>
-				your browser is corrupted or severely outdated.
+				{{ $t('dashboard.user.signout.err1') }}<br>
+				{{ $t('dashboard.user.signout.err2') }}
 				<br><br>
-				Do you want to clear the local data and try signing in again? This will not affect the data on the server,<br>
-				but you will lose any unsaved changes.
+				{{ $t("dashboard.user.signout.err3") }}
 			</p>
 		</template>
 	</CustomDialog>
@@ -572,7 +573,7 @@ onMounted(async () => {
 						>
 							<li>
 								<a>
-									Home
+									{{ $t("dashboard.home") }}
 								</a>
 							</li>
 						</RouterLink>
@@ -581,7 +582,7 @@ onMounted(async () => {
 						>
 							<li>
 								<a>
-									Chats list
+									{{ $t("dashboard.lists.chats") }}
 								</a>
 							</li>
 						</RouterLink>
@@ -590,7 +591,7 @@ onMounted(async () => {
 						>
 							<li>
 								<a>
-									Friends list
+									{{ $t("dashboard.lists.friends") }}
 								</a>
 							</li>
 						</RouterLink>
@@ -599,7 +600,7 @@ onMounted(async () => {
 							>
 							<li>
 								<a>
-									Pong
+									{{ $t("dashboard.pong.title") }}
 								</a>
 							</li>
 						</RouterLink>
@@ -608,7 +609,7 @@ onMounted(async () => {
 							>
 							<li>
 								<a>
-									Memory
+									{{ $t("dashboard.memory.title") }}
 								</a>
 							</li>
 						</RouterLink>
@@ -617,7 +618,7 @@ onMounted(async () => {
 							>
 							<li>
 								<a>
-									Meteo
+									{{ $t("dashboard.meteo.title") }}
 								</a>
 							</li>
 						</RouterLink>
@@ -680,7 +681,7 @@ onMounted(async () => {
 					>
 						<a>
 							<i class="bi bi-gear"></i>
-							Settings
+							{{$t("dashboard.settings.title")}}
 						</a>
 					</li>
 					<li
@@ -688,7 +689,7 @@ onMounted(async () => {
 					>
 						<a>
 							<i class="bi bi-box-arrow-right"></i>
-							Sign out
+							{{$t("dashboard.user.signout")}}
 						</a>
 					</li>
 				</ul>
@@ -704,31 +705,33 @@ onMounted(async () => {
 			<div> {{ news.title }}</div>
 			<div> {{ news.body }}</div>
 			<button v-if="localUserStore.user.operator" @click="deleteNew(news.id)" class="btn btn-error">
-				Delete This News
+				{{ $t("dashboard.admin.news.delete") }}
 			</button>
 		</div>
 		<button v-if="localUserStore.user.operator" @click="openNewDialog()" class="btn btn-success">
-			Create News
+			{{ $t("dashboard.admin.news.create") }}
 		</button>
-			Pick a section to begin.
+			{{$t("dashboard.welcome",null)}},
+			{{ localUserStore.user.username }}
 				<div class="flex gap-4">
 					<HomeSquare
 						to="/dashboard/chats"
 						icon="bi-list-task"
-						text="Chats list"
+						:text="$t('dashboard.lists.chats')"
+						styles="half-v"
 					>
 					</HomeSquare>
 					<div class="flex flex-col gap-4">
 						<HomeSquare
 							to="/dashboard/friends"
 							icon="bi-people"
-							text="Friends List"
+							:text="$t('dashboard.lists.friends')"
 							styles="half-v"
 						/>
 						<HomeSquare
 							to="/dashboard/settings"
 							icon="bi-gear"
-							text="Settings"
+							:text="$t('dashboard.settings.title')"
 							:styles="localUserStore.user.operator ? 'half-v' : ''"
 						/>
 					</div>
@@ -738,13 +741,13 @@ onMounted(async () => {
 					<HomeSquare class=""
 						to="/dashboard/memory"
 						icon="bi-joystick"
-						text="Memory"
+						:text="$t('dashboard.memory.title')"
 						styles="half-v">
 					</HomeSquare>
 					<HomeSquare
 						to="/dashboard/meteo"
 						icon="bi-cloud-sun"
-						text="Meteo"
+						:text="$t('dashboard.meteo.title')"
 					>
 					</HomeSquare>
 				</div>

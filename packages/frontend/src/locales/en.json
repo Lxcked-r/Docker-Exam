@@ -1,0 +1,127 @@
+{
+    "dashboard": {
+        "title": "Dashboard",
+        "welcome": "Welcome to the dashboard",
+        "home": "Home",
+        "about": "About",
+        "lists": {
+            "chats": "Chats List",
+            "friends": "Friends List"
+        },
+        "settings": {
+            "title": "Settings",
+            "language": {
+                "title": "Language",
+                "select": "Select Language",
+                "save": "Save Language",
+                "swap": "Swap Language",
+                "description": "Select your preferred language from the list below. This will change the language of the application.",
+                "current": "Current Language",
+                "fr": "French",
+                "en": "English",
+                "es": "Spanish",
+                "de": "German",
+                "ru": "Russian",
+                "zh": "Chinese",
+                "ja": "Japanese",
+                "el": "Greek",
+                "tr": "Turkish"
+            },
+            "theme": {
+                "title": "Theme",
+                "dark": "Dark",
+                "light": "Light",
+                "system": "System",
+                "select": "Select Theme",
+                "save": "Save Theme"
+            },
+            "notifications": {
+                "privacy": "Privacy",
+                "toggleNotifs": "Toggle Notifications"
+            },
+            "profile": {
+                "profilePicture": "Profile Picture",
+                "remove": "Remove",
+                "clickToUpload": "Click to upload",
+                "uploadDesc": "PNG, JPG or GIF (max. 2 MB)"
+            },
+            "user": {
+                "password": "Password",
+                "confirmNewPassword": "Confirm New Password",
+                "currentPassword": "Current Password",
+                "newPassword": "New Password",
+                "changePassword": "Change Password",
+                "title": "User",
+                "signin": "Signin",
+                "signup": "Signup",
+                "signout": "Signout",
+                "forgot": "Forgot Password",
+                "reset": "Reset Password"
+            },
+            "session": {
+                "title": "Session",
+                "activeSessions": "Active Sessions",
+                "lastLogin": "Last Login",
+                "logoutAll": "Logout from all devices",
+                "logout": "Logout",
+                "sessionsSignout": {
+                    "title": "Sessions Signout",
+                    "description": "Click the button below to sign out from all devices. This will log you out from all active sessions.",
+                    "signOut": "Sign out from all devices"
+                }
+            }
+        },
+        "notifications": {
+            "title": "Notifications",
+            "messages": "Messages",
+            "alerts": "Alerts"
+        },
+        "profile": {
+            "title": "Profile",
+            "name": "Name",
+            "email": "Email",
+            "phone": "Phone"
+        },
+        "memory": {
+            "title": "Memory",
+            "total": "Total",
+            "used": "Used",
+            "free": "Free"
+        },
+        "meteo": {
+            "title": "Meteo",
+            "temperature": "Temperature",
+            "humidity": "Humidity",
+            "wind": "Wind"
+        },
+
+        "admin": {
+            "title": "Admin",
+            "users": "Users",
+            "roles": "Roles",
+            "permissions": "Permissions",
+
+            "news": {
+                "title": "News",
+                "list": "News List",
+                "create": "Create News",
+                "edit": "Edit News",
+                "delete": "Delete News"
+            }
+        },
+
+        "user": {
+            "password": "Password",
+            "confirmNewPassword": "Confirm New Password",
+            "currentPassword": "Current Password",
+            "newPassword": "New Password",
+            "title": "User",
+            "signin": "Signin",
+            "signup": "Signup",
+            "signout": "Signout",
+            "forgot": "Forgot Password",
+            "reset": "Reset Password"
+        }
+
+    }
+}

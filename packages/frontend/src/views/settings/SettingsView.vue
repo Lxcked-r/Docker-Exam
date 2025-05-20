@@ -5,6 +5,7 @@ import { useLocalUserStore } from "@/stores/localUser";
 import AvatarCircle from "@/components/AvatarCircle.vue";
 import config from "@/../config";
 
+
 const app_name = config.app_name;
 const notifPermCheckboxInput = ref(null);
 
@@ -148,14 +149,22 @@ const refreshTheme = () => {
 	}
 };
 
+const swapLanguage = () => {
+	const currentLang = localStorage.getItem("lang");
+	if (currentLang === "en") {
+		
 
+	} else {
+		localStorage.setItem("lang", "en");
+	}
+};
 
 onMounted(async () => {	
 	await localUserStore.init();
 
 	notifPermCheckboxInput.value.checked = Notification.permission === "granted";
 
-	document.title = 'Settings - ' + app_name;
+	document.title = `${t('dashboard.settings.title')} - ` + app_name;
 
 	// reload theme
 	refreshTheme();
@@ -166,83 +175,83 @@ onMounted(async () => {
 <template>
 	<div class="w-full p-6">
 		<h1 class="text-2xl font-bold">
-			Settings
+			{{ $t("dashboard.settings.title") }}
 		</h1>
 
 		<div class="divider my-4"></div>
 
-		<h2 class="text-xl font-bold">Notifications</h2>
+		<h2 class="text-xl font-bold">{{ $t("dashboard.notifications.title") }}</h2>
 
 		<div class="flex flex-col gap-4 mb-4 mt-2">
 			<div class="flex flex-box items-center">
-				<h3>Enable Notifications &nbsp;</h3>
+				<h3>{{ $t("dashboard.settings.notifications.toggleNotifs") }} &nbsp;</h3>
 				<input ref="notifPermCheckboxInput" type="checkbox" class="toggle" checked @change="tryNotificationPermission" />
 			</div>
 		</div>
 
-		<h2 class="text-xl font-bold">Profile Picture</h2>
+		<h2 class="text-xl font-bold">{{ $t("dashboard.settings.profile.profilePicture") }}</h2>
 
 		<div class="flex flex-col gap-4 mt-4">
 			<div class="flex gap-4 items-center">
 				<AvatarCircle :id="localUserStore.user.id" :avatar="localUserStore.user.avatar"/>
 				<button
-					:class="removingAvatar || localUserStore.user.avatar === null ? 'btn btn-error max-w-32 btn-disabled' : 'btn btn-error max-w-32'"
+					:class="removingAvatar || localUserStore.user.avatar === null ? 'btn btn-error max-w-64 btn-disabled' : 'btn btn-error max-w-64'"
 					@click="removeAvatar()"
 				>
 					<span class="loading loading-spinner loading-md" v-if="removingAvatar"></span>
 					<i v-else class="bi bi-trash text-xl"></i>
-					Remove
+					{{ $t("dashboard.settings.profile.remove") }}
 				</button>
 			</div>
 
 			<label for="dropzone-file" class="flex flex-col items-center justify-center w-64 max-w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
 				<div class="flex flex-col items-center justify-center pt-5 pb-6">
 					<i class="bi bi-cloud-upload text-4xl"></i>
-					<p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Click to upload</span> or drag and drop</p>
-					<p class="text-xs text-gray-500 dark:text-gray-400"> PNG, JPG or GIF (max. 2 MB)</p>
+					<p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">{{ $t("dashboard.settings.profile.clickToUpload") }}</span></p>
+					<p class="text-xs text-gray-500 dark:text-gray-400">{{ $t("dashboard.settings.profile.uploadDesc") }}</p>
 				</div>
 				<input ref="filePicker" id="dropzone-file" type="file" class="hidden" accept="image/gif, image/png, image/jpeg" @change="uploadImage()"/>
 			</label>
 		</div>
 
 		<h2 class="text-xl font-bold mt-8">
-			Theme
+			{{ $t("dashboard.settings.theme.title") }}
 		</h2>
 
 		<div class="flex flex-col gap-4">
 			<div class="flex flex-col gap-2">
-				<label for="theme-select" class="text-sm font-semibold">Select theme</label>
+				<label for="theme-select" class="text-sm font-semibold">{{ $t("dashboard.settings.theme.select") }}</label>
 				<select id="theme-select" class="select select-bordered max-w-64" @change="saveTheme()" v-model="theme">
-					<option value="Light">Light</option>
-					<option value="Dark">Dark</option>
+					<option value="Light">{{ $t("dashboard.settings.theme.light") }}</option>
+					<option value="Dark">{{ $t("dashboard.settings.theme.dark") }}</option>
 				</select>
 			</div>
 		</div>
 
 		<button class="btn btn-primary max-w-32 mt-4" @click="saveTheme()">
-			Save
+			{{ $t("dashboard.settings.theme.save") }}
 		</button>
 
 		<h2 class="text-xl font-bold mt-4">
-			Password
+			{{ $t("dashboard.settings.user.password") }}
 		</h2>
 
 		<div class="flex flex-col gap-4">
 			<input
 				type="password"
-				placeholder="Current password"
+				:placeholder="$t('dashboard.settings.user.currentPassword')"
 				class="input input-sm input-bordered my-2 max-w-64"
 				v-model="passwordFields.currentPassword"
 			/>
 			<input
 				type="password"
-				placeholder="New password"
+				:placeholder="$t('dashboard.settings.user.newPassword')"
 				class="input input-sm input-bordered my-2 max-w-64"
 				v-model="passwordFields.newPassword"
 			/>
 			<input
 				type="password"
-				placeholder="Confirm new password"
+				:placeholder="$t('dashboard.settings.user.confirmNewPassword')"
 				class="input input-sm input-bordered my-2 max-w-64"
 				v-model="passwordFields.confirmNewPassword"
 			/>
@@ -252,22 +261,35 @@ onMounted(async () => {
 				@click="changePassword();"
 			>
 				<span class="loading loading-spinner loading-md" v-if="isPasswordChanging"></span>
-				Change password
+				{{ $t("dashboard.settings.user.changePassword") }}
 			</button>
 		</div>
 
 		<h2 class="text-xl font-bold mt-8">
-			Sessions
+			{{ $t("dashboard.settings.language.title") }}
+		</h2>
+		<p class="mb-4">
+			{{ $t("dashboard.settings.language.description") }}
+		</p>
+		<div class="flex flex-col gap-4 mb-4 mt-2">
+			<select v-model="$i18next.language" class="select select-bordered max-w-64" @change="$i18next.changeLanguage($i18next.language)">
+				<option v-for="locale in $i18next.languages" :key="`locale-${locale}`" :value="locale">
+					{{ $t("dashboard.settings.language." + locale) }}
+				</option>
+			</select>
+		</div>
+
+		<h2 class="text-xl font-bold mt-8">
+			{{ $t("dashboard.settings.session.title") }}
 		</h2>
 
 		<div class="flex flex-col gap-4">
 			<p>
-				Click this button to sign out of all other sessions.<br>
-				You'll need to sign in again on your other devices.
+				{{$t("dashboard.settings.session.sessionsSignout.description")}}
 			</p>
 			<input
 				type="password"
-				placeholder="Current password"
+				:placeholder="$t('dashboard.settings.user.currentPassword')"
 				class="input input-sm input-bordered my-2 max-w-64"
 				v-model="signOutAllFields.currentPassword"
 			/>
@@ -275,7 +297,7 @@ onMounted(async () => {
 				class="btn btn-error max-w-32"
 				@click="signOutAll();"
 			>
-				Sign out
+				{{ $t("dashboard.settings.session.sessionsSignout.signOut") }}
 			</button>
 		</div>
 	</div>

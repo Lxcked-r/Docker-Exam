@@ -1,0 +1,118 @@
+{
+    "dashboard": {
+        "title": "Tableau de bord",
+        "welcome": "Bienvenue dans le tableau de bord",
+        "home": "Accueil",
+        "about": "À propos",
+        "lists": {
+            "chats": "Liste des discussions",
+            "friends": "Liste des amis"
+        },
+        "settings": {
+            "title": "Paramètres",
+            "language": {
+                "title": "Langue",
+                "select": "Sélectionner la langue",
+                "save": "Enregistrer la langue",
+                "swap": "Échanger la langue",
+                "description": "Sélectionnez votre langue préférée dans la liste ci-dessous. Cela changera la langue de la demande.",
+                "current": "Langue actuelle",
+                "fr": "Français",
+                "en": "Anglais",
+                "es": "Espagnol",
+                "de": "Allemand"
+            },
+            "theme": {
+                "title": "Thème",
+                "dark": "Noir",
+                "light": "Lumière",
+                "system": "Système",
+                "select": "Sélectionner le thème",
+                "save": "Enregistrer le thème"
+            },
+            "notifications": {
+                "privacy": "Vie privée",
+                "toggleNotifs": "Basculer les notifications"
+            },
+            "profile": {
+                "profilePicture": "Image de profil",
+                "remove": "Supprimer",
+                "clickToUpload": "Cliquez pour télécharger",
+                "uploadDesc": "PNG, JPG ou GIF (max. 2 Mo)"
+            },
+            "user": {
+                "password": "Mot de passe",
+                "confirmNewPassword": "Confirmer un nouveau mot de passe",
+                "currentPassword": "Mot de passe actuel",
+                "newPassword": "Nouveau mot de passe",
+                "changePassword": "Modifier le mot de passe",
+                "title": "Utilisateur",
+                "signin": "Signature",
+                "signup": "Inscription",
+                "signout": "Signout",
+                "forgot": "Mot de passe oublié",
+                "reset": "Réinitialiser le mot de passe"
+            },
+            "session": {
+                "title": "Séance",
+                "activeSessions": "Séances actives",
+                "lastLogin": "Dernière connexion",
+                "logoutAll": "Déconnexion de tous les appareils",
+                "logout": "Logout",
+                "sessionsSignout": {
+                    "title": "Ouverture des séances",
+                    "description": "Cliquez sur le bouton ci-dessous pour vous déconnecter de tous les appareils. Cela vous déconnectera de toutes les sessions actives.",
+                    "signOut": "Déconnexion de tous les appareils"
+                }
+            }
+        },
+        "notifications": {
+            "title": "Notifications",
+            "messages": "Messages",
+            "alerts": "Alertes"
+        },
+        "profile": {
+            "title": "Profil",
+            "name": "Nom",
+            "email": "Courriel",
+            "phone": "Téléphone"
+        },
+        "memory": {
+            "title": "Mémoire",
+            "total": "Total général",
+            "used": "Utilisé",
+            "free": "Gratuit"
+        },
+        "meteo": {
+            "title": "Météo",
+            "temperature": "Température",
+            "humidity": "Humidité",
+            "wind": "Vent"
+        },
+        "admin": {
+            "title": "Administrateur",
+            "users": "Utilisateur",
+            "roles": "Rôles",
+            "permissions": "Autorisations",
+            "news": {
+                "title": "Nouvelles",
+                "list": "Liste des nouvelles",
+                "create": "Créer des nouvelles",
+                "edit": "Modifier les nouvelles",
+                "delete": "Supprimer les nouvelles"
+            }
+        },
+        "user": {
+            "password": "Mot de passe",
+            "confirmNewPassword": "Confirmer un nouveau mot de passe",
+            "currentPassword": "Mot de passe actuel",
+            "newPassword": "Nouveau mot de passe",
+            "title": "Utilisateur",
+            "signin": "Signature",
+            "signup": "Inscription",
+            "signout": "Signout",
+            "forgot": "Mot de passe oublié",
+            "reset": "Réinitialiser le mot de passe"
+        }
+    }
+}
