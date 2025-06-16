@@ -1,0 +1,5 @@
+- can add people not in friends list to a private channel
+- friend code is the user id, so impossible to modify
+- can't leave chats
+- when sending a friend request, it does not appear in the pending view
+- can't(?) block users?
