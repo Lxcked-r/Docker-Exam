@@ -25,6 +25,8 @@ import router from "@/router";
 import crypter from "@/utils/crypter";
 
 import config from "@/../config";
+import CustomDatalist from "./CustomDatalist.vue"
+import CustomInput from "./CustomInput.vue";
 
 const appName = config.app_name;
 
@@ -42,6 +44,8 @@ const actualUser = ref(null);
 
 const showUserProfileDialogRef = ref(null);
 const showImageDialogRef = ref(null);
+
+const actualCharsDiv = ref(null);
 
 const showImageRef = ref(null);
 
@@ -601,6 +605,26 @@ const backToChatsList = () => {
     router.push("/dashboard/chats");
 };
 
+/**
+ * animate the send button and message input when message is sent
+ */
+const animateSendInput = () => {
+    messageInput.value.classList.add("animated_content");
+    setTimeout(() => {
+        messageInput.value.classList.remove("animated_content");
+    }, 1000);
+};
+
+/**
+ * animate the send button and message input when message is sent
+ */
+const animateSendInputError = () => {
+    messageInput.value.classList.add("animated_content_error");
+    setTimeout(() => {
+        messageInput.value.classList.remove("animated_content_error");
+    }, 300);
+};
+
 
 let t = 0;
 
@@ -693,17 +717,29 @@ const typing = async (event) => {
     const data = {channelID: props.channelID, userID: props.userID, userName: props.userName};
     const encrypted = encryptData(data);
     socket.emit("typing", encrypted);
+
+
     if (event.code === "Enter" || event.code === "NumpadEnter") {
         if(messageInput.value.value === "") {
             return;
         }
-        if((localUserStore.user.username !== "Lxcked") && messageInput.value.value.length > 300 || messageInput.value.value.length < 1) {
+        if(messageInput.value.value.length > 300 || messageInput.value.value.length < 1) {
             showError("The message must be between 1 and 300 characters long");
+            animateSendInputError();
             return;
         }
         setSocketMessage(props.userID, messageInput.value.value, props.channelID, props.userName, localUserStore.user.avatar);
+        animateSendInput();
         messageInput.value.value = ""; // clear the input
         actualChars.value = 0;
+    }
+    
+    if(actualChars.value < 150) {
+        actualCharsDiv.value.style.color = "";
+    } else if(actualChars.value < 300) {
+        actualCharsDiv.value.style.color = "orange";
+    } else {
+        actualCharsDiv.value.style.color = "red";
     }
 };
 
@@ -754,10 +790,25 @@ const tryAvatar = async (id) => {
 const getTwentyNewMessages = async () => {
 
     //avoid opaque responses
-
 	if(lastLoadedMessages.value.length<=0 && page.value!==2 || lastLoadedMessages.value.length>0 && lastLoadedMessages.value.length<20 && page.value!==2) {
 		return false;
 	}
+
+    const setToLoadMessages = () => {
+        // in top of messages, set loading circle
+        const loadingCircle = document.createElement("div");
+
+        loadingCircle.classList.add("loading-circle");
+
+        loadingCircle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke-width="10"/></svg>`;
+        loadingCircle.style.display = "flex";
+        loadingCircle.style.justifyContent = "center";
+        loadingCircle.style.alignItems = "center";
+
+    };
+
+    setToLoadMessages();
+    
     const res = await API.fireServer("/api/v1/messages?channelID="+props.channelID+"&page="+page.value, {
         method: "GET",
     });
@@ -1082,6 +1133,8 @@ onBeforeMount(async () => {
 
     messages.value = props.channelMessages;
 
+    friends.value = friendsStore.friends;
+
 
     await reload();
     await getAvatar();
@@ -1140,6 +1193,7 @@ onMounted(async () => {
         messagesRef.value.addEventListener("scroll", checkScroll);
         scrollToBottom();
     });   
+
     messageInput.value.addEventListener('paste', (e) => {
         if (e.clipboardData.files.length > 0) {
             e.preventDefault();
@@ -1175,7 +1229,6 @@ defineExpose({
 
 <template>
     <Teleport to="#dash">
-
         <CustomDialog
             ref="editChannelDialogRef"
             :is-acknowledgement="true"
@@ -1224,7 +1277,8 @@ defineExpose({
                     </div>
                 </div>
             </template>
-        </CustomDialog>        
+        </CustomDialog>
+
         <CustomDialog
             ref="changeChannelImageDialogRef"
             :is-acknowledgement="true"
@@ -1260,8 +1314,6 @@ defineExpose({
                 </div>
             </template>
         </CustomDialog>
-
-
 
         <CustomDialog
             ref="showUserProfileDialogRef"
@@ -1311,12 +1363,28 @@ defineExpose({
                 Add person
             </template>
             <template #content>
+              <!--  <CustomInput
+                    type="text"
+                    placeholder="Username"
+                    customClass="input input-bordered w-full max-w-xs mb-2"
+                    ref="addSomeoneInputRef"
+                    list="user-autocomplete-list"
+                    @change="console.log($event)"
+                />
+                <CustomDatalist
+                    id="user-autocomplete-list"
+                    :items="friendsStore.friends.map((x) => x.user)"
+                    @select="addSomeoneInputRef.value.value = $event"
+                ></CustomDatalist>-->
+
                 <input
                     ref="addSomeoneInputRef"
                     type="text"
                     placeholder="Username"
-                    class="input input-bordered w-full max-w-xs"
+                    class="input input-bordered w-full max-w-xs mb-2"
+                    v-model="addSomeoneInput"
                 />
+
                 <button @click="addSomeone" class="btn btn-primary">Add</button>
             </template>
         </CustomDialog>
@@ -1455,25 +1523,27 @@ defineExpose({
                     :is-o-p="getIsOp()"
                     :is-edited="message.editedAt"
                 />
-                {{ console.log(message) }}
             </div>
         </ul>
 
         <div ref="someoneIsTyping" class="chat-header flex flex-box opacity-80 max-h-8"></div>
         <div class="flex flex-col">
+            <div class="relative z-20 pointer-events-none select-none" ref="actualCharsDiv">
+                <span>{{ actualChars }}/{{ maxChars }}</span>
+            </div>
+
             <div class="relative">
+                
                 <input
                     @input="typing($event)"
                     @keypress="typing($event)"
                     ref="messageInput"
                     type="text"
                     placeholder="Write your message!"
-                    class="input input-bordered w-full max-w-[calc(100%-90px)] max-h-20 overflow-y-auto "
+                    class="input input-bordered w-full max-w-[calc(100%-90px)] max-h-20 overflow-y-auto"
                 />
                 <div class="absolute right-0 items-center inset-y-0 hidden sm:flex">
-                    <div>
-                        <span class="-z-1 text-gray-500">{{ actualChars }}/{{ maxChars }}</span>
-                    </div>
+
                     <button @click="showUploadFile()" type="button" class="inline-flex items-center justify-center rounded-full h-10 w-10 transition duration-500 ease-in-out">
                         <i class="bi bi-file-earmark-arrow-up"></i>
                     </button>
@@ -1486,3 +1556,58 @@ defineExpose({
         </div>
     </div>
 </template>
+
+<style scoped>
+.animated_content_error {
+    animation: animated_content_error 0.3s normal;
+}
+
+.animated_content {
+    animation: animated_content 1s normal;
+}
+
+@keyframes animated_content {
+    0% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7), 0 0 0 0 rgba(34, 197, 94, 0.7);
+    }
+    20% {
+        box-shadow: 0 0 8px 4px rgba(34, 197, 94, 0.3), 0 0 16px 8px rgba(34, 197, 94, 0.2);
+    }
+    40% {
+        box-shadow: 0 0 16px 8px rgba(34, 197, 94, 0.2), 0 0 32px 16px rgba(34, 197, 94, 0.1);
+    }
+    60% {
+        box-shadow: 0 0 8px 4px rgba(34, 197, 94, 0.15), 0 0 16px 8px rgba(34, 197, 94, 0.1);
+    }
+    80% {
+        box-shadow: 0 0 4px 2px rgba(34, 197, 94, 0.1), 0 0 8px 4px rgba(34, 197, 94, 0.05);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0), 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+}
+
+@keyframes animated_content_error {
+10%,
+  90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+
+  20%,
+  80% {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+
+  40%,
+  60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+
+</style>
