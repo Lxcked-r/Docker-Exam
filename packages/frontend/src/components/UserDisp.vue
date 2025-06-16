@@ -1,5 +1,7 @@
 <script setup>
 import AvatarCircle from "@/components/AvatarCircle.vue";
+import { onBeforeMount, ref } from "vue";
+
 
 const props = defineProps({
 	id: { type: String, required: false },
@@ -11,11 +13,23 @@ const props = defineProps({
 	isSpecial: { type: Boolean, default: false },
 });
 
+
+const arePropsValid = ref(false);
+
+onBeforeMount(() => {
+	// Validate props
+	if (props.username && typeof props.username === 'string') {
+		arePropsValid.value = true;
+	} else {
+		console.warn("Invalid props passed to UserDisp component");
+	}
+});
+
 defineEmits(["checked"]);
 </script>
 
 <template>
-    <div class="card" tabindex="0">
+    <div v-if="arePropsValid" class="card" tabindex="0">
 		<AvatarCircle :id="props.id" :force-fallback="props.avatar === null" :name="props.username" :avatar="props.avatar" debug="userDisp" />
 		<div class="content select-none">
 			<div class="title">

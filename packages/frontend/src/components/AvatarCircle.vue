@@ -68,7 +68,6 @@ const showPlaceholderInstead = computed(() => {
 	return !localUserStore.user.avatar || sessionStateStore.isOffline || props.forceFallback;
 });
 
-
 // watch the value of localUserStore.user.avatar. if it changes, append a timestamp to the end of the url to force a refresh
 // we only want to refresh the image when it has changed from its previous value to avoid cache issues
 watch(() => localUserStore.user.avatar, () => {
@@ -127,9 +126,7 @@ onMounted(async () => {
 	</div>
 </div>
 
-
 </template>
-
 
 <style scoped>
 .gl {
