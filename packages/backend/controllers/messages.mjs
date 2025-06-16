@@ -42,6 +42,18 @@ const createMessage = async (options) => {
         return null;
     }
     
+    // check if message text is empty or made of only spaces
+    if (typeof options.text !== "string") {
+        logger.error("Message text must be a string", { caller: callerName });
+        return null;
+    }
+    // check if message text is empty or made of only spaces
+    if (options.text.trim() === "") {
+        logger.error("Message text cannot be empty", { caller: callerName });
+        return null;
+    }
+    
+
     const createdAt = new Date();
     const updatedAt = createdAt;
 

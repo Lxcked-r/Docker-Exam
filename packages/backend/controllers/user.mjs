@@ -54,6 +54,38 @@ const createUser = async (options) => {
         return null;
     }
 
+    // Check if the username already exists
+    const existingUser = await User.findOne({
+        where: {
+            username: options.username,
+        },
+    });
+    if (existingUser) {
+        logger.error("Username already exists", { caller: callerName });
+        return null;
+    }
+    // Check if the email already exists
+    const existingEmail = await User.findOne({
+        where: {
+            email: options.email,
+        },
+    });
+    if (existingEmail) {
+        logger.error("Email already exists", { caller: callerName });
+        return null;
+    }
+
+    // Check if the email is valid
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(options.email)) {
+        logger.error("Invalid email format", { caller: callerName });
+        return null;
+    }
+
+    // write usename in lowercase
+    options.username = options.username.toLowerCase();
+    
+
     // Hash the password
     const hashedPassword = await hashPassword(options.password);
 
@@ -130,7 +162,6 @@ const getUserByUsername = async (username) => {
         logger.error("Failed to get user by username", { caller: callerName });
         return null;
     }
-
     return user;
 };
 

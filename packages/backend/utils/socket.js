@@ -93,6 +93,22 @@ const serverApp = async (app) => {
             
             let dataV2 = data;
 
+            if(data.text === null || data.text === "") {
+                console.error("Message text is empty");
+                return;
+            }
+
+            // check if message text is not empty or made of only spaces
+            if (typeof data.text !== "string") {
+                console.error("Message text must be a string");
+                return;
+            }
+            // check if message text is empty or made of only spaces
+            if (data.text.trim() === "") {
+                console.error("Message text cannot be empty");
+                return;
+            }
+
             dataV2.text = await encrypt(data.text);
 
             let message = await createMessage(dataV2);
