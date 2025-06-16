@@ -9,6 +9,7 @@ export default {
 	variants: {
 		extend: {
 			display: ["group-hover"],
+			backgroundOpacity: ['active', 'hover'],
 		}
 	},
 	theme: {
@@ -42,5 +43,6 @@ export default {
 				},
 			},
 		],
+		defaultTheme: "dark",
 	},
 };

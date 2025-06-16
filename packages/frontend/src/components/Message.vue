@@ -87,7 +87,7 @@ const props = defineProps({
     avatar: String,
     isOnline: Boolean,
     isEdited: {
-        type: Boolean,
+        type: String,
         default: false,
     },
     isOP: {
@@ -192,7 +192,7 @@ onBeforeMount(async () => {
 
 onMounted(async () => {
 
-    if (props.type !== 'text' && props.type !== 'jpg' && props.type !== 'png' && props.type !== 'webp' && props.type !== 'gif') {
+    if (props.type !== 'text' && props.type !== 'jpg' && props.type !== 'png' && props.type !== 'webp' && props.type !== 'gif' ) {
         const data = await getFile(props.text);
         fileTitle.value = data.name;
         fileSize.value = data.size;
@@ -231,7 +231,16 @@ onMounted(async () => {
                     <source :src="getImg(text)" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
-
+            </div>
+            <div v-else-if="type=='ogg' || type=='wav' || type=='mp3' || type=='opus'">
+                <audio v-if="isFirst" :id="id" class="rounded-lg" controls>
+                        <source :src="getImg(text)" type="audio/ogg">
+                        <source :src="getImg(text)" type="audio/wav">
+                        <source :src="getImg(text)" type="audio/mpeg">
+                        <source :src="getImg(text)" type="audio/mp3">
+                        <source :src="getImg(text)" type="audio/opus">
+                        Your browser does not support the audio tag.
+                </audio>
             </div>
             <div v-else> 
                 <div v-if="isFirst" class="flex items-start bg-gray-50 dark:bg-gray-600 rounded-xl p-2">
@@ -281,3 +290,10 @@ onMounted(async () => {
 
         </div>
 </template>
+
+<style scoped>
+audio {
+    max-height: 50px;
+    max-width: 500px;
+}
+</style>
