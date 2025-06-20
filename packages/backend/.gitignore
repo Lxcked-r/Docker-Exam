@@ -4,3 +4,4 @@ logs
 avatars
 files
 config.json
+*.env
