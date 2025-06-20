@@ -1,6 +1,8 @@
 {
   "name": "bowy",
-  "version": "0.1.1",
+  "author": "Lxcked",
+  "description": "A live chat application with a focus on privacy and security.",
+  "version": "0.1.27",
   "private": true,
   "type": "module",
   "main": "electron-main.js",
@@ -13,6 +15,7 @@
     "electron": "electron .",
     "electron:build": "npm run build && electron-builder"
   },
+  
   "build": {
     "asar": false,
     "appId": "ch.lxcked.bowy",
@@ -26,8 +29,16 @@
       "buildResources": "build"
     },
     "win": {
+      "icon": "imgs/fav.ico",
       "target": "nsis"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "dekcxl",
+        "repo": "bowy-releases"
+      }
+    ]
   },
   "publish": [
     {

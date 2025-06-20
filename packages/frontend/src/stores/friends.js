@@ -1,56 +1,30 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
 import API from "@/utils/apiWrapper";
+import { universalStorage } from "@/utils/universalStorage";
 
 export const useFriendsStore = defineStore("friends", () => {
     const friends = ref([]);
-    const kind = ref(null);	// local, api, or null
+    const kind = ref(null);
     const initialized = ref(false);
 
-
-    /**
-     * Initializes the store for use in the app.
-     * @returns {Promise<void>}
-     * @throws {Error} if the store could not be initialized
-    */
     const init = async (userID) => {
-        // we get the user from the api first before falling back to localStorage
-        // if that fails too somehow, we need to throw an error
-
         let apiInitFailed = false;
         let localStorageInitFailed = false;
 
-        kind.value = "api";	// default to
-        // try the api first
+        kind.value = "api";
         try {
-            if(!userID) {
-                return;
-            }
-            const response = await API.fireServer("/api/v1/friends/" + userID, {
-                method: "GET",
-            });
-
+            if(!userID) return;
+            const response = await API.fireServer("/api/v1/friends/" + userID, { method: "GET" });
             response.data = await response.json();
 
-            // for each friends in data set online to null
-            response.data.forEach((friend) => {
-                friend.online = null;
-            });
+            response.data.forEach((friend) => { friend.online = null; });
 
-            // make sure the values in the response are sane
-            if (!response.ok) {
-                apiInitFailed = true;
-                throw new Error("Bad response code");
-            }
+            if (!response.ok) throw new Error("Bad response code");
+            if (!Array.isArray(response.data)) throw new Error("Invalid response format");
 
-            if (!Array.isArray(response.data)) {
-                apiInitFailed = true;
-                throw new Error("Invalid response format");
-            }
-
-            // copy to live store
             friends.value = response.data;
-
+            await universalStorage.set("friends", response.data);
         } catch (error) {
             console.error(error);
             console.error("[stores/friends] Could not fetch friends from server. Falling back to localStorage.");
@@ -58,9 +32,15 @@ export const useFriendsStore = defineStore("friends", () => {
             apiInitFailed = true;
         }
 
-        // if the api failed, try localStorage
         if (apiInitFailed) {
-            throw new Error("Could not initialize friends store");
+            try {
+                const localFriends = await universalStorage.get("friends");
+                if (!Array.isArray(localFriends)) throw new Error("Invalid local friends format");
+                friends.value = localFriends;
+            } catch (error) {
+                console.error("[stores/friends] Could not fetch friends from localStorage.");
+                localStorageInitFailed = true;
+            }
         }
 
         if (apiInitFailed && localStorageInitFailed) {

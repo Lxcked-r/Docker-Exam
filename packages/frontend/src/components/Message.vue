@@ -30,6 +30,7 @@ const friends = ref([]);
 
 const mode = ref('view');
 
+
 const getFile = async (id) => {
     if(id === 'undefined') return;
     if(id === 'null') return;
@@ -101,8 +102,10 @@ const props = defineProps({
     },
     id: String,
 });
+
 //check if message is edited after load
 watch(() => props.isEdited, async (newValue) => {
+    console.log('isEdited changed', newValue);
     if (newValue) {
         const data = await reloadMessage();
         document.getElementById(props.id).value = data.text;

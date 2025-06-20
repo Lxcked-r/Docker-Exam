@@ -1,11 +1,11 @@
-import { app, BrowserWindow, nativeTheme } from 'electron';
+import { app, BrowserWindow, nativeTheme, ipcMain } from 'electron';
 
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
-
 const { autoUpdater } = require('electron-updater');
 import path from 'path';
+import fs from 'fs';
 
 // Force dark mode
 nativeTheme.themeSource = 'dark';
@@ -22,10 +22,12 @@ function createWindow () {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      webSecurity: false, // Disable web security for local development
-      
-    }
+      //preload: "preload.js", // Path to your preload script
+    },
+
   });
+  win.setMenuBarVisibility(false); // Hide the menu bar
+  win.setTitle('Bowy ' + app.getVersion());
 
   // Load the Vue app and open the #login route
   const indexPath = path.join(app.getAppPath(), 'dist', 'index.html');
@@ -38,23 +40,35 @@ function createWindow () {
   });
 }
 
-
-app.whenReady().then(createWindow);
-
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
 autoUpdater.on('update-available', () => {
-  console.log('Update available');
+  BrowserWindow.getAllWindows().forEach(win => {
+    win.webContents.send('update-status', 'available');
+    // Optionally, you can show a notification or dialog to the user
+    win.setProgressBar(-1); // Indeterminate progress bar
+
+  });
+});
+autoUpdater.on('download-progress', (progressObj) => {
+  BrowserWindow.getAllWindows().forEach(win => {
+    win.webContents.send('update-status', 'downloading', progressObj);
+    // use loading bar or progress indicator in your UI
+    win.setProgressBar(progressObj.percent / 100);
+  });
 });
 autoUpdater.on('update-downloaded', () => {
-  console.log('Update downloaded');
-  autoUpdater.quitAndInstall();
+  BrowserWindow.getAllWindows().forEach(win => {
+    win.webContents.send('update-status', 'downloaded');
+    autoUpdater.quitAndInstall();
+  });
 });
-autoUpdater.on('error', (error) => {
-  console.error('Update error:', error);
-});
+
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
+
+
+app.whenReady().then(createWindow);

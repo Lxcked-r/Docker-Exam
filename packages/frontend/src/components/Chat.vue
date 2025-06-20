@@ -328,7 +328,10 @@ socket.on("editMessage", async (event) => {
     if (index !== -1) {
         messages.value[index].text = message.text;
         messages.value[index].updatedAt = message.updatedAt;
+        messages.value[index].editedAt = message.updatedAt;
     }
+
+    console.log("Message edited", message);
 });
 
 socket.on("deleteMessage", async (event) => {
