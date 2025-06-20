@@ -5,16 +5,22 @@
 
 import { Sequelize } from "sequelize";
 import logger from "./logger.mjs";
+import config from "../config.json" assert { type: "json" };
 
-const db = new Sequelize({
-    dialect: "sqlite",
-    storage: "./db.sqlite",
-    logging: false,
+// Ensure that the config file is correctly imported and contains the necessary database configuration
+const db = new Sequelize(
+  config.db.database,      // database name
+  config.db.user,      // username
+  config.db.password,  // password
+  {
+    host: config.db.host,
+    port: config.db.port,
+    dialect: 'mysql',
     define: {
-        freezeTableName: true,
-    },	
-});
-
+      freezeTableName: true,
+    },
+  }
+);
 
 /**
  * Connect to the database.

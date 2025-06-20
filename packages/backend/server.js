@@ -107,9 +107,11 @@ app.use((req, res) => {
 
 // Wait for the database to connect before starting the server
 const dbConnected = await connect();
+// If the database connection fails, log the error and exit the process
 if (!dbConnected) {
     logger.error("Could not connect to the database", { caller: caller });
     process.exit(1);
+
 }
 
 // Sync the models with the database

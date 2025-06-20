@@ -1,4 +1,4 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes } from "sequelize";
 import { db } from "../utils/database.mjs";
 
 const Token = db.define('Token', { // auth token for a user. revoked tokens are removed on a cycle

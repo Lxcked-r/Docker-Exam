@@ -1,4 +1,4 @@
-import DataTypes from 'sequelize';
+import { DataTypes } from "sequelize";
 
 import { db } from '../utils/database.mjs';
 import User from './user.mjs';

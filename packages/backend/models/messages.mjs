@@ -11,7 +11,7 @@ const Message = db.define("Message", {
         allowNull: false,
     },
     text: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: false,
     },
     userID: {
