@@ -5,3 +5,6 @@ avatars
 files
 config.json
 *.env
+*.py
+*.sql
+*.old
