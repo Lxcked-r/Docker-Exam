@@ -32,6 +32,38 @@ ipcMain.on('check-for-updates', (event) => {
   });
 });
 
+ipcMain.on('save-token', (event, token) => {
+  console.log('Saving token with icpMain:', token);
+  const tokenPath = path.join(app.getPath('userData'), 'token.json');
+  fs.writeFile(tokenPath, JSON.stringify({ token }), (err) => {
+    if (err) {
+      console.error('Error saving token:', err);
+      event.sender.send('token-saved', false, err.message);
+    } else {
+      console.log('Token saved successfully to', tokenPath);
+      event.sender.send('token-saved', true);
+    }
+  });
+});
+
+ipcMain.handle('get-token', async (event) => {
+  const tokenPath = path.join(app.getPath('userData'), 'token.json');
+  console.log('Retrieving token from:', tokenPath);
+  try {
+    const data = await fs.promises.readFile(tokenPath, 'utf-8');
+    const tokenData = JSON.parse(data);
+    return tokenData.token || null;
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      console.log('Token file not found, returning null');
+      return null; // Token file does not exist
+    } else {
+      console.error('Error reading token file:', err);
+      throw err; // Re-throw other errors
+    }
+  }
+});
+
 function createWindow () {
   const win = new BrowserWindow({
     width: 1200,
@@ -41,17 +73,19 @@ function createWindow () {
       contextIsolation: true,
       preload: preloadPath, // Use the preload script
 
-      openDevTools: true, // Uncomment to open DevTools by default
-
     },
 
   });
   win.setMenuBarVisibility(false); // Hide the menu bar
   win.setTitle('Bowy ' + app.getVersion());
 
-  // Load the Vue app and open the #login route
+  // Load the Vue app and open the #dashboard route
   const indexPath = path.join(app.getAppPath(), 'dist', 'index.html');
-  win.loadFile(indexPath, { hash: 'login' });
+  win.loadFile(indexPath).then(() => {
+    console.log('Window loaded successfully:', indexPath);
+  }).catch(err => {
+    console.error('Error loading window:', err);
+  });
 
   win.once('ready-to-show', () => {
     autoUpdater.checkForUpdatesAndNotify().catch(err => {

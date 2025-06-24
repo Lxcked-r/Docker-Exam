@@ -2,7 +2,7 @@
   "name": "bowy",
   "author": "Lxcked",
   "description": "A live chat application with a focus on privacy and security.",
-  "version": "0.1.30",
+  "version": "0.1.32",
   "private": true,
   "type": "module",
   "main": "electron-main.js",
@@ -22,7 +22,8 @@
     "productName": "Bowy",
     "files": [
       "dist/**/*",
-      "electron-main.js"
+      "electron-main.js",
+      "preload.js"
     ],
     "icon": "imgs/fav.ico",
     "directories": {

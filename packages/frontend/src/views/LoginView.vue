@@ -58,6 +58,15 @@ const login = async () => {
 
 	if (response.status === 200) {
 		API.setToken(response.data.token);
+		// Save token to Electron if available
+        if (window.electronAPI) {
+            window.electronAPI.saveToken(response.data.token);
+			console.log("Token saved to Electron.");
+        } else {
+            // Fallback: save to localStorage if not in Electron
+            localStorage.setItem("token", response.data.token);
+        }
+
 		router.push("/dashboard");
 		isLoading.value = false;
 		return;

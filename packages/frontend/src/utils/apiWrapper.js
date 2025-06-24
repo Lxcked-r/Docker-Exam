@@ -23,7 +23,12 @@ API.setToken = function(token) {
  * @returns {String} The token.
  */
 API.getToken = function() {
-	localStorage.getItem("token");
+	if(window.electronAPI){
+		console.log("[api/getToken] Using Electron API to get token.");
+		return window.electronAPI.getToken();
+	} else {
+	return localStorage.getItem("token");
+	}
 };
 
 /**
@@ -31,6 +36,9 @@ API.getToken = function() {
  * @returns {void}
  */
 API.clearToken = function() {
+	if(window.electronAPI) {
+		window.electronAPI.clearToken ? window.electronAPI.clearToken() : null;
+	}
 	localStorage.removeItem("token");
 
 	// Also clear the token cookie
