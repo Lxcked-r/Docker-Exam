@@ -1,6 +1,6 @@
 <script setup>
 import API from "@/utils/apiWrapper";
-import { computed, onMounted, ref, provide } from "vue";
+import { computed, onMounted, ref, provide, onBeforeMount } from "vue";
 import { useRouter } from "vue-router";
 const router = useRouter();
 
@@ -50,6 +50,8 @@ const lastNotif = ref(null);
 const news = ref({});
 
 const friends = ref([]);
+
+const isElectron = ref(false);
 
 
 // ############################################################################################################
@@ -404,6 +406,15 @@ const emitJoinChannels = () => {
 	}
 };
 
+function checkForUpdate() {
+    console.log("Checking for updates...");
+    if (window.electronAPI) {
+        window.electronAPI.checkForUpdates();
+    } else {
+        console.warn("Electron API not available or checkForUpdate method not defined.");
+    }
+}
+
 /**
  * Open Chat and remove the notification from the notifications array
  * @param {number} channelID
@@ -464,6 +475,11 @@ const checkOnlineFriends = async () => {
 	socket.emit("checkOnline", data);
 };
 
+onBeforeMount(() => {
+
+
+});
+
 onMounted(async () => {
 
 	// Check if the user is logged in, and redirect them to the dashboard if they are.
@@ -502,6 +518,17 @@ onMounted(async () => {
 		getPendingFriendsRequestsFromSpecificFriendID(friend.id);
 	}
 	changeTitle(`Home - ${app_name}`);
+
+		// Check if we are in electron mode or browser mode
+	if (window.electronAPI) {
+		provide("isElectron", true);
+		isElectron.value = true;
+	} else {
+		provide("isElectron", false);
+		isElectron.value = false;
+	}
+
+	console.log("DashboardView mounted with isElectron:", isElectron.value);
 
 
 	isLoaded.value = true;
@@ -623,7 +650,12 @@ onMounted(async () => {
 							</li>
 						</RouterLink>
 					</ul>
-			</div>
+					
+			</div >
+				<h1 v-if="isElectron" class="text-2xl font-bold px-4">
+    				<button @click="checkForUpdate">Check for Update</button>
+				</h1>
+			
 
 			<div class="flex-1">
 			</div>

@@ -145,7 +145,7 @@ onMounted(async () => {
             <p>Max Temperature : {{ maxTemp }}°C</p>
             <p>Min Temperature : {{ minTemp }}°C</p>
             <p>Actual Temperature : {{ actualTemp }}°C</p>
-            <img :src=symbol>
+            <img :src=symbol class="w-16 h-16" alt="Weather Symbol">
         </div>
         <span v-else-if="isLoadingWeather" class="loading loading-spinner"></span>
     </div>

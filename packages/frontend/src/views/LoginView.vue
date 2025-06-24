@@ -19,6 +19,15 @@ const errorText = ref("Please enter a username and password.");
 
 const dialog = ref(null);
 
+// event listener for the enter key
+document.addEventListener("keydown", (event) => {
+	if (event.key === "Enter") {
+		event.preventDefault();
+		login();
+	}
+});
+
+
 // Try to log the user in.
 // If the session was created, redirect them to the dashboard.
 const login = async () => {
@@ -63,6 +72,7 @@ const login = async () => {
 
 onMounted(() => {
 	document.title = `Login - ${app_name} `;
+
 });
 
 </script>

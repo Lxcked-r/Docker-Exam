@@ -57,8 +57,6 @@ app.use("/api/v1/channels", channelsRouter);
 import avatarsRouter from "./routes/avatars.js";
 app.use("/api/v1/avatars", avatarsRouter);
 
-
-
 import channelsRelationsRouter from "./routes/channelsrelations.js";
 import { createMessage } from "./controllers/messages.mjs";
 app.use("/api/v1/channelsrelations", channelsRelationsRouter);
@@ -70,8 +68,6 @@ app.use("/api/v1/notifications", notificationsRouter);
 
 import filesRouter from "./routes/files.js";
 app.use("/api/v1/files", filesRouter);
-
-
 
 import friendsRouter from "./routes/friends.js";
 app.use("/api/v1/friends", friendsRouter);
@@ -110,8 +106,15 @@ const dbConnected = await connect();
 // If the database connection fails, log the error and exit the process
 if (!dbConnected) {
     logger.error("Could not connect to the database", { caller: caller });
-    process.exit(1);
+}
 
+// retry if the database connection fails
+let retries = 5;
+while (!dbConnected && retries > 0) {
+    logger.warn(`Retrying database connection... (${5 - retries + 1})`, { caller: caller });
+    await new Promise(resolve => setTimeout(resolve, 5000)); // wait for 5 seconds
+    dbConnected = await connect();
+    retries--;
 }
 
 // Sync the models with the database
