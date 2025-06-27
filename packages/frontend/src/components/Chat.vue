@@ -567,7 +567,7 @@ socket.on("message", async (event) => {
         return;
     } else {
         //audioNotif.value.play();
-        internalNotif("New message", "You have a new message from " + event.User.username);
+        //internalNotif("New message", "You have a new message from " + event.User.username);
         notifs.value++;
     }
     

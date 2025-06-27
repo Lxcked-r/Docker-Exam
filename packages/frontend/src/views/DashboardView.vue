@@ -649,6 +649,24 @@ onMounted(async () => {
 								</a>
 							</li>
 						</RouterLink>
+						<RouterLink
+							to="/dashboard/idle"
+							>
+							<li>
+								<a>
+									{{ $t("dashboard.idle.title") }}
+								</a>
+							</li>
+						</RouterLink>
+						<RouterLink
+							to="/dashboard/idlev2"
+							>
+							<li>
+								<a>
+									Idle Clicker V2
+								</a>
+							</li>
+						</RouterLink>
 					</ul>
 					
 			</div >

@@ -64,6 +64,36 @@ ipcMain.handle('get-token', async (event) => {
   }
 });
 
+ipcMain.handle('get-idle-data', async (event) => {
+  const idleDataPath = path.join(app.getPath('userData'), 'idleData.json');
+  console.log('Retrieving idle data from:', idleDataPath);
+  try {
+    const data = await fs.promises.readFile(idleDataPath, 'utf-8');
+    return JSON.parse(data);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      console.log('Idle data file not found, returning empty object');
+      return {}; // Idle data file does not exist
+    } else {
+      console.error('Error reading idle data file:', err);
+      throw err; // Re-throw other errors
+    }
+  }
+});
+
+ipcMain.handle('save-idle-data', async (event, data) => {
+  const idleDataPath = path.join(app.getPath('userData'), 'idleData.json');
+  console.log('Saving idle data to:', idleDataPath);
+  try {
+    await fs.promises.writeFile(idleDataPath, JSON.stringify(data, null, 2));
+    console.log('Idle data saved successfully');
+    return true; // Indicate success
+  } catch (err) {
+    console.error('Error saving idle data:', err);
+    throw err; // Re-throw error to be handled by the caller
+  }
+});
+
 function createWindow () {
   const win = new BrowserWindow({
     width: 1200,
