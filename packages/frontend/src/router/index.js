@@ -73,7 +73,7 @@ const router = createRouter({
 					path: "idlev2",
 					name: "idlev2",
 
-					component: () => import("../views/games/IdleClickerV2View.vue"),
+					component: () => import("../views/games/idleClickerV2View.vue"),
 				},
 				{
 					path: "meteo",
