@@ -8,6 +8,13 @@ import { useLocalUserStore } from '@/stores/localUser';
 
 import crypter from '@/utils/crypter.js';
 
+import MarkdownIt from 'markdown-it';
+
+const md = new MarkdownIt({
+    html: true,
+    typographer: true,
+});
+
 
 
 const encryptData = () => crypter.encrypt();
@@ -30,6 +37,9 @@ const friends = ref([]);
 
 const mode = ref('view');
 
+const parsed = ref([]);
+
+const content = ref('');
 
 const getFile = async (id) => {
     if(id === 'undefined') return;
@@ -105,7 +115,6 @@ const props = defineProps({
 
 //check if message is edited after load
 watch(() => props.isEdited, async (newValue) => {
-    console.log('isEdited changed', newValue);
     if (newValue) {
         const data = await reloadMessage();
         document.getElementById(props.id).value = data.text;
@@ -191,6 +200,24 @@ onBeforeMount(async () => {
     loading.value = false;
 });
 
+const parse = (text) => {
+
+    //everytime that a link is found, it should be replaced by a markdown link so https://example.com becomes [https://example.com](https://example.com)
+    if (text.includes('http://') || text.includes('https://')) {
+        console.log("found a link in the text");
+        const linksFound = text.match(/(https?:\/\/[^\s]+)/g);
+        if (linksFound) {
+            for (let link of linksFound) {
+                console.log("found link: " + link);
+                text = text.replace(link, `[${link}](${link})`);
+                console.log("replaced link: " + text);
+            }
+        }
+    }
+
+    return text;
+
+};
 
 
 onMounted(async () => {
@@ -200,13 +227,22 @@ onMounted(async () => {
         fileTitle.value = data.name;
         fileSize.value = data.size;
     }
+
+    parsed.value = md.parse(props.text)? md.parse(parse(props.text)) : [];
+    content.value = parsed.value[1] ? md.render((parsed.value[1].content)) : '';
+
+    console.log("parsed.value: ", parsed.value);
+    console.log("content.value: ", content.value);
+
+
+
 });
 
 
 </script>
 
 <template>
-    <div class="flex items-start group relative">
+    <div  class="flex items-start group relative">
         <AvatarCircle v-if="isFirst||isEdited" :id="userID" :force-fallback="true" :name="userName":avatar="avatar" @click="$emit('showUser')" :is-online="isOnline"/>
         
         <li class="group/item flex flex-col leading-1.5 mb-2 ml-2">
@@ -219,8 +255,8 @@ onMounted(async () => {
             </div> 
 
             <div v-else-if="type=='text'" class="">
-                <p v-if="isFirst||isEdited" :id="id" class="text-sm font-normal pt-1 mt-0 text-gray-900 dark:text-white max-w-[64rem]" @mouseover="$emit('showMessageOptions')"><a class="link link-primary" v-if="containsLinkBalise(text)" :href="getLinkBalise(text)" target="_blank">{{ getLinkBalise(text) }}</a>&nbsp;{{ removeLinkBalise(text)}}</p>
-                <p v-else :id="id" class="text-sm font-normal text-gray-900 dark:text-white ml-[48px] max-w-[64rem]" @mouseover="$emit('showMessageOptions')"><a class="link link-primary" v-if="containsLinkBalise(text)" :href="getLinkBalise(text)" target="_blank">{{ getLinkBalise(text) }}</a>&nbsp;{{ removeLinkBalise(text) }}</p>
+                <p v-if="isFirst||isEdited" :id="id" class="text-sm font-normal pt-1 mt-0 text-gray-900 dark:text-white max-w-[64rem]" @mouseover="$emit('showMessageOptions')" markdown="1" ><p v-if="content" v-html="content"></p></p>
+                <p v-else  :id="id" class="text-sm font-normal text-gray-900 dark:text-white ml-[48px] max-w-[64rem]" @mouseover="$emit('showMessageOptions')" markdown="1" ><p v-if="content" v-html="content"></p></p>
             </div>
 
 
@@ -230,7 +266,8 @@ onMounted(async () => {
             </div>
 
             <div v-else-if="type=='mp4' || type=='webm' || type=='mov'">
-                <video v-if="isFirst" :id="id" class="rounded-lg max-w-[30%]" controls>
+                <video :id="id" class="rounded-lg max-w-[30%]" controls>
+                    {{ text }}
                     <source :src="getImg(text)" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>

@@ -548,7 +548,6 @@ socket.on("message", async (event) => {
     if(message.User.username === "Server") {
         
         props.channelMessages.push(message);
-        scrollToBottom();
         return;
     }   
 
@@ -838,9 +837,11 @@ const getTwentyNewMessages = async () => {
     }
     
     const newMessages = data.reverse();
-    //unshift adds the new messages to the beginning of the array without using a loop
-    //messages.value.unshift(...newMessages);
     messages.value.unshift(...newMessages);
+
+    if(messagesRef.value) {
+        messagesRef.value.scrollTop = 1000;
+    }
 };
 
 /**
@@ -1090,13 +1091,7 @@ const findUserFromFriendList = (id) => {
 }
 
 const convertLinks = (text) => {
-    const linksFound = text.match(/(https?:\/\/[^\s]+)/g);
-    if (linksFound) {
-        for (let link of linksFound) {
-            text = text.replace(link, `<a href="${link}" target="_blank">${link}</a>`);
-        }
 
-    }
     return text;
  }
 
@@ -1526,6 +1521,7 @@ defineExpose({
                     :is-o-p="getIsOp()"
                     :is-edited="message.editedAt"
                 />
+                {{ console.log("message.text : " + message.text) }}
             </div>
         </ul>
 
@@ -1543,7 +1539,7 @@ defineExpose({
                     ref="messageInput"
                     type="text"
                     placeholder="Write your message!"
-                    class="input input-bordered w-full max-w-[calc(100%-90px)] max-h-20 overflow-y-auto"
+                    class="input input-bordered w-full max-w-[calc(100%-90px)] max-h-20 overflow-y-auto lol"
                 />
                 <div class="absolute right-0 items-center inset-y-0 hidden sm:flex">
 

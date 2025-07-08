@@ -109,12 +109,12 @@ if (!dbConnected) {
 }
 
 // retry if the database connection fails
-let retries = 5;
-while (!dbConnected && retries > 0) {
-    logger.warn(`Retrying database connection... (${5 - retries + 1})`, { caller: caller });
-    await new Promise(resolve => setTimeout(resolve, 5000)); // wait for 5 seconds
-    dbConnected = await connect();
-    retries--;
+if (!dbConnected) {
+    logger.error("Could not connect to the database, retrying...", { caller: caller });
+    setTimeout(() => {
+        process.exit(1);
+    }, 5000);
+    
 }
 
 // Sync the models with the database
