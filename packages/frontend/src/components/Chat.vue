@@ -1521,7 +1521,6 @@ defineExpose({
                     :is-o-p="getIsOp()"
                     :is-edited="message.editedAt"
                 />
-                {{ console.log("message.text : " + message.text) }}
             </div>
         </ul>
 

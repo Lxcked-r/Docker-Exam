@@ -204,13 +204,11 @@ const parse = (text) => {
 
     //everytime that a link is found, it should be replaced by a markdown link so https://example.com becomes [https://example.com](https://example.com)
     if (text.includes('http://') || text.includes('https://')) {
-        console.log("found a link in the text");
         const linksFound = text.match(/(https?:\/\/[^\s]+)/g);
         if (linksFound) {
             for (let link of linksFound) {
-                console.log("found link: " + link);
+                //force the visual link to be underlined
                 text = text.replace(link, `[${link}](${link})`);
-                console.log("replaced link: " + text);
             }
         }
     }
@@ -227,15 +225,11 @@ onMounted(async () => {
         fileTitle.value = data.name;
         fileSize.value = data.size;
     }
-
     parsed.value = md.parse(props.text)? md.parse(parse(props.text)) : [];
     content.value = parsed.value[1] ? md.render((parsed.value[1].content)) : '';
-
-    console.log("parsed.value: ", parsed.value);
-    console.log("content.value: ", content.value);
-
-
-
+    // detect all link balises in the content.value and force them to be underlined without the function containsLinkBalise
+    
+    
 });
 
 
