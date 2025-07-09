@@ -41,6 +41,8 @@ const parsed = ref([]);
 
 const content = ref('');
 
+const text = ref('');
+
 const getFile = async (id) => {
     if(id === 'undefined') return;
     if(id === 'null') return;
@@ -115,12 +117,21 @@ const props = defineProps({
 
 //check if message is edited after load
 watch(() => props.isEdited, async (newValue) => {
+    console.log('isEdited changed', newValue);
     if (newValue) {
         const data = await reloadMessage();
+        console.log('data', data);
         document.getElementById(props.id).value = data.text;
     }
 });
 
+watch(() => props.text, async (newValue) => {
+    console.log('text changed', newValue);
+    text.value = newValue;
+    
+    parsed.value = md.parse(text.value)? md.parse(parse(text.value)) : [];
+    content.value = parsed.value[1] ? md.render((parsed.value[1].content)) : '';
+});
 watch(() => props.type, async (newValue) => {
     if (newValue !== 'text' && newValue !== 'jpg' && newValue !== 'png' && newValue !== 'webp' && newValue !== 'gif') {
         const data = await getFile(props.text);
@@ -220,12 +231,14 @@ const parse = (text) => {
 
 onMounted(async () => {
 
+    text.value = props.text;
+
     if (props.type !== 'text' && props.type !== 'jpg' && props.type !== 'png' && props.type !== 'webp' && props.type !== 'gif' ) {
-        const data = await getFile(props.text);
+        const data = await getFile(text.value);
         fileTitle.value = data.name;
         fileSize.value = data.size;
     }
-    parsed.value = md.parse(props.text)? md.parse(parse(props.text)) : [];
+    parsed.value = md.parse(text.value)? md.parse(parse(text.value)) : [];
     content.value = parsed.value[1] ? md.render((parsed.value[1].content)) : '';
     // detect all link balises in the content.value and force them to be underlined without the function containsLinkBalise
     
