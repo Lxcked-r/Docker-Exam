@@ -1,9 +1,8 @@
-version: "3.8"
-
 services:
   # Environnement de Développement
   doom-dev:
-    build: .                    # Construit l'image à partir du Dockerfile local
+    image: doom-local:dev       # Nomme l'image construite localement
+    build: ./doom-source/Docker # Construit l'image à partir du code source cloné
     container_name: doom-dev
     ports:
       - "8080:8080"             # Accessible sur http://localhost:8080
@@ -15,7 +14,7 @@ services:
 
   # Environnement de Production
   doom-prod:
-    build: .                    # Construit l'image à partir du Dockerfile local
+    image: $PROD_IMAGE # Utilise l'image définie dans .env.prod ou celle par défaut
     container_name: doom-prod
     ports:
       - "8081:8080"             # Accessible sur http://localhost:8081
