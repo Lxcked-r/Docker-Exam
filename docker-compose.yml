@@ -1,7 +1,7 @@
 services:
   # Environnement de Développement
   doom-dev:
-    image: doom-local:dev       # Nomme l'image construite localement
+    image: $PROD_IMAGE # Utilise l'image définie dans .env.prod ou celle par défaut
     build: ./doom-source/Docker # Construit l'image à partir du code source cloné
     container_name: doom-dev
     ports:
