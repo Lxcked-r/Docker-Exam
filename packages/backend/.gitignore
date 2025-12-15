@@ -3,7 +3,6 @@ logs
 *.sqlite
 avatars
 files
-config.json
 *.env
 *.py
 *.sql
