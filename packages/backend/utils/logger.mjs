@@ -2,8 +2,9 @@ import winston, { format, transports } from "winston";
 import { env } from "node:process";
 
 const consoleFormatting = winston.format.printf(({ timestamp, level, message, ...meta }) => {
-	// with meta logging:
-	// return `[${level.toUpperCase()}/${timestamp}${meta.caller ? `/${meta.caller}` : ""}] ${message} (${meta ? JSON.stringify(meta) : ''})`;
+	if (env.NODE_ENV === "production") {
+		return "";
+	}
 	return `[${level.toUpperCase()}/${timestamp}${meta.caller ? `/${meta.caller}` : ""}] ${message}`;
 });
 
