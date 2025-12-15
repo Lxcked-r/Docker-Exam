@@ -27,7 +27,7 @@ API.getToken = function() {
 		console.log("[api/getToken] Using Electron API to get token.");
 		return window.electronAPI.getToken();
 	} else {
-	return localStorage.getItem("token");
+		return localStorage.getItem("token");
 	}
 };
 

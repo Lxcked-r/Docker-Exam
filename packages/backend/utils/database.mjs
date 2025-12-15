@@ -7,14 +7,23 @@ import { Sequelize } from "sequelize";
 import logger from "./logger.mjs";
 import config from "../config.json" assert { type: "json" };
 
+const dbConfig = {
+  host: process.env.DB_HOST || config.db.host,
+  port: process.env.DB_PORT || config.db.port,
+  database: process.env.DB_NAME || config.db.database,
+  username: process.env.DB_USER || config.db.user,
+  password: process.env.DB_PASSWORD || config.db.password,
+  dialect: 'mysql',
+};
+
 // Ensure that the config file is correctly imported and contains the necessary database configuration
 const db = new Sequelize(
   config.db.database,      // database name
   config.db.user,      // username
   config.db.password,  // password
   {
-    host: config.db.host,
-    port: config.db.port,
+    host: process.env.DB_HOST || config.db.host,
+    port: process.env.DB_PORT || config.db.port,
     dialect: 'mysql',
     define: {
       freezeTableName: true,

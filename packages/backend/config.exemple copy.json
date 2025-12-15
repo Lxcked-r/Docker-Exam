@@ -4,13 +4,6 @@
         "host": "server_ip",
         "port": "db_server_port",
         "name": "db_name"
-    },
-
-    "mail": {
-        "host": "mail_server_ip",
-        "port": "mail_server_port",
-        "user": "mail_user",
-        "pass": "mail_pass"
     }
 
 }

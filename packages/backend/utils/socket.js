@@ -251,7 +251,9 @@ const serverApp = async (app) => {
 
     const start = () => {
         // Start the server
-        httpServer.listen(3001);
+        httpServer.listen(3001, '0.0.0.0', () => {
+            console.log(`Server is running on port 3001`);
+        });
     }
 
     start();
