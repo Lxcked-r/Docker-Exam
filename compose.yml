@@ -1,8 +1,6 @@
 services:
   db:
-    build:
-      context: ./packages/db
-      dockerfile: Dockerfile
+    image: lockedbtw/bowy-db:1.0
     environment:
       MYSQL_DATABASE: bowy
       MYSQL_USER: bowy
@@ -17,6 +15,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   backend:
     build:
