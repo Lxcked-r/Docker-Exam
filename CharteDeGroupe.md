@@ -23,7 +23,7 @@
 
 ### Gestion des tâches
 *   Outil utilisé : Github, Discord, WhatsApp, tout ce qui peut servir, sans modération.
-*   Application choisie : [DOCKER-DOOM by B0nam](https://github.com/B0nam/DOCKER-DOOM)
+*   Application choisie : [Bowy]
 *   Date limite de rendu interne : 24h avant la date limite officielle
 
 ## 3. Engagements et Responsabilités
