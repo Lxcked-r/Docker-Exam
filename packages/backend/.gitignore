@@ -1,0 +1,9 @@
+node_modules
+logs
+*.sqlite
+avatars
+files
+*.env
+*.py
+*.sql
+*.old

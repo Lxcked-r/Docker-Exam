@@ -1,3 +1,2 @@
-.env.dev
-.env.prod
-doom-source/
+memory py/
+node_modules/
