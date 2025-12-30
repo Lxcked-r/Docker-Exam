@@ -27,7 +27,7 @@ Cet environnement **construit l'image localement** à partir du code source tél
 Pour lancer la version de développement :
 
 ```bash
-docker compose --env-file .env.dev up doom-dev
+docker compose up doom-dev
 ```
 
 - **URL :** [http://localhost:8080](http://localhost:8080)
