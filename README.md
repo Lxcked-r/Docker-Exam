@@ -53,6 +53,37 @@ docker compose -f compose.yml down -v
 
 ---
 
+## Dev environment (Docker, hot reload)
+
+L’environnement prod (compose.yml) reste le plus stable pour utiliser l’app dans son état actuel. L’environnement dev (compose-dev.yml) fonctionne aussi en Docker, mais est pensé pour le debug/hot reload et peut être moins stable.
+
+Commandes principales :
+
+```bash
+# build + start (dev)
+docker compose -f compose-dev.yml up -d --build
+
+# voir l’état
+docker compose -f compose-dev.yml ps
+
+# logs (ex. backend)
+docker compose -f compose-dev.yml logs -f backend-dev
+
+# arrêter
+docker compose -f compose-dev.yml down
+```
+
+Ports/devices (alignés sur la prod) :
+- Frontend : http://localhost:5173
+- Backend API : http://localhost:3001 (debug Node inspect sur 9229)
+- MySQL : host `localhost:3306`
+
+Notes :
+- Ne pas lancer compose.yml et compose-dev.yml en même temps (mêmes ports).
+- compose-dev monte le code du host dans les conteneurs et installe aussi les dépendances dev, pour nodemon/Vite et logs plus verbeux.
+
+---
+
 ## Services & ports (defaults) 
 
 - Frontend: http://localhost:5173 (compose maps 5173 → 80)
