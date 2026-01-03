@@ -1,0 +1,71 @@
+services:
+  db-dev:
+    build:
+      context: ./packages/db
+      dockerfile: Dockerfile-dev
+    environment:
+      MYSQL_DATABASE: bowy
+      MYSQL_USER: bowy
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_LOG_CONSOLE: "true"
+    command: ["mysqld", "--general-log=1", "--general-log-file=/var/lib/mysql/general.log", "--log-error-verbosity=3"]
+    volumes:
+      - db-data-dev:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend-dev:
+    build:
+      context: ./packages/backend
+      dockerfile: Dockerfile-dev
+    depends_on:
+      db-dev:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      CHOKIDAR_USEPOLLING: "1"
+      DB_HOST: db-dev
+      DB_PORT: 3306
+      DB_USER: bowy
+      DB_PASSWORD: secret
+      DB_NAME: bowy
+      PORT: 3001
+      NODE_OPTIONS: --inspect=0.0.0.0:9229
+    ports:
+      - "3001:3001"
+      - "9229:9229"
+    volumes:
+      - ./packages/backend:/app
+      - backend-node_modules-dev:/app/node_modules
+    restart: unless-stopped
+
+  frontend-dev:
+    build:
+      context: ./packages/frontend
+      dockerfile: Dockerfile-dev
+    depends_on:
+      - backend-dev
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "1"
+      VITE_DEV_SERVER_HOST: 0.0.0.0
+      VITE_DEV_SERVER_PORT: 5173
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./packages/frontend:/app
+      - frontend-node_modules-dev:/app/node_modules
+    restart: unless-stopped
+
+volumes:
+  db-data-dev:
+  backend-node_modules-dev:
+  frontend-node_modules-dev:

@@ -1,0 +1,18 @@
+FROM node:18-alpine
+WORKDIR /app
+
+# Install all dependencies (including dev) for Vite dev server
+COPY package*.json ./
+RUN npm install
+
+# Copy source for initial build; will be overridden by bind mount in compose-test.yml
+COPY . .
+
+ENV NODE_ENV=development \
+    VITE_DEV_SERVER_HOST=0.0.0.0 \
+    VITE_DEV_SERVER_PORT=5173 \
+    CHOKIDAR_USEPOLLING=1
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]

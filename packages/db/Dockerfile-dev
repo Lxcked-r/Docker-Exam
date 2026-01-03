@@ -1,0 +1,14 @@
+FROM mysql:8.0
+
+ENV MYSQL_DATABASE=bowy \
+    MYSQL_USER=bowy \
+    MYSQL_PASSWORD=secret \
+    MYSQL_ROOT_PASSWORD=rootpassword \
+    MYSQL_LOG_CONSOLE=true
+
+COPY init.sql /docker-entrypoint-initdb.d/
+
+EXPOSE 3306
+
+# Enable verbose logging in dev/test mode
+CMD ["mysqld", "--general-log=1", "--general-log-file=/var/lib/mysql/general.log", "--log-error-verbosity=3"]

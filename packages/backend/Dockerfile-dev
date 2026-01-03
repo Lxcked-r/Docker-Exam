@@ -1,0 +1,19 @@
+FROM node:18-alpine
+WORKDIR /app
+
+# Install all dependencies (including dev) for tooling like nodemon
+COPY package*.json ./
+RUN npm install
+
+# Copy source for initial build; will be overridden by bind mount in compose-test.yml
+COPY . .
+
+ENV NODE_ENV=development \
+    PORT=3001 \
+    LOG_LEVEL=debug \
+    CHOKIDAR_USEPOLLING=1 \
+    NODE_OPTIONS=--inspect=0.0.0.0:9229
+
+EXPOSE 3001 9229
+
+CMD ["npm", "run", "dev"]
