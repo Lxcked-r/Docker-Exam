@@ -53,34 +53,45 @@ docker compose -f compose.yml down -v
 
 ---
 
-## Dev environment (Docker, hot reload)
+## Dev environment (Docker, hot reload, verbose)
 
-L’environnement prod (compose.yml) reste le plus stable pour utiliser l’app dans son état actuel. L’environnement dev (compose-dev.yml) fonctionne aussi en Docker, mais est pensé pour le debug/hot reload et peut être moins stable.
+The prod environment (compose.yml) remains the most stable for using the app in its current state. The dev environment (compose-dev.yml) also runs in Docker, but is designed for debug/hot reload and may be less stable.
 
-Commandes principales :
+Main commands:
 
 ```bash
 # build + start (dev)
 docker compose -f compose-dev.yml up -d --build
 
-# voir l’état
+# check status
 docker compose -f compose-dev.yml ps
 
-# logs (ex. backend)
+# logs (e.g. backend)
 docker compose -f compose-dev.yml logs -f backend-dev
 
-# arrêter
+# stop
 docker compose -f compose-dev.yml down
 ```
 
-Ports/devices (alignés sur la prod) :
-- Frontend : http://localhost:5173
-- Backend API : http://localhost:3001 (debug Node inspect sur 9229)
-- MySQL : host `localhost:3306`
+Ports/devices (aligned with prod):
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3001 (Node inspect debug on 9229)
+- MySQL: host `localhost:3306`
 
-Notes :
-- Ne pas lancer compose.yml et compose-dev.yml en même temps (mêmes ports).
-- compose-dev monte le code du host dans les conteneurs et installe aussi les dépendances dev, pour nodemon/Vite et logs plus verbeux.
+Notes:
+- Do not run compose.yml and compose-dev.yml at the same time (same ports).
+- compose-dev mounts host code into containers and also installs dev dependencies, for nodemon/Vite and more verbose logs.
+
+Hot reload test:
+- Go to file "./docker-exam/packages/frontend/src/views/LoginView.vue".
+- Go to line 108 and modify the <h1>.
+
+Example of adding verbose in the test version:
+- Go to file "./docker-exam/packages/db/dockerfile-dev".
+- Go to line 14 and observe the custom MySQL command for verbose output.
+
+Different version from dockerhub:
+- We use in the compose-dev.yml the image we updated with the tag "dev" for the dev environment.
 
 ---
 

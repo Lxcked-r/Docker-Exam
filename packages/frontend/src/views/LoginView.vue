@@ -105,7 +105,7 @@ onMounted(() => {
 
 	<div class="h-screen w-screen flex flex-col justify-center items-center">
 		<div class="p-2 bg-primary-300 flex flex-col gap-4">
-			<h1 class="text-2xl font-bold">Login</h1>
+			<h1 class="text-2xl font-bold">Login TEST SUPPRIME MOI</h1>
 			<input class="input input-bordered w-full max-w-xs" type="text" placeholder="Username" v-model="username" />
 			<input class="input input-bordered w-full max-w-xs" type="password" placeholder="Password" v-model="password" />
 			<button type="submit"

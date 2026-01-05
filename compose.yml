@@ -1,4 +1,5 @@
 services:
+  # Production Database Service
   db:
     image: lockedbtw/bowy-db:1.0
     environment:
@@ -7,7 +8,7 @@ services:
       MYSQL_PASSWORD: secret
       MYSQL_ROOT_PASSWORD: rootpassword
     volumes:
-      - db-data:/var/lib/mysql
+      - db-data:/var/lib/mysql # Persist data
     ports:
       - "3306:3306"
     healthcheck:
@@ -17,13 +18,14 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # Production Backend API
   backend:
     build:
       context: ./packages/backend
       dockerfile: Dockerfile
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_healthy # Wait for DB to be ready
     environment:
       DB_HOST: db
       DB_PORT: 3306
@@ -35,6 +37,7 @@ services:
       - "3001:3001"
     restart: unless-stopped
 
+  # Production Frontend (Nginx)
   frontend:
     build:
       context: ./packages/frontend
@@ -42,7 +45,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "5173:80"
+      - "5173:80" # Map host 5173 to container 80 (Nginx)
     restart: unless-stopped
 
 volumes:

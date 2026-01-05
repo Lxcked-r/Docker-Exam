@@ -1,8 +1,7 @@
 services:
+  # Development Database with verbose logging
   db-dev:
-    build:
-      context: ./packages/db
-      dockerfile: Dockerfile-dev
+    image: lockedbtw/bowy-db:dev
     environment:
       MYSQL_DATABASE: bowy
       MYSQL_USER: bowy
@@ -21,6 +20,7 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # Development Backend with Hot Reload (Nodemon)
   backend-dev:
     build:
       context: ./packages/backend
@@ -31,22 +31,23 @@ services:
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
-      CHOKIDAR_USEPOLLING: "1"
+      CHOKIDAR_USEPOLLING: "1" # Fix for hot reload on some systems (Windows/WSL)
       DB_HOST: db-dev
       DB_PORT: 3306
       DB_USER: bowy
       DB_PASSWORD: secret
       DB_NAME: bowy
       PORT: 3001
-      NODE_OPTIONS: --inspect=0.0.0.0:9229
+      NODE_OPTIONS: --inspect=0.0.0.0:9229 # Enable debugger
     ports:
       - "3001:3001"
-      - "9229:9229"
+      - "9229:9229" # Debugger port
     volumes:
-      - ./packages/backend:/app
-      - backend-node_modules-dev:/app/node_modules
+      - ./packages/backend:/app # Bind mount for hot reload
+      - backend-node_modules-dev:/app/node_modules # Prevent host node_modules from overwriting container's
     restart: unless-stopped
 
+  # Development Frontend with Hot Reload (Vite)
   frontend-dev:
     build:
       context: ./packages/frontend
@@ -61,7 +62,7 @@ services:
     ports:
       - "5173:5173"
     volumes:
-      - ./packages/frontend:/app
+      - ./packages/frontend:/app # Bind mount for hot reload
       - frontend-node_modules-dev:/app/node_modules
     restart: unless-stopped
 

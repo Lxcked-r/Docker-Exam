@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy source for initial build; will be overridden by bind mount in compose-test.yml
+# Copy source for initial build; will be overridden by bind mount in compose-dev.yml
 COPY . .
 
 ENV NODE_ENV=development \
@@ -16,4 +16,5 @@ ENV NODE_ENV=development \
 
 EXPOSE 3001 9229
 
+# Run with nodemon (via npm script)
 CMD ["npm", "run", "dev"]
